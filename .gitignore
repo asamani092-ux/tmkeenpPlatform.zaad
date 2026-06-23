@@ -26,7 +26,9 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
+.env
 .env*.local
+credentials.md
 
 # vercel
 .vercel
@@ -34,3 +36,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/generated
+/prisma/dev.db
+/prisma/*.db
+
+# local runtime data (settings, email logs)
+/data/
+
+# uploaded files (production: outside repo on VPS)
+/uploads/

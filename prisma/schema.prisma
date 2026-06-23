@@ -1,0 +1,203 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  GUIDE
+  BENEFICIARY
+}
+
+enum Stage {
+  PENDING_APPROVAL
+  GUIDANCE
+  TRAINING
+  EMPLOYMENT
+  FOLLOW_UP
+  CLOSED
+}
+
+enum OpportunityType {
+  TRAINING
+  EMPLOYMENT
+}
+
+enum SessionStatus {
+  SCHEDULED
+  ATTENDED
+  MISSED
+  COMPLETED
+  CANCELED
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum CareerPlanStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+}
+
+enum FollowUpStatus {
+  PENDING
+  COMPLETED
+  MISSED
+}
+
+model User {
+  id               String   @id @default(cuid())
+  name             String
+  email            String   @unique
+  phone            String
+  password         String
+  role             Role
+  stage            Stage    @default(PENDING_APPROVAL)
+  pendingStage     Stage?
+  stageEnteredAt   DateTime @default(now())
+  guideId          String?
+  educationLevel   String   @default("")
+  experience       String   @default("")
+  skills           String   @default("")
+  careerInterests  String   @default("")
+  cvContent        String   @default("")
+  professionalRecommendations String @default("")
+  selectedTrainingCourseIds   String @default("[]")
+  isEmployed       Boolean  @default(false)
+  careerPlan       String   @default("")
+  commitmentLevel  Int      @default(50)
+  commitmentScore  Int      @default(0)
+  cvUrl            String?
+  certificatesUrls String?
+  guide            User?    @relation("GuideBeneficiaries", fields: [guideId], references: [id])
+  beneficiaries    User[]   @relation("GuideBeneficiaries")
+  notesAsBeneficiary Note[] @relation("BeneficiaryNotes")
+  notesAsGuide       Note[] @relation("GuideNotes")
+  sessionsAsBeneficiary Session[] @relation("BeneficiarySessions")
+  sessionsAsGuide       Session[] @relation("GuideSessions")
+  applications     Application[]
+  careerPlans      CareerPlan[]
+  tasksAsBeneficiary Task[] @relation("BeneficiaryTasks")
+  tasksAsGuide       Task[] @relation("GuideTasks")
+  followUps        FollowUp[]
+  opportunityTargets OpportunityTarget[]
+  notifications    InAppNotification[]
+  createdAt        DateTime @default(now())
+}
+
+model InAppNotification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Note {
+  id            String   @id @default(cuid())
+  beneficiaryId String
+  beneficiary   User     @relation("BeneficiaryNotes", fields: [beneficiaryId], references: [id], onDelete: Cascade)
+  guideId       String
+  guide         User     @relation("GuideNotes", fields: [guideId], references: [id])
+  content       String
+  createdAt     DateTime @default(now())
+}
+
+model Session {
+  id                String        @id @default(cuid())
+  beneficiaryId     String
+  beneficiary       User          @relation("BeneficiarySessions", fields: [beneficiaryId], references: [id], onDelete: Cascade)
+  guideId           String
+  guide             User          @relation("GuideSessions", fields: [guideId], references: [id])
+  date              DateTime
+  status            SessionStatus @default(SCHEDULED)
+  notes             String        @default("")
+  meetingLink       String?
+  location          String?
+  commitmentRating  Int?
+  createdAt         DateTime      @default(now())
+}
+
+model Task {
+  id            String   @id @default(cuid())
+  beneficiaryId String
+  beneficiary   User     @relation("BeneficiaryTasks", fields: [beneficiaryId], references: [id], onDelete: Cascade)
+  guideId       String
+  guide         User     @relation("GuideTasks", fields: [guideId], references: [id])
+  title         String
+  description   String?
+  isCompleted   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+}
+
+model CareerPlan {
+  id            String           @id @default(cuid())
+  beneficiaryId String
+  beneficiary   User             @relation(fields: [beneficiaryId], references: [id], onDelete: Cascade)
+  tasks         Json             @default("[]")
+  status        CareerPlanStatus @default(ACTIVE)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
+
+model FollowUp {
+  id            String         @id @default(cuid())
+  beneficiaryId String
+  beneficiary   User           @relation(fields: [beneficiaryId], references: [id], onDelete: Cascade)
+  month         Int
+  status        FollowUpStatus @default(PENDING)
+  notes         String         @default("")
+  createdAt     DateTime       @default(now())
+
+  @@unique([beneficiaryId, month])
+}
+
+model Opportunity {
+  id           String          @id @default(cuid())
+  type         OpportunityType
+  title        String
+  provider     String
+  duration     String
+  status       String
+  requirements String          @default("")
+  salary       String?
+  jobType      String?
+  applications Application[]
+  targets      OpportunityTarget[]
+  createdAt    DateTime        @default(now())
+}
+
+model OpportunityTarget {
+  id            String      @id @default(cuid())
+  opportunityId String
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  beneficiaryId String
+  beneficiary   User        @relation(fields: [beneficiaryId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+
+  @@unique([opportunityId, beneficiaryId])
+}
+
+model Application {
+  id            String            @id @default(cuid())
+  beneficiaryId String
+  beneficiary   User              @relation(fields: [beneficiaryId], references: [id], onDelete: Cascade)
+  opportunityId String
+  opportunity   Opportunity       @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  status        ApplicationStatus @default(PENDING)
+  reviewNote    String?
+  reviewedAt    DateTime?
+  appliedAt     DateTime          @default(now())
+
+  @@unique([beneficiaryId, opportunityId])
+}

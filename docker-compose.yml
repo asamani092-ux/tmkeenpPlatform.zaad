@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: tmkeen
+      POSTGRES_PASSWORD: tmkeen_dev
+      POSTGRES_DB: tmkeen
+    ports:
+      - "5432:5432"
+    volumes:
+      - tmkeen_pg_data:/var/lib/postgresql/data
+
+volumes:
+  tmkeen_pg_data:

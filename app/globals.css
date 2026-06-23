@@ -1,27 +1,68 @@
+@import url("https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #f5f5f5;
+  --foreground: #706f6f;
+  --primary: #8b1538;
+  --secondary: #f2b824;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Tajawal", Tahoma, Arial, sans-serif;
+  direction: rtl;
+  text-align: right;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-red-800 px-6 py-3 text-right font-semibold text-white transition hover:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-800 focus:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-surface-border bg-surface px-6 py-3 text-right font-semibold text-brand-gray transition hover:bg-surface-muted focus:outline-none focus:ring-2 focus:ring-surface-border focus:ring-offset-2;
+  }
+
+  .btn-recommend {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-yellow-500 px-6 py-3 text-right font-semibold text-red-900 transition hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2;
+  }
+
+  .btn-register {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-[rgb(250_204_21)] px-6 py-3 text-right font-semibold text-red-900 transition hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-[rgb(250_204_21)] focus:ring-offset-2;
+  }
+
+  .card {
+    @apply rounded-xl border-2 border-surface-border bg-surface p-6 text-right shadow-sm;
+  }
+
+  .card-section {
+    @apply rounded-xl border-2 border-primary/20 bg-surface p-5 text-right shadow-sm;
+  }
+
+  .input-field {
+    @apply w-full rounded-lg border border-surface-border bg-surface px-4 py-3 text-right text-brand-gray outline-none transition focus:border-red-800 focus:ring-2 focus:ring-red-800/20;
+  }
+
+  .label-field {
+    @apply mb-2 block text-right text-sm font-semibold text-brand-gray;
+  }
+
+  table {
+    @apply text-right;
+  }
+
+  input[type="email"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="datetime-local"],
+  input[type="number"][dir="ltr"],
+  [dir="ltr"].input-field {
+    direction: ltr;
+    text-align: left;
   }
 }
