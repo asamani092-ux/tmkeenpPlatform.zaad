@@ -23,7 +23,7 @@ export function exportToCsv(
   rows: string[][]
 ) {
   const lines = buildCsvLines(headers, rows);
-  const blob = new Blob(["\uFEFF" + lines.join("\n")], {
+  const blob = new Blob(["\uFEFF" + lines.join("\r\n")], {
     type: "text/csv;charset=utf-8;",
   });
   const url = URL.createObjectURL(blob);
@@ -51,7 +51,7 @@ export function exportBulkCsv(filename: string, sections: BulkExportSection[]) {
       parts.push(row.map(escapeCell).join(CSV_DELIMITER));
     }
   }
-  const blob = new Blob(["\uFEFF" + parts.join("\n")], {
+  const blob = new Blob(["\uFEFF" + parts.join("\r\n")], {
     type: "text/csv;charset=utf-8;",
   });
   const url = URL.createObjectURL(blob);

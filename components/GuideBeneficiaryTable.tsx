@@ -17,6 +17,9 @@ import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
 import { STAGE_LABELS, getNextStage } from "@/lib/stages";
 import { SESSION_STATUS_LABELS } from "@/lib/labels";
 import { getUpcomingSession } from "@/lib/upcoming-session";
+import { formatCountdown, canJoinSession } from "@/lib/follow-up-program";
+import ContactLinks from "@/components/ui/ContactLinks";
+import { useSyncFromProps } from "@/lib/use-sync-from-props";
 import { toastSuccess, toastError } from "@/lib/toast";
 
 import {
@@ -46,12 +49,6 @@ import {
   AlertCircle,
 
   MapPin,
-
-  Mail,
-
-  Phone,
-
-  MessageCircle,
 
 } from "lucide-react";
 
@@ -119,6 +116,7 @@ type Beneficiary = {
 type Props = {
   beneficiaries: Beneficiary[];
   trainingCourses: { id: string; title: string; provider: string }[];
+  readOnly?: boolean;
 };
 
 type TabId = "profile" | "sessions" | "tasks" | "evaluations";
@@ -126,11 +124,12 @@ type TabId = "profile" | "sessions" | "tasks" | "evaluations";
 export default function GuideBeneficiaryTable({
   beneficiaries: initial,
   trainingCourses,
+  readOnly = false,
 }: Props) {
 
   const router = useRouter();
 
-  const [beneficiaries, setBeneficiaries] = useState(initial);
+  const [beneficiaries, setBeneficiaries] = useSyncFromProps(initial);
 
   const [selected, setSelected] = useState<Beneficiary | null>(null);
 
@@ -179,14 +178,6 @@ export default function GuideBeneficiaryTable({
   const [noteContent, setNoteContent] = useState("");
 
   const [pending, startTransition] = useTransition();
-
-
-
-  useEffect(() => {
-
-    setBeneficiaries(initial);
-
-  }, [initial]);
 
 
 
@@ -681,17 +672,14 @@ export default function GuideBeneficiaryTable({
 
 
 
-  const tabs: { id: TabId; label: string; icon: typeof User }[] = [
-
+  const allTabs: { id: TabId; label: string; icon: typeof User }[] = [
     { id: "profile", label: guideCopy.profileTab, icon: User },
-
     { id: "sessions", label: guideCopy.sessionsTab, icon: Calendar },
-
     { id: "tasks", label: guideCopy.tasksTab, icon: ListTodo },
-
     { id: "evaluations", label: guideCopy.evaluationsTab, icon: Star },
-
   ];
+
+  const tabs = readOnly ? allTabs.filter((t) => t.id === "profile") : allTabs;
 
 
 
@@ -736,11 +724,25 @@ export default function GuideBeneficiaryTable({
       render: (b) => {
         const upcoming = getUpcomingSession(b.sessions);
         if (!upcoming) return <span className="text-brand-gray">—</span>;
+        const canJoin = canJoinSession(new Date(upcoming.date));
         return (
-          <span className="inline-flex items-center justify-end gap-1 text-xs text-primary">
-            <Calendar className="h-4 w-4" />
-            {new Date(upcoming.date).toLocaleDateString("ar-SA")}
-          </span>
+          <div className="flex flex-col items-start gap-1 text-xs">
+            <span className="inline-flex items-center gap-1 text-primary">
+              <Calendar className="h-4 w-4" />
+              {formatCountdown(new Date(upcoming.date))}
+            </span>
+            {upcoming.meetingLink && canJoin && (
+              <a
+                href={upcoming.meetingLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-primary hover:underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                دخول الجلسة
+              </a>
+            )}
+          </div>
         );
       },
     },
@@ -748,31 +750,7 @@ export default function GuideBeneficiaryTable({
       key: "contact",
       header: "التواصل",
       render: (b) => (
-        <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-          <a
-            href={`tel:${b.phone}`}
-            className="rounded p-1 text-primary hover:bg-surface-muted"
-            title="اتصال"
-          >
-            <Phone className="h-4 w-4" />
-          </a>
-          <a
-            href={`mailto:${b.email}`}
-            className="rounded p-1 text-primary hover:bg-surface-muted"
-            title="بريد"
-          >
-            <Mail className="h-4 w-4" />
-          </a>
-          <a
-            href={`https://wa.me/${b.phone.replace(/\D/g, "").replace(/^0/, "966")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded p-1 text-primary hover:bg-surface-muted"
-            title="واتساب"
-          >
-            <MessageCircle className="h-4 w-4" />
-          </a>
-        </div>
+        <ContactLinks phone={b.phone} email={b.email} size="sm" />
       ),
     },
   ];
@@ -832,7 +810,7 @@ export default function GuideBeneficiaryTable({
 
               </button>
 
-              <div className="text-right">
+              <div className="text-start">
 
                 <h3 className="text-xl font-bold text-primary">{selected.name}</h3>
 
@@ -872,7 +850,7 @@ export default function GuideBeneficiaryTable({
                       </span>
                     ) : null}
                   </div>
-                  <div className="text-right">
+                  <div className="text-start">
                     <p className="flex items-center justify-end gap-1 text-sm font-bold text-primary">
                       <AlertCircle className="h-4 w-4 text-secondary-dark" />
                       جلسة قادمة
@@ -945,7 +923,7 @@ export default function GuideBeneficiaryTable({
 
                       <dt className="text-xs font-semibold text-brand-gray">البريد</dt>
 
-                      <dd dir="ltr" className="text-left text-primary">{selected.email}</dd>
+                      <dd dir="ltr" className="text-start text-primary">{selected.email}</dd>
 
                     </div>
 
@@ -953,7 +931,7 @@ export default function GuideBeneficiaryTable({
 
                       <dt className="text-xs font-semibold text-brand-gray">الجوال</dt>
 
-                      <dd dir="ltr" className="text-left text-primary">{selected.phone}</dd>
+                      <dd dir="ltr" className="text-start text-primary">{selected.phone}</dd>
 
                     </div>
 
@@ -1043,7 +1021,7 @@ export default function GuideBeneficiaryTable({
 
 
 
-                {selected.stage !== "CLOSED" && !selected.pendingStage && getNextStage(selected.stage) && (
+                {!readOnly && selected.stage !== "CLOSED" && !selected.pendingStage && getNextStage(selected.stage) && (
                   <button
                     type="button"
                     onClick={handleRecommendStage}
@@ -1059,22 +1037,26 @@ export default function GuideBeneficiaryTable({
 
                 <div className="card-section space-y-3">
                   <h4 className="font-bold text-primary">ملاحظات المستفيد</h4>
-                  <textarea
-                    value={noteContent}
-                    onChange={(e) => setNoteContent(e.target.value)}
-                    rows={3}
-                    className="input-field resize-none"
-                    placeholder="أضف ملاحظة للمستفيد..."
-                  />
-                  <SubmitButton
-                    type="button"
-                    onClick={handleAddNote}
-                    loading={pending}
-                    disabled={!noteContent.trim()}
-                    className="btn-primary w-full !py-2 text-sm"
-                  >
-                    حفظ الملاحظة
-                  </SubmitButton>
+                  {!readOnly && (
+                    <>
+                      <textarea
+                        value={noteContent}
+                        onChange={(e) => setNoteContent(e.target.value)}
+                        rows={3}
+                        className="input-field resize-none"
+                        placeholder="أضف ملاحظة للمستفيد..."
+                      />
+                      <SubmitButton
+                        type="button"
+                        onClick={handleAddNote}
+                        loading={pending}
+                        disabled={!noteContent.trim()}
+                        className="btn-primary w-full !py-2 text-sm"
+                      >
+                        حفظ الملاحظة
+                      </SubmitButton>
+                    </>
+                  )}
                   {selected.notes.length > 0 ? (
                     <ul className="max-h-40 space-y-2 overflow-y-auto">
                       {selected.notes.map((n) => (
@@ -1097,7 +1079,7 @@ export default function GuideBeneficiaryTable({
 
 
 
-            {activeTab === "sessions" && (
+            {!readOnly && activeTab === "sessions" && (
 
               <div className="card-section space-y-4">
 
@@ -1243,7 +1225,7 @@ export default function GuideBeneficiaryTable({
 
                             </div>
 
-                            <div className="text-right">
+                            <div className="text-start">
 
                               <span className="font-semibold text-primary">{SESSION_STATUS_LABELS[s.status as SessionStatus]}</span>
 
@@ -1291,7 +1273,7 @@ export default function GuideBeneficiaryTable({
 
             )}
 
-            {activeTab === "tasks" && selected && (() => {
+            {!readOnly && activeTab === "tasks" && selected && (() => {
               const currentTasks = selected.tasks.filter((t) => !t.isCompleted);
               const completedTasks = selected.tasks.filter((t) => t.isCompleted);
 
@@ -1315,7 +1297,7 @@ export default function GuideBeneficiaryTable({
                           <button type="button" onClick={() => startEditTask(t)} className="text-primary" title={guideCopy.editTask}><Pencil className="h-4 w-4" /></button>
                           <button type="button" onClick={() => handleDeleteTask(t.id)} className="text-red-600" title={guideCopy.deleteTask}><Trash2 className="h-4 w-4" /></button>
                         </div>
-                        <div className="text-right">
+                        <div className="text-start">
                           <span className={`text-sm font-medium ${t.isCompleted ? "line-through opacity-60" : "text-primary"}`}>{t.title}</span>
                           {t.description && <p className="mt-1 text-xs text-brand-gray">{t.description}</p>}
                         </div>
@@ -1364,7 +1346,7 @@ export default function GuideBeneficiaryTable({
 
 
 
-            {activeTab === "evaluations" && selected && (
+            {!readOnly && activeTab === "evaluations" && selected && (
 
               <GuideEvaluationsTab
 
@@ -1399,7 +1381,7 @@ export default function GuideBeneficiaryTable({
       );
       })()}
 
-      {selected && (
+      {selected && !readOnly && (
         <>
           <SlideOver
             open={taskDrawerOpen}

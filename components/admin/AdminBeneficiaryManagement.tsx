@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
+import { useSyncFromProps } from "@/lib/use-sync-from-props";
 import { useRouter } from "next/navigation";
 import { Stage } from "@/generated/prisma/client";
 import { STAGE_LABELS } from "@/lib/stages";
@@ -34,6 +35,8 @@ type GuideOption = { id: string; name: string };
 type Props = {
   beneficiaries: ManagedBeneficiary[];
   guides: GuideOption[];
+  initialOpenBeneficiaryId?: string | null;
+  onBeneficiaryOpened?: () => void;
 };
 
 function parseCertificateLinks(raw: string | null): string[] {
@@ -47,12 +50,26 @@ function parseCertificateLinks(raw: string | null): string[] {
   return raw.split(",").map((s) => s.trim()).filter(Boolean);
 }
 
-export default function AdminBeneficiaryManagement({ beneficiaries: initial, guides }: Props) {
+export default function AdminBeneficiaryManagement({
+  beneficiaries: initial,
+  guides,
+  initialOpenBeneficiaryId,
+  onBeneficiaryOpened,
+}: Props) {
   const router = useRouter();
-  const [rows, setRows] = useState(initial);
+  const [rows, setRows] = useSyncFromProps(initial);
   const [selected, setSelected] = useState<ManagedBeneficiary | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (!initialOpenBeneficiaryId) return;
+    const match = rows.find((b) => b.id === initialOpenBeneficiaryId);
+    if (match) {
+      setSelected(match);
+      onBeneficiaryOpened?.();
+    }
+  }, [initialOpenBeneficiaryId, rows, onBeneficiaryOpened]);
 
   function assign(beneficiaryId: string, guideId: string) {
     startTransition(async () => {
@@ -145,7 +162,7 @@ export default function AdminBeneficiaryManagement({ beneficiaries: initial, gui
       render: (b) => (
         <div className="flex flex-col gap-0.5">
           <span className="font-medium text-primary">{b.name}</span>
-          <span className="text-xs text-brand-gray" dir="ltr">
+          <span className="text-xs font-mono text-brand-gray" dir="ltr">
             {b.phone}
           </span>
         </div>
@@ -172,7 +189,7 @@ export default function AdminBeneficiaryManagement({ beneficiaries: initial, gui
         <select
           defaultValue={b.guideId ?? ""}
           disabled={pending}
-          className="input-field !py-2 text-sm"
+          className="input-field min-w-[140px] !rounded-lg !bg-surface-muted !py-2 text-sm"
           onClick={(e) => e.stopPropagation()}
           onChange={(e) => assign(b.id, e.target.value)}
         >

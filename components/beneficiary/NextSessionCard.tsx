@@ -1,10 +1,8 @@
 import { beneficiaryCopy } from "@/lib/copy/ar";
-
-import { Calendar, MapPin, Video, AlertCircle } from "lucide-react";
-
+import { Calendar, MapPin, AlertCircle } from "lucide-react";
 import { SESSION_STATUS_LABELS } from "@/lib/labels";
-
 import type { SessionStatus } from "@/generated/prisma/client";
+import SessionJoinButton from "@/components/beneficiary/SessionJoinButton";
 
 
 
@@ -127,25 +125,10 @@ export default function NextSessionCard({ sessions }: Props) {
 
 
         {upcoming.meetingLink && (
-
-          <a
-
-            href={upcoming.meetingLink}
-
-            target="_blank"
-
-            rel="noopener noreferrer"
-
-            className="btn-primary flex w-full items-center justify-center gap-2 !py-3"
-
-          >
-
-            <Video className="h-5 w-5" />
-
-            {beneficiaryCopy.joinRemoteSession}
-
-          </a>
-
+          <SessionJoinButton
+            meetingLink={upcoming.meetingLink}
+            sessionDate={upcoming.date}
+          />
         )}
 
       </div>

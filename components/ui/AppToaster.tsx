@@ -9,9 +9,13 @@ export default function AppToaster() {
       dir="rtl"
       richColors
       closeButton
+      expand
+      duration={4000}
       toastOptions={{
         classNames: {
-          toast: "font-sans text-right",
+          toast: "font-sans text-start shadow-lg border border-surface-border px-4 py-3",
+          title: "font-bold text-primary",
+          description: "text-brand-gray",
         },
       }}
     />

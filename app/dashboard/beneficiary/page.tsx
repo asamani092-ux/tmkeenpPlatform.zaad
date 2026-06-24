@@ -6,11 +6,13 @@ import OpportunityApplyCard from "@/components/OpportunityApplyCard";
 import NextSessionCard from "@/components/beneficiary/NextSessionCard";
 import CareerPlanChecklist from "@/components/beneficiary/CareerPlanChecklist";
 import BeneficiaryGuideHub from "@/components/beneficiary/BeneficiaryGuideHub";
-import BeneficiaryProfileEdit from "@/components/beneficiary/BeneficiaryProfileEdit";
+import BeneficiaryProfileCard from "@/components/beneficiary/BeneficiaryProfileCard";
+import FollowUpMonthForm from "@/components/beneficiary/FollowUpMonthForm";
+import { getFollowUpFormForBeneficiary } from "@/lib/follow-up-service";
+import { processFollowUpReminders } from "@/lib/follow-up-service";
 import { getDashboardPath } from "@/lib/auth";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
-import { STAGE_LABELS } from "@/lib/stages";
 import { APPLICATION_STATUS_LABELS } from "@/lib/labels";
 import { beneficiaryCanSeeOpportunity } from "@/lib/opportunity-visibility";
 import {
@@ -59,6 +61,13 @@ export default async function BeneficiaryDashboardPage() {
   });
 
   if (!user) redirect("/login");
+
+  await processFollowUpReminders();
+
+  const followUpData =
+    user.stage === "FOLLOW_UP"
+      ? await getFollowUpFormForBeneficiary(user.id)
+      : null;
 
   const courseIds = parseCourseIds(user.selectedTrainingCourseIds);
   const recommendedCourses =
@@ -118,30 +127,35 @@ export default async function BeneficiaryDashboardPage() {
       <Navbar userName={user.name} userRole={session.role} userId={session.id} />
 
       <main className="mx-auto max-w-6xl space-y-8 px-4 py-8">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-primary">الملف الرقمي للمستفيد</h1>
-            <p className="text-brand-gray">
-              المرحلة الحالية:{" "}
-              <span className="font-semibold text-primary">{STAGE_LABELS[user.stage]}</span>
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-lg font-bold text-primary">{user.name}</span>
-            <BeneficiaryProfileEdit
-              profile={{
-                name: user.name,
-                email: user.email,
-                phone: user.phone,
-                educationLevel: user.educationLevel,
-                experience: user.experience,
-                skills: user.skills,
-                careerInterests: user.careerInterests,
-                cvUrl: user.cvUrl,
-              }}
-            />
-          </div>
-        </div>
+        <BeneficiaryProfileCard
+          profile={{
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            educationLevel: user.educationLevel,
+            experience: user.experience,
+            skills: user.skills,
+            careerInterests: user.careerInterests,
+            cvUrl: user.cvUrl,
+            certificatesUrls: user.certificatesUrls,
+          }}
+        />
+
+        {followUpData && (
+          <FollowUpMonthForm
+            activeMonth={followUpData.activeMonth}
+            questions={(followUpData.questions ?? []).map((q) => ({
+              ...q,
+              options: Array.isArray(q.options) ? q.options.map(String) : [],
+            }))}
+            records={(followUpData.records ?? []).map((r) => ({
+              month: r.month,
+              status: r.status,
+              submittedAt: r.submittedAt?.toISOString() ?? null,
+              dueAt: r.dueAt?.toISOString() ?? null,
+            }))}
+          />
+        )}
 
         {user.stage === "PENDING_APPROVAL" && (
           <section className="card">
@@ -287,13 +301,13 @@ export default async function BeneficiaryDashboardPage() {
               </div>
               <div>
                 <dt className="text-xs font-semibold text-brand-gray">الجوال</dt>
-                <dd dir="ltr" className="text-left text-brand-gray">
+                <dd dir="ltr" className="text-start text-brand-gray">
                   {user.phone}
                 </dd>
               </div>
               <div>
                 <dt className="text-xs font-semibold text-brand-gray">البريد</dt>
-                <dd dir="ltr" className="text-left text-brand-gray">
+                <dd dir="ltr" className="text-start text-brand-gray">
                   {user.email}
                 </dd>
               </div>

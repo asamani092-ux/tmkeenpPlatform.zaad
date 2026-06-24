@@ -25,7 +25,7 @@ export default function GuideDashboardKpis({
       {items.map(({ icon: Icon, value, label }) => (
         <div key={label} className="card flex items-center gap-4 !p-4">
           <Icon className="h-8 w-8 shrink-0 text-primary" />
-          <div className="text-right">
+          <div className="text-start">
             <p className="text-2xl font-bold text-primary">{value}</p>
             <p className="text-sm text-brand-gray">{label}</p>
           </div>
