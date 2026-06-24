@@ -5,6 +5,23 @@ import { prisma } from "./prisma";
 const SESSION_COOKIE = "tmkeen_session";
 const ROLE_COOKIE = "tmkeen_role";
 
+function sessionCookieSecure(): boolean {
+  if (process.env.SESSION_COOKIE_SECURE === "true") return true;
+  if (process.env.SESSION_COOKIE_SECURE === "false") return false;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  return appUrl.startsWith("https://");
+}
+
+function sessionCookieOptions() {
+  return {
+    httpOnly: true,
+    secure: sessionCookieSecure(),
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7,
+  };
+}
+
 export type SessionUser = {
   id: string;
   name: string;

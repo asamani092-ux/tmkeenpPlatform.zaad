@@ -29,8 +29,10 @@
 |---------|--------|
 | `DATABASE_URL` | من خدمة PostgreSQL |
 | `SESSION_SECRET` | `openssl rand -base64 32` |
-| `NEXT_PUBLIC_APP_URL` | `https://tmkeen.alzaad.org.sa` |
+| `NEXT_PUBLIC_APP_URL` | `http://91.98.234.130.nip.io` (HTTP) أو `https://...` لاحقاً |
 | `UPLOAD_DIR` | `/app/uploads` |
+
+> **HTTP (nip.io):** اضبط `NEXT_PUBLIC_APP_URL` بـ `http://` — الكوكيز تُفعّل `Secure` تلقائياً فقط مع `https://`.
 | `SMTP_HOST` | `smtp.hostinger.com` |
 | `SMTP_PORT` | `465` |
 | `SMTP_SECURE` | `true` |
