@@ -33,21 +33,10 @@ export type SessionUser = {
 
 export async function createSession(userId: string, role?: Role): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE, userId, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7,
-  });
+  const opts = sessionCookieOptions();
+  cookieStore.set(SESSION_COOKIE, userId, opts);
   if (role) {
-    cookieStore.set(ROLE_COOKIE, role, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-    });
+    cookieStore.set(ROLE_COOKIE, role, opts);
   }
 }
 
