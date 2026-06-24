@@ -90,19 +90,20 @@ function OpportunityTargetPanel({
   }
 
   return (
-    <div className="mt-3 rounded-lg border border-primary/20 bg-surface-muted p-3 text-right">
+    <div className="mt-3 rounded-lg border border-primary/20 bg-surface-muted p-3 text-start">
       <p className="mb-2 text-sm font-semibold text-primary">
         استهداف مستفيدين محددين (يظهر لهم حتى خارج مرحلتهم)
       </p>
       <ul className="mb-3 max-h-40 space-y-1 overflow-y-auto">
         {beneficiaries.map((b) => (
           <li key={b.id}>
-            <label className="flex cursor-pointer items-center justify-end gap-2 rounded px-2 py-1.5 text-sm hover:bg-surface">
-              <span className="text-brand-gray">{b.name}</span>
+            <label className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-surface">
+              <span className="flex-1 text-start text-brand-gray">{b.name}</span>
               <input
                 type="checkbox"
                 checked={selected.has(b.id)}
                 onChange={() => toggle(b.id)}
+                className="shrink-0"
               />
             </label>
           </li>
@@ -185,7 +186,7 @@ export default function AdminOpportunityList({
       ) : (
         <ul className="max-h-[32rem] space-y-3 overflow-y-auto">
           {opportunities.map((opp) => (
-            <li key={opp.id} className="rounded-lg border border-surface-border p-3 text-right">
+            <li key={opp.id} className="rounded-lg border border-surface-border p-3 text-start">
               {editingId === opp.id ? (
                 <form onSubmit={(e) => handleSave(e, opp.id)} className="space-y-2">
                   <select name="type" defaultValue={opp.type} className="input-field">
@@ -214,8 +215,9 @@ export default function AdminOpportunityList({
                 </form>
               ) : (
                 <>
-                  <div className="flex justify-between gap-2">
-                    <div className="flex gap-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="min-w-0 flex-1 font-bold text-primary">{opp.title}</h3>
+                    <div className="flex shrink-0 gap-1">
                       <button
                         type="button"
                         onClick={() => setTargetingId(targetingId === opp.id ? null : opp.id)}
@@ -231,7 +233,6 @@ export default function AdminOpportunityList({
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
-                    <h3 className="font-bold text-primary">{opp.title}</h3>
                   </div>
                   <p className="mt-1 text-sm text-brand-gray">
                     {opp.provider} · {opp.duration} · {opp.type === "TRAINING" ? "تدريب" : "توظيف"} ·{" "}

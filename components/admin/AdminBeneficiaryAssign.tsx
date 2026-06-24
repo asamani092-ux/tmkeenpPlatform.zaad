@@ -85,7 +85,7 @@ export default function AdminBeneficiaryAssign({ beneficiaries: initial, guides 
         <h2 className="text-xl font-bold text-primary">إسناد المستفيدين للمرشدين</h2>
         <ExportExcelButton filename="beneficiaries" headers={exportHeaders} rows={exportRows} />
       </div>
-      <table className="w-full min-w-[720px] text-right text-sm">
+      <table className="w-full min-w-[720px] text-sm">
         <thead className="bg-primary/5 text-primary">
           <tr>
             <th className="px-4 py-3">الاسم</th>
@@ -102,7 +102,7 @@ export default function AdminBeneficiaryAssign({ beneficiaries: initial, guides 
               <td className="px-4 py-3">
                 {STAGE_LABELS[b.stage]}
                 {b.pendingStage && (
-                  <span className="mr-1 block text-xs font-semibold text-red-800">
+                  <span className="ms-1 block text-xs font-semibold text-red-800">
                     طلب: {STAGE_LABELS[b.pendingStage]}
                   </span>
                 )}

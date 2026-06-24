@@ -16,44 +16,44 @@ body {
   background: var(--background);
   font-family: "Tajawal", Tahoma, Arial, sans-serif;
   direction: rtl;
-  text-align: right;
+  text-align: start;
 }
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-red-800 px-6 py-3 text-right font-semibold text-white transition hover:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-800 focus:ring-offset-2;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-red-800 px-6 py-3 text-start font-semibold text-white transition hover:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-800 focus:ring-offset-2;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-surface-border bg-surface px-6 py-3 text-right font-semibold text-brand-gray transition hover:bg-surface-muted focus:outline-none focus:ring-2 focus:ring-surface-border focus:ring-offset-2;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-surface-border bg-surface px-6 py-3 text-start font-semibold text-brand-gray transition hover:bg-surface-muted focus:outline-none focus:ring-2 focus:ring-surface-border focus:ring-offset-2;
   }
 
   .btn-recommend {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-yellow-500 px-6 py-3 text-right font-semibold text-red-900 transition hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-yellow-500 px-6 py-3 text-start font-semibold text-red-900 transition hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2;
   }
 
   .btn-register {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-[rgb(250_204_21)] px-6 py-3 text-right font-semibold text-red-900 transition hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-[rgb(250_204_21)] focus:ring-offset-2;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-[rgb(250_204_21)] px-6 py-3 text-start font-semibold text-red-900 transition hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-[rgb(250_204_21)] focus:ring-offset-2;
   }
 
   .card {
-    @apply rounded-xl border-2 border-surface-border bg-surface p-6 text-right shadow-sm;
+    @apply rounded-xl border-2 border-surface-border bg-surface p-6 text-start shadow-sm;
   }
 
   .card-section {
-    @apply rounded-xl border-2 border-primary/20 bg-surface p-5 text-right shadow-sm;
+    @apply rounded-xl border-2 border-primary/20 bg-surface p-5 text-start shadow-sm;
   }
 
   .input-field {
-    @apply w-full rounded-lg border border-surface-border bg-surface px-4 py-3 text-right text-brand-gray outline-none transition focus:border-red-800 focus:ring-2 focus:ring-red-800/20;
+    @apply w-full rounded-lg border border-surface-border bg-surface px-4 py-3 text-start text-brand-gray outline-none transition focus:border-red-800 focus:ring-2 focus:ring-red-800/20;
   }
 
   .label-field {
-    @apply mb-2 block text-right text-sm font-semibold text-brand-gray;
+    @apply mb-2 block text-start text-sm font-semibold text-brand-gray;
   }
 
   table {
-    @apply text-right;
+    @apply text-start;
   }
 
   input[type="email"],

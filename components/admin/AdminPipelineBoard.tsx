@@ -86,7 +86,7 @@ export default function AdminPipelineBoard({ beneficiaries }: Props) {
                 key={stage}
                 type="button"
                 onClick={() => setOpenView(stage)}
-                className="rounded-xl border-2 border-surface-border bg-surface-muted/50 p-4 text-right transition hover:border-primary hover:bg-primary/5"
+                className="rounded-xl border-2 border-surface-border bg-surface-muted/50 p-4 text-start transition hover:border-primary hover:bg-primary/5"
               >
                 <p className="text-sm font-bold text-primary">{STAGE_LABELS[stage]}</p>
                 <p className="mt-2 text-3xl font-bold text-primary">{count}</p>
@@ -101,7 +101,7 @@ export default function AdminPipelineBoard({ beneficiaries }: Props) {
           <button
             type="button"
             onClick={() => setOpenView("pending-requests")}
-            className="rounded-xl border-2 border-red-200 bg-red-50/50 p-4 text-right transition hover:border-primary"
+            className="rounded-xl border-2 border-red-200 bg-red-50/50 p-4 text-start transition hover:border-primary"
           >
             <p className="text-sm font-bold text-primary">طلبات معلّقة</p>
             <p className="mt-2 text-3xl font-bold text-primary">{pendingTotal}</p>
@@ -118,10 +118,14 @@ export default function AdminPipelineBoard({ beneficiaries }: Props) {
               {modalList.map((b) => (
                 <li
                   key={b.id}
-                  className="rounded-lg border border-surface-border bg-surface p-4 text-right text-sm"
+                  className="rounded-lg border border-surface-border bg-surface p-4 text-start text-sm"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="flex flex-wrap gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-primary">{b.name}</p>
+                      <p className="text-brand-gray" dir="ltr">{b.phone}</p>
+                    </div>
+                    <div className="flex shrink-0 flex-wrap gap-2">
                       {b.stage === "PENDING_APPROVAL" && (
                         <button
                           type="button"
@@ -144,10 +148,6 @@ export default function AdminPipelineBoard({ beneficiaries }: Props) {
                           اعتماد {STAGE_LABELS[b.pendingStage]}
                         </button>
                       )}
-                    </div>
-                    <div>
-                      <p className="font-bold text-primary">{b.name}</p>
-                      <p className="text-brand-gray" dir="ltr">{b.phone}</p>
                     </div>
                   </div>
                   {b.guideName && (

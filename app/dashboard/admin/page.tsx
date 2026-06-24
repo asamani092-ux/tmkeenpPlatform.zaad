@@ -276,7 +276,7 @@ export default async function AdminDashboardPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <LayoutDashboard className="h-8 w-8 text-primary" />
-            <div className="text-right">
+            <div className="text-start">
               <h1 className="text-2xl font-bold text-primary">لوحة المدير</h1>
               <p className="text-brand-gray">نظرة عامة على منصة التمكين المستدام</p>
             </div>

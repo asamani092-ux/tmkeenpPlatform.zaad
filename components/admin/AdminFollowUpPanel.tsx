@@ -129,7 +129,7 @@ export default function AdminFollowUpPanel({
             صف واحد لكل مستفيد — انقر لعرض سجل المتابعة وإضافة متابعة جديدة
           </p>
         </div>
-        <table className="w-full min-w-[640px] text-right text-sm">
+        <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-primary/5 text-primary">
             <tr>
               <th className="px-4 py-3">المستفيد</th>
@@ -191,17 +191,9 @@ export default function AdminFollowUpPanel({
                   .map((f) => (
                     <li
                       key={f.id}
-                      className="flex items-start justify-between gap-2 rounded-lg border border-surface-border p-3 text-sm"
+                      className="flex items-start gap-2 rounded-lg border border-surface-border p-3 text-sm"
                     >
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(f.id)}
-                        disabled={pending}
-                        className="text-red-600"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                      <div className="flex-1 text-right">
+                      <div className="min-w-0 flex-1 text-start">
                         <p className="font-semibold text-primary">شهر {f.month}</p>
                         <p className="text-brand-gray">
                           {FOLLOW_UP_STATUS_LABELS[
@@ -210,6 +202,14 @@ export default function AdminFollowUpPanel({
                         </p>
                         {f.notes && <p className="mt-1 text-brand-gray">{f.notes}</p>}
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(f.id)}
+                        disabled={pending}
+                        className="shrink-0 text-red-600"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </li>
                   ))}
               </ul>
@@ -217,7 +217,7 @@ export default function AdminFollowUpPanel({
           </div>
 
           <form onSubmit={handleAdd} className="space-y-3 border-t border-surface-border pt-4">
-            <h3 className="flex items-center justify-end gap-2 font-bold text-primary">
+            <h3 className="flex items-center gap-2 font-bold text-primary">
               <Plus className="h-4 w-4" />
               إضافة متابعة جديدة
             </h3>

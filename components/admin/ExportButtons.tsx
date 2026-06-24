@@ -13,7 +13,7 @@ type Props = {
 
 export default function ExportButtons({ title, filename, headers, rows, showPdf = true }: Props) {
   return (
-    <div className="mb-3 flex flex-wrap justify-end gap-2 print:hidden">
+    <div className="mb-3 flex flex-wrap justify-start gap-2 print:hidden">
       <button
         type="button"
         onClick={() => exportToCsv(filename, headers, rows)}

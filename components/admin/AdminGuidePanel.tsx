@@ -106,7 +106,13 @@ export default function AdminGuidePanel({ guides: initial }: Props) {
         {guides.map((g) => (
           <li key={g.id} className="rounded-lg border border-surface-border p-3">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex gap-1">
+              <div className="min-w-0 flex-1 text-start">
+                <p className="font-semibold text-primary">{g.name}</p>
+                <p className="text-xs text-brand-gray" dir="ltr">
+                  {g.email} · {g.beneficiaryCount} مستفيد
+                </p>
+              </div>
+              <div className="flex shrink-0 gap-1">
                 <button
                   type="button"
                   onClick={() => openEdit(g)}
@@ -133,12 +139,6 @@ export default function AdminGuidePanel({ guides: initial }: Props) {
                     <Trash2 className="h-4 w-4" />
                   )}
                 </button>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold text-primary">{g.name}</p>
-                <p className="text-xs text-brand-gray" dir="ltr">
-                  {g.email} · {g.beneficiaryCount} مستفيد
-                </p>
               </div>
             </div>
           </li>

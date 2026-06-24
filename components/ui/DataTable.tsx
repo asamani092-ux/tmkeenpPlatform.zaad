@@ -1,9 +1,11 @@
 import { ReactNode } from "react";
 
+export type DataTableColumnAlign = "start" | "end" | "center" | "left" | "right";
+
 export type DataTableColumn<T> = {
   key: string;
   header: string;
-  align?: "right" | "left" | "center";
+  align?: DataTableColumnAlign;
   render: (row: T) => ReactNode;
 };
 
@@ -16,6 +18,13 @@ type Props<T> = {
   onRowClick?: (row: T) => void;
 };
 
+function columnAlignClass(align?: DataTableColumnAlign): string {
+  if (align === "center") return "text-center";
+  if (align === "end" || align === "left") return "text-end";
+  if (align === "start" || align === "right") return "text-start";
+  return "text-start";
+}
+
 export default function DataTable<T>({
   columns,
   rows,
@@ -25,20 +34,11 @@ export default function DataTable<T>({
   onRowClick,
 }: Props<T>) {
   return (
-    <table className="w-full text-right text-sm" style={{ minWidth }}>
+    <table className="w-full text-sm" style={{ minWidth }}>
       <thead className="bg-primary/5 text-primary">
         <tr>
           {columns.map((col) => (
-            <th
-              key={col.key}
-              className={`px-4 py-3 ${
-                col.align === "left"
-                  ? "text-left"
-                  : col.align === "center"
-                    ? "text-center"
-                    : "text-right"
-              }`}
-            >
+            <th key={col.key} className={`px-4 py-3 ${columnAlignClass(col.align)}`}>
               {col.header}
             </th>
           ))}
@@ -61,16 +61,7 @@ export default function DataTable<T>({
               } ${onRowClick ? "cursor-pointer hover:bg-secondary/10" : ""}`}
             >
               {columns.map((col) => (
-                <td
-                  key={col.key}
-                  className={`px-4 py-3 ${
-                    col.align === "left"
-                      ? "text-left"
-                      : col.align === "center"
-                        ? "text-center"
-                        : "text-right"
-                  }`}
-                >
+                <td key={col.key} className={`px-4 py-3 ${columnAlignClass(col.align)}`}>
                   {col.render(row)}
                 </td>
               ))}
