@@ -53,6 +53,12 @@ enum FollowUpStatus {
   MISSED
 }
 
+enum FollowUpProgramStatus {
+  ACTIVE
+  COMPLETED
+  WITHDRAWN
+}
+
 model User {
   id               String   @id @default(cuid())
   name             String
@@ -72,6 +78,9 @@ model User {
   professionalRecommendations String @default("")
   selectedTrainingCourseIds   String @default("[]")
   isEmployed       Boolean  @default(false)
+  isActive         Boolean  @default(true)
+  followUpProgramStatus   FollowUpProgramStatus?
+  followUpProgramStartedAt DateTime?
   careerPlan       String   @default("")
   commitmentLevel  Int      @default(50)
   commitmentScore  Int      @default(0)
@@ -151,15 +160,35 @@ model CareerPlan {
 }
 
 model FollowUp {
-  id            String         @id @default(cuid())
-  beneficiaryId String
-  beneficiary   User           @relation(fields: [beneficiaryId], references: [id], onDelete: Cascade)
-  month         Int
-  status        FollowUpStatus @default(PENDING)
-  notes         String         @default("")
-  createdAt     DateTime       @default(now())
+  id             String         @id @default(cuid())
+  beneficiaryId  String
+  beneficiary    User           @relation(fields: [beneficiaryId], references: [id], onDelete: Cascade)
+  month          Int
+  status         FollowUpStatus @default(PENDING)
+  notes          String         @default("")
+  answers        Json?
+  opensAt        DateTime?
+  dueAt          DateTime?
+  submittedAt    DateTime?
+  lastReminderAt DateTime?
+  createdAt      DateTime       @default(now())
 
   @@unique([beneficiaryId, month])
+}
+
+model FollowUpFormQuestion {
+  id         String   @id @default(cuid())
+  month      Int
+  label      String
+  fieldType  String   @default("text")
+  options    Json     @default("[]")
+  sortOrder  Int      @default(0)
+  required   Boolean  @default(true)
+  helperText String   @default("")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([month, sortOrder])
 }
 
 model Opportunity {

@@ -7,6 +7,7 @@ import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { STAGE_LABELS, STAGE_ORDER } from "@/lib/stages";
 import { syncFollowUpRemindersForAdmin } from "@/lib/notifications";
+import { processFollowUpReminders } from "@/lib/follow-up-service";
 import { APPLICATION_STATUS_LABELS, FOLLOW_UP_STATUS_LABELS } from "@/lib/labels";
 import type { BulkExportSection } from "@/lib/export-table";
 import { Briefcase, GraduationCap, LayoutDashboard, Users } from "lucide-react";
@@ -17,6 +18,7 @@ export default async function AdminDashboardPage() {
   if (session.role !== "ADMIN") redirect(getDashboardPath(session.role));
 
   await syncFollowUpRemindersForAdmin();
+  await processFollowUpReminders();
 
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);

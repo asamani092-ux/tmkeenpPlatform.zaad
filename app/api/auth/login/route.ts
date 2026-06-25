@@ -34,6 +34,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (user.isActive === false) {
+      return NextResponse.json(
+        { error: "الحساب معلّق. تواصل مع الإدارة." },
+        { status: 403 }
+      );
+    }
+
     await createSession(user.id, user.role);
 
     return NextResponse.json({

@@ -6,7 +6,7 @@ import { Stage } from "@/generated/prisma/client";
 import { STAGE_LABELS, STAGE_ORDER } from "@/lib/stages";
 import FloatingModal from "@/components/admin/FloatingModal";
 import { toastSuccess, toastError } from "@/lib/toast";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, ExternalLink } from "lucide-react";
 
 type PipelineBeneficiary = {
   id: string;
@@ -26,6 +26,7 @@ type Props = {
 export default function AdminPipelineBoard({ beneficiaries }: Props) {
   const router = useRouter();
   const [openView, setOpenView] = useState<OpenView | null>(null);
+  const [quickView, setQuickView] = useState<PipelineBeneficiary | null>(null);
   const [pending, startTransition] = useTransition();
 
   const byStage = STAGE_ORDER.reduce(
@@ -118,14 +119,15 @@ export default function AdminPipelineBoard({ beneficiaries }: Props) {
               {modalList.map((b) => (
                 <li
                   key={b.id}
-                  className="rounded-lg border border-surface-border bg-surface p-4 text-start text-sm"
+                  className="cursor-pointer rounded-lg border border-surface-border bg-surface p-4 text-start text-sm transition hover:border-primary"
+                  onClick={() => setQuickView(b)}
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="font-bold text-primary">{b.name}</p>
                       <p className="text-brand-gray" dir="ltr">{b.phone}</p>
                     </div>
-                    <div className="flex shrink-0 flex-wrap gap-2">
+                    <div className="flex shrink-0 flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
                       {b.stage === "PENDING_APPROVAL" && (
                         <button
                           type="button"
@@ -162,6 +164,54 @@ export default function AdminPipelineBoard({ beneficiaries }: Props) {
               ))}
             </ul>
           )}
+        </FloatingModal>
+      )}
+
+      {quickView && (
+        <FloatingModal
+          title={`عرض سريع — ${quickView.name}`}
+          onClose={() => setQuickView(null)}
+        >
+          <dl className="space-y-3 text-sm">
+            <div>
+              <dt className="text-xs text-brand-gray">الجوال</dt>
+              <dd dir="ltr">{quickView.phone}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-brand-gray">المرحلة</dt>
+              <dd className="font-semibold text-primary">{STAGE_LABELS[quickView.stage]}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-brand-gray">المرشد</dt>
+              <dd>{quickView.guideName ?? "—"}</dd>
+            </div>
+            {quickView.pendingStage && (
+              <div>
+                <dt className="text-xs text-brand-gray">طلب معلّق</dt>
+                <dd>{STAGE_LABELS[quickView.pendingStage]}</dd>
+              </div>
+            )}
+          </dl>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {quickView.pendingStage && (
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => approve(quickView.id, "transition")}
+                className="btn-primary !px-3 !py-2 text-sm"
+              >
+                <CheckCircle className="inline h-4 w-4" />
+                الانتقال للمرحلة التالية
+              </button>
+            )}
+            <a
+              href={`/dashboard/admin?tab=management&beneficiary=${quickView.id}`}
+              className="btn-secondary inline-flex !px-3 !py-2 text-sm"
+            >
+              <ExternalLink className="h-4 w-4" />
+              عرض الملف الكامل
+            </a>
+          </div>
         </FloatingModal>
       )}
     </>

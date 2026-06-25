@@ -78,6 +78,7 @@ export default function AdminOpportunityForm({ onSuccess }: Props) {
           المدة
         </label>
         <input id="duration" name="duration" required className="input-field" />
+        <p className="text-xs text-brand-gray">مثال: 3 أشهر، 6 أشهر، سنة</p>
       </div>
       <div>
         <label htmlFor="requirements" className="label-field">
@@ -90,12 +91,14 @@ export default function AdminOpportunityForm({ onSuccess }: Props) {
           className="input-field resize-none"
           placeholder="شروط الالتحاق أو متطلبات الوظيفة"
         />
+        <p className="mt-1 text-xs text-brand-gray">اذكر المؤهلات والخبرة المطلوبة بوضوح</p>
       </div>
       <div>
         <label htmlFor="salary" className="label-field">
           الراتب (للتوظيف)
         </label>
         <input id="salary" name="salary" className="input-field" placeholder="اختياري" />
+        <p className="mt-1 text-xs text-brand-gray">لفرص التوظيف فقط — اتركه فارغاً للتدريب</p>
       </div>
       <div>
         <label htmlFor="jobType" className="label-field">
@@ -107,6 +110,7 @@ export default function AdminOpportunityForm({ onSuccess }: Props) {
           className="input-field"
           placeholder="مثال: دوام كامل"
         />
+        <p className="mt-1 text-xs text-brand-gray">دوام كامل، جزئي، عن بُعد، إلخ</p>
       </div>
       <div>
         <label htmlFor="status" className="label-field">

@@ -11,9 +11,15 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const body = await request.json();
+    let body: { isCompleted?: boolean; title?: string; description?: string } = {};
+    try {
+      const text = await request.text();
+      if (text.trim()) body = JSON.parse(text);
+    } catch {
+      return NextResponse.json({ error: "طلب غير صالح" }, { status: 400 });
+    }
 
-    if (body.isCompleted !== undefined) {
+    if (body.isCompleted !== undefined || Object.keys(body).length === 0) {
       const result = await toggleTaskCompletion(id);
       if (!result.success) {
         return NextResponse.json({ error: result.error }, { status: 400 });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useSyncFromProps } from "@/lib/use-sync-from-props";
 import { useRouter } from "next/navigation";
 import FloatingModal from "@/components/admin/FloatingModal";
 import SubmitButton from "@/components/ui/SubmitButton";
@@ -23,7 +24,7 @@ type ModalMode = "add" | "edit" | null;
 
 export default function AdminGuidePanel({ guides: initial }: Props) {
   const router = useRouter();
-  const [guides, setGuides] = useState(initial);
+  const [guides, setGuides] = useSyncFromProps(initial);
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [editingGuide, setEditingGuide] = useState<Guide | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -151,40 +152,54 @@ export default function AdminGuidePanel({ guides: initial }: Props) {
           onClose={closeModal}
         >
           <form onSubmit={handleSubmit} className="space-y-3">
-            <input
-              name="name"
-              placeholder="الاسم"
-              required
-              defaultValue={editingGuide?.name ?? ""}
-              className="input-field"
-            />
-            <input
-              name="email"
-              type="email"
-              placeholder="البريد"
-              required
-              defaultValue={editingGuide?.email ?? ""}
-              className="input-field"
-              dir="ltr"
-            />
-            <input
-              name="phone"
-              type="tel"
-              placeholder="الجوال"
-              required
-              defaultValue={editingGuide?.phone ?? ""}
-              className="input-field"
-              dir="ltr"
-            />
-            <input
-              name="password"
-              type="password"
-              placeholder={modalMode === "add" ? "كلمة المرور" : "كلمة مرور جديدة (اختياري)"}
-              required={modalMode === "add"}
-              minLength={modalMode === "add" ? 6 : undefined}
-              className="input-field"
-              dir="ltr"
-            />
+            <div>
+              <label className="label-field">الاسم</label>
+              <input
+                name="name"
+                placeholder="الاسم الكامل"
+                required
+                defaultValue={editingGuide?.name ?? ""}
+                className="input-field"
+              />
+            </div>
+            <div>
+              <label className="label-field">البريد الإلكتروني</label>
+              <input
+                name="email"
+                type="email"
+                placeholder="email@example.com"
+                required
+                defaultValue={editingGuide?.email ?? ""}
+                className="input-field"
+                dir="ltr"
+              />
+            </div>
+            <div>
+              <label className="label-field">الجوال</label>
+              <input
+                name="phone"
+                type="tel"
+                placeholder="05xxxxxxxx"
+                required
+                defaultValue={editingGuide?.phone ?? ""}
+                className="input-field"
+                dir="ltr"
+              />
+            </div>
+            <div>
+              <label className="label-field">
+                {modalMode === "add" ? "كلمة المرور" : "كلمة مرور جديدة (اختياري)"}
+              </label>
+              <input
+                name="password"
+                type="password"
+                placeholder={modalMode === "add" ? "6 أحرف على الأقل" : "اتركه فارغاً للإبقاء"}
+                required={modalMode === "add"}
+                minLength={modalMode === "add" ? 6 : undefined}
+                className="input-field"
+                dir="ltr"
+              />
+            </div>
             <div className="flex gap-2 pt-2">
               <SubmitButton loading={pending} className="btn-primary flex-1 !py-2 text-sm">
                 {modalMode === "add" ? "حفظ المرشد" : "حفظ التعديلات"}

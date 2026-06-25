@@ -33,7 +33,12 @@ function parseTasks(raw: unknown): CareerPlanTask[] {
 
 async function assertGuideBeneficiary(guideId: string, beneficiaryId: string) {
   return prisma.user.findFirst({
-    where: { id: beneficiaryId, role: "BENEFICIARY", guideId },
+    where: {
+      id: beneficiaryId,
+      role: "BENEFICIARY",
+      guideId,
+      stage: "GUIDANCE",
+    },
   });
 }
 
@@ -90,6 +95,21 @@ export async function registerBeneficiary(data: {
     "تسجيل مستفيد جديد",
     `طلب اعتماد للمستفيد ${created.name} — يرجى المراجعة والاعتماد.`
   );
+
+  const settings = await getSystemSettings();
+  const { sendGenericEmail } = await import("@/lib/email-notify");
+  const admins = await prisma.user.findMany({
+    where: { role: "ADMIN" },
+    select: { email: true },
+  });
+  for (const admin of admins) {
+    await sendGenericEmail({
+      to: admin.email,
+      subject: "تسجيل مستفيد جديد — منصة تمكين",
+      body: `تم تسجيل مستفيد جديد: ${created.name} (${created.email}).\n\nيُرجى مراجعة الطلب واعتماده من لوحة المدير.`,
+      senderEmail: settings.senderEmail,
+    });
+  }
 
   return { success: true };
 }
@@ -727,15 +747,19 @@ export async function createFollowUp(data: {
     return { success: false, error: "غير مصرح" };
   }
 
-  if (![1, 3, 6].includes(data.month)) {
-    return { success: false, error: "شهر المتابعة يجب أن يكون 1 أو 3 أو 6" };
+  if (![1, 2, 3, 4, 5, 6].includes(data.month)) {
+    return { success: false, error: "شهر المتابعة يجب أن يكون بين 1 و 6" };
   }
 
   const beneficiary = await prisma.user.findFirst({
-    where: { id: data.beneficiaryId, role: "BENEFICIARY", stage: "FOLLOW_UP" },
+    where: {
+      id: data.beneficiaryId,
+      role: "BENEFICIARY",
+      OR: [{ stage: "FOLLOW_UP" }, { stage: "EMPLOYMENT" }, { isEmployed: true }],
+    },
   });
   if (!beneficiary) {
-    return { success: false, error: "المستفيد غير موجود أو ليس في مرحلة المتابعة" };
+    return { success: false, error: "المستفيد غير موجود أو غير مؤهل للمتابعة" };
   }
 
   try {
@@ -1069,6 +1093,11 @@ export async function approveStageTransition(
     "تحديث مرحلتك",
     `تم اعتماد انتقالك إلى مرحلة: ${STAGE_LABELS[newStage]}.`
   );
+
+  if (newStage === "FOLLOW_UP") {
+    const { initializeFollowUpProgram } = await import("@/lib/follow-up-service");
+    await initializeFollowUpProgram(beneficiaryId);
+  }
 
   const settings = await getSystemSettings();
   const { sendGenericEmail } = await import("@/lib/email-notify");

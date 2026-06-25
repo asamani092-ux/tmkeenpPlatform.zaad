@@ -1,4 +1,5 @@
 import OpportunityApplyCard from "@/components/OpportunityApplyCard";
+import ContactLinks from "@/components/ui/ContactLinks";
 import { ApplicationStatus } from "@/generated/prisma/client";
 import { beneficiaryCopy } from "@/lib/copy/ar";
 import { Compass, MessageSquare, BookOpen } from "lucide-react";
@@ -49,40 +50,34 @@ export default function BeneficiaryGuideHub({
   const hasGuide = Boolean(guide);
 
   return (
-    <section className="card space-y-6">
+    <section className="space-y-6">
       <h2 className="flex items-center gap-2 text-xl font-bold text-primary">
         <Compass className="h-6 w-6 text-secondary-dark" />
         من مرشدك
       </h2>
 
       {hasGuide && guide && (
-        <div className="rounded-lg border border-primary/20 bg-surface-muted p-4 text-right">
-          <p className="font-semibold text-primary">مرشدك: {guide.name}</p>
-          <div className="mt-2 flex flex-wrap justify-end gap-3 text-sm">
-            <a href={`tel:${guide.phone}`} className="font-semibold text-primary hover:underline" dir="ltr">
-              {guide.phone}
-            </a>
-            <a href={`mailto:${guide.email}`} className="font-semibold text-primary hover:underline" dir="ltr">
-              {guide.email}
-            </a>
+        <div className="card-section flex flex-wrap items-center justify-between gap-3">
+          <div className="text-start">
+            <p className="font-semibold text-primary">مرشدك: {guide.name}</p>
+            <p className="mt-1 text-sm text-brand-gray" dir="ltr">
+              {guide.phone} · {guide.email}
+            </p>
           </div>
+          <ContactLinks phone={guide.phone} email={guide.email} />
         </div>
       )}
 
-      <div className="space-y-3">
+      <div className="card-section space-y-3">
         <h3 className="font-bold text-primary">{beneficiaryCopy.professionalRecommendations}</h3>
         {hasRecs ? (
-          <p className="whitespace-pre-wrap rounded-lg bg-surface-muted p-4 text-sm text-brand-gray">
-            {professionalRecommendations}
-          </p>
+          <p className="whitespace-pre-wrap text-sm text-brand-gray">{professionalRecommendations}</p>
         ) : (
-          <p className="rounded-lg border border-dashed border-surface-border bg-surface-muted/50 p-4 text-sm text-brand-gray">
-            لم يضف مرشدك توصيات مهنية بعد.
-          </p>
+          <p className="text-sm text-brand-gray">لم يضف مرشدك توصيات مهنية بعد.</p>
         )}
       </div>
 
-      <div className="space-y-3">
+      <div className="card-section space-y-3">
         <h3 className="flex items-center gap-2 font-bold text-primary">
           <BookOpen className="h-5 w-5" />
           {beneficiaryCopy.recommendedCourses}
@@ -99,13 +94,11 @@ export default function BeneficiaryGuideHub({
             ))}
           </ul>
         ) : (
-          <p className="rounded-lg border border-dashed border-surface-border bg-surface-muted/50 p-4 text-sm text-brand-gray">
-            لم يحدد مرشدك دورات موصى بها بعد.
-          </p>
+          <p className="text-sm text-brand-gray">لم يحدد مرشدك دورات موصى بها بعد.</p>
         )}
       </div>
 
-      <div className="space-y-3">
+      <div className="card-section space-y-3">
         <h3 className="flex items-center gap-2 font-bold text-primary">
           <MessageSquare className="h-5 w-5" />
           ملاحظات المرشد
@@ -122,9 +115,7 @@ export default function BeneficiaryGuideHub({
             ))}
           </ul>
         ) : (
-          <p className="rounded-lg border border-dashed border-surface-border bg-surface-muted/50 p-4 text-sm text-brand-gray">
-            لا توجد ملاحظات من مرشدك حتى الآن.
-          </p>
+          <p className="text-sm text-brand-gray">لا توجد ملاحظات من مرشدك حتى الآن.</p>
         )}
       </div>
     </section>
