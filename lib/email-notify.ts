@@ -244,6 +244,31 @@ export async function sendFollowUpFormReminderEmail(params: {
   ]);
 }
 
+/** Password reset link — O(1) */
+export async function sendPasswordResetEmail(params: {
+  to: string;
+  name: string;
+  resetUrl: string;
+  senderEmail: string;
+}): Promise<void> {
+  await dispatch(params.senderEmail, [
+    {
+      to: params.to,
+      subject: "إعادة تعيين كلمة المرور — منصة تمكين",
+      body: [
+        `مرحباً ${params.name}،`,
+        "",
+        "تلقّينا طلباً لإعادة تعيين كلمة المرور الخاصة بك.",
+        `اضغط على الرابط التالي خلال 30 دقيقة: ${params.resetUrl}`,
+        "",
+        "إذا لم تطلب ذلك، تجاهل هذه الرسالة.",
+        "",
+        "مع تحيات فريق منصة تمكين",
+      ].join("\n"),
+    },
+  ]);
+}
+
 /** Generic notification email — O(1) */
 
 export async function sendGenericEmail(params: GenericEmailParams): Promise<void> {

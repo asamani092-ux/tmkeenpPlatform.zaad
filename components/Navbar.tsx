@@ -1,7 +1,7 @@
 import Image from "next/image";
+import Link from "next/link";
 import { LogOut, LayoutDashboard } from "lucide-react";
 import { getDashboardPath } from "@/lib/auth";
-import FullPageLink from "@/components/FullPageLink";
 import NotificationBell from "@/components/NotificationBell";
 import BeneficiaryNavbarActions from "@/components/beneficiary/BeneficiaryNavbarActions";
 import type { UnifiedProfile } from "@/components/beneficiary/BeneficiaryUnifiedProfileModal";
@@ -35,7 +35,7 @@ export default function Navbar({
     <header className="border-b border-surface-border bg-surface shadow-sm">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
         <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
-          {userName && (
+          {userName && userRole !== "BENEFICIARY" && (
             <span className="truncate text-sm font-medium text-primary">
               مرحباً، {userName}
             </span>
@@ -44,20 +44,20 @@ export default function Navbar({
 
         <div className="flex shrink-0 items-center gap-3">
           {showAuth && userId && isBeneficiary && unifiedProfile ? (
-            <BeneficiaryNavbarActions profile={unifiedProfile} />
+            <BeneficiaryNavbarActions userName={userName ?? ""} profile={unifiedProfile} />
           ) : showAuth && userId ? (
             <NotificationBell />
           ) : null}
 
           {showAuth && userName && !isBeneficiary && dashboardHref ? (
             <nav className="flex items-center gap-3 text-sm">
-              <FullPageLink
+              <Link
                 href={dashboardHref}
                 className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-brand-gray transition hover:bg-surface-muted hover:text-primary"
               >
                 <LayoutDashboard className="h-4 w-4" />
                 لوحة التحكم
-              </FullPageLink>
+              </Link>
               <form action={logoutHref} method="POST">
                 <button
                   type="submit"
@@ -69,12 +69,12 @@ export default function Navbar({
               </form>
             </nav>
           ) : showAuth && !userName ? (
-            <FullPageLink href="/login" className="btn-primary !px-4 !py-2 text-sm">
+            <Link href="/login" className="btn-primary !px-4 !py-2 text-sm">
               تسجيل الدخول
-            </FullPageLink>
+            </Link>
           ) : null}
 
-          <FullPageLink href="/" className="flex items-center">
+          <Link href="/" className="flex items-center">
             <Image
               src="/logo.png"
               alt="شعار جمعية الزاد"
@@ -84,7 +84,7 @@ export default function Navbar({
               priority
               unoptimized
             />
-          </FullPageLink>
+          </Link>
         </div>
       </div>
     </header>

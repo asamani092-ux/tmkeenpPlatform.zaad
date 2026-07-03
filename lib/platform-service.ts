@@ -114,32 +114,6 @@ export async function registerBeneficiary(data: {
   return { success: true };
 }
 
-export async function resetPasswordByPhone(data: {
-  phone: string;
-  password: string;
-}): Promise<ActionResult> {
-  if (!data.phone?.trim() || !data.password) {
-    return { success: false, error: "رقم الجوال وكلمة المرور مطلوبان" };
-  }
-  if (data.password.length < 6) {
-    return { success: false, error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" };
-  }
-
-  const user = await prisma.user.findFirst({
-    where: { phone: data.phone.trim() },
-  });
-  if (!user) {
-    return { success: false, error: "رقم الجوال غير مسجل" };
-  }
-
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { password: await hashPassword(data.password) },
-  });
-
-  return { success: true };
-}
-
 export async function applyToOpportunity(
   opportunityId: string
 ): Promise<ActionResult> {
@@ -691,6 +665,8 @@ export async function adminUpdateBeneficiary(
   beneficiaryId: string,
   data: {
     phone?: string;
+    email?: string;
+    password?: string;
     educationLevel?: string;
     experience?: string;
     skills?: string;
@@ -710,6 +686,16 @@ export async function adminUpdateBeneficiary(
     return { success: false, error: "المستفيد غير موجود" };
   }
 
+  if (data.email !== undefined) {
+    const email = data.email.toLowerCase().trim();
+    const existing = await prisma.user.findFirst({
+      where: { email, id: { not: beneficiaryId } },
+    });
+    if (existing) {
+      return { success: false, error: "البريد مسجل مسبقاً" };
+    }
+  }
+
   if (data.guideId) {
     const guide = await prisma.user.findFirst({
       where: { id: data.guideId, role: "GUIDE" },
@@ -721,6 +707,8 @@ export async function adminUpdateBeneficiary(
     where: { id: beneficiaryId },
     data: {
       ...(data.phone !== undefined ? { phone: data.phone.trim() } : {}),
+      ...(data.email !== undefined ? { email: data.email.toLowerCase().trim() } : {}),
+      ...(data.password ? { password: await hashPassword(data.password) } : {}),
       ...(data.educationLevel !== undefined
         ? { educationLevel: data.educationLevel.trim() }
         : {}),
@@ -844,6 +832,45 @@ export async function updateBeneficiaryProfile(data: {
       ...(data.certificatesUrls !== undefined
         ? { certificatesUrls: data.certificatesUrls || null }
         : {}),
+    },
+  });
+
+  return { success: true };
+}
+
+/** Beneficiary updates account email/password — O(1) */
+export async function updateBeneficiaryAccount(data: {
+  email?: string;
+  password?: string;
+}): Promise<ActionResult> {
+  const session = await getSession();
+  if (!session || session.role !== "BENEFICIARY") {
+    return { success: false, error: "غير مصرح" };
+  }
+
+  if (!data.email && !data.password) {
+    return { success: false, error: "لا توجد بيانات للتحديث" };
+  }
+
+  if (data.password && data.password.length < 6) {
+    return { success: false, error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" };
+  }
+
+  if (data.email) {
+    const email = data.email.toLowerCase().trim();
+    const existing = await prisma.user.findFirst({
+      where: { email, id: { not: session.id } },
+    });
+    if (existing) {
+      return { success: false, error: "البريد مسجل مسبقاً" };
+    }
+  }
+
+  await prisma.user.update({
+    where: { id: session.id },
+    data: {
+      ...(data.email ? { email: data.email.toLowerCase().trim() } : {}),
+      ...(data.password ? { password: await hashPassword(data.password) } : {}),
     },
   });
 

@@ -99,7 +99,20 @@ model User {
   followUps        FollowUp[]
   opportunityTargets OpportunityTarget[]
   notifications    InAppNotification[]
+  passwordResetTokens PasswordResetToken[]
   createdAt        DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
 }
 
 model InAppNotification {
@@ -176,8 +189,19 @@ model FollowUp {
   @@unique([beneficiaryId, month])
 }
 
+model FollowUpFormTemplate {
+  id        String   @id @default(cuid())
+  title     String
+  months    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  questions FollowUpFormQuestion[]
+}
+
 model FollowUpFormQuestion {
   id         String   @id @default(cuid())
+  formId     String?
+  form       FollowUpFormTemplate? @relation(fields: [formId], references: [id], onDelete: Cascade)
   month      Int
   label      String
   fieldType  String   @default("text")
@@ -189,6 +213,7 @@ model FollowUpFormQuestion {
   updatedAt  DateTime @updatedAt
 
   @@index([month, sortOrder])
+  @@index([formId, sortOrder])
 }
 
 model Opportunity {

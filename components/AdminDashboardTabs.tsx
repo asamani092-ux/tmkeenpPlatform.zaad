@@ -35,6 +35,13 @@ type Guide = {
   beneficiaryCount: number;
 };
 
+type AssignedBeneficiary = {
+  id: string;
+  name: string;
+  phone: string;
+  stage: string;
+};
+
 type Beneficiary = {
   id: string;
   name: string;
@@ -53,6 +60,8 @@ type FollowUp = {
   status: string;
   notes: string;
   answers?: unknown;
+  submittedAt?: string | null;
+  dueAt?: string | null;
   beneficiary: { id: string; name: string; phone: string };
 };
 
@@ -68,6 +77,7 @@ type ApplicationRow = {
 type Props = {
   opportunities: Opportunity[];
   guides: Guide[];
+  beneficiariesByGuideId: Record<string, AssignedBeneficiary[]>;
   beneficiaries: Beneficiary[];
   managedBeneficiaries: ManagedBeneficiary[];
   followUps: FollowUp[];
@@ -81,6 +91,7 @@ type Tab = "pipeline" | "opportunities" | "guides" | "management" | "application
 export default function AdminDashboardTabs({
   opportunities,
   guides,
+  beneficiariesByGuideId,
   beneficiaries,
   managedBeneficiaries,
   followUps,
@@ -151,7 +162,9 @@ export default function AdminDashboardTabs({
         />
       )}
 
-      {tab === "guides" && <AdminGuidePanel guides={guides} />}
+      {tab === "guides" && (
+        <AdminGuidePanel guides={guides} beneficiariesByGuideId={beneficiariesByGuideId} />
+      )}
 
       {tab === "management" && (
         <AdminBeneficiaryManagement
@@ -170,6 +183,8 @@ export default function AdminDashboardTabs({
         <AdminFollowUpPanel
           followUps={followUps.map((f) => ({
             ...f,
+            submittedAt: f.submittedAt ?? null,
+            dueAt: f.dueAt ?? null,
             answers:
               f.answers && typeof f.answers === "object" && !Array.isArray(f.answers)
                 ? (f.answers as Record<string, string>)

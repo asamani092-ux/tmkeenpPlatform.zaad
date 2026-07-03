@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
-import FullPageLink from "@/components/FullPageLink";
 import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastError, toastSuccess } from "@/lib/toast";
@@ -22,16 +22,11 @@ export default function ForgotPasswordPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          phone: form.get("phone"),
-          password: form.get("password"),
+          email: form.get("email"),
         }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        toastError(data.error || "فشل إعادة التعيين");
-        return;
-      }
-      toastSuccess("تم تعيين كلمة المرور بنجاح. يمكنك تسجيل الدخول الآن.");
+      toastSuccess(data.message || forgotPasswordCopy.successMessage);
     } catch {
       toastError("حدث خطأ في الاتصال");
     } finally {
@@ -55,25 +50,15 @@ export default function ForgotPasswordPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <FieldRow label={forgotPasswordCopy.phoneLabel} htmlFor="phone" ltr>
+            <FieldRow label={forgotPasswordCopy.emailLabel} htmlFor="email" ltr>
               <input
-                id="phone"
-                name="phone"
-                type="tel"
+                id="email"
+                name="email"
+                type="email"
                 required
                 className="input-field"
                 dir="ltr"
-              />
-            </FieldRow>
-            <FieldRow label={forgotPasswordCopy.passwordLabel} htmlFor="password" ltr>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                minLength={6}
-                className="input-field"
-                dir="ltr"
+                autoComplete="email"
               />
             </FieldRow>
             <SubmitButton loading={loading} className="btn-primary w-full">
@@ -82,9 +67,9 @@ export default function ForgotPasswordPage() {
           </form>
 
           <p className="mt-6 text-center text-sm text-brand-gray">
-            <FullPageLink href="/login" className="font-semibold text-primary hover:underline">
+            <Link href="/login" className="font-semibold text-primary hover:underline">
               {forgotPasswordCopy.backToLogin}
-            </FullPageLink>
+            </Link>
           </p>
         </div>
       </main>

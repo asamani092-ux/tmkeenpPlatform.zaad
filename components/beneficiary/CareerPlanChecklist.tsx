@@ -1,19 +1,17 @@
 "use client";
 
 import { useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { useSyncFromProps } from "@/lib/use-sync-from-props";
 import { beneficiaryCopy } from "@/lib/copy/ar";
 import type { BeneficiaryTask } from "@/lib/copy/ar";
 import { toastSuccess, toastError } from "@/lib/toast";
-import { CheckCircle, CheckSquare } from "lucide-react";
+import { CircleCheck } from "lucide-react";
 
 type Props = {
   tasks: BeneficiaryTask[];
 };
 
 export default function CareerPlanChecklist({ tasks: initial }: Props) {
-  const router = useRouter();
   const [tasks, setTasks] = useSyncFromProps(initial);
   const [pending, startTransition] = useTransition();
 
@@ -40,7 +38,6 @@ export default function CareerPlanChecklist({ tasks: initial }: Props) {
         return;
       }
       toastSuccess("تم إكمال المهمة");
-      router.refresh();
     });
   }
 
@@ -48,7 +45,7 @@ export default function CareerPlanChecklist({ tasks: initial }: Props) {
     return (
       <section className="card">
         <h2 className="mb-3 flex items-center gap-2 text-xl font-bold text-primary">
-          <CheckSquare className="h-6 w-6" />
+          <CircleCheck className="h-6 w-6" />
           {beneficiaryCopy.careerChecklist}
         </h2>
         <p className="text-brand-gray">{beneficiaryCopy.noTasks}</p>
@@ -59,7 +56,7 @@ export default function CareerPlanChecklist({ tasks: initial }: Props) {
   return (
     <section className="card">
       <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-primary">
-        <CheckSquare className="h-6 w-6" />
+        <CircleCheck className="h-6 w-6" />
         {beneficiaryCopy.careerChecklist}
       </h2>
       <ul className="space-y-3">
@@ -87,13 +84,13 @@ export default function CareerPlanChecklist({ tasks: initial }: Props) {
                 type="button"
                 disabled={pending || task.isCompleted}
                 onClick={() => handleToggle(task.id)}
-                className={`flex shrink-0 items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition ${
+                className={`flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition ${
                   task.isCompleted
-                    ? "bg-primary text-white"
-                    : "bg-red-800 text-white hover:bg-red-900"
+                    ? "bg-primary/15 text-primary"
+                    : "bg-red-800 text-white shadow-sm hover:bg-red-900"
                 } disabled:opacity-60`}
               >
-                <CheckCircle className="h-4 w-4" />
+                <CircleCheck className="h-4 w-4" />
                 {task.isCompleted ? "مكتملة" : "أتممت المهمة"}
               </button>
             </div>

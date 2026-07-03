@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { OPPORTUNITY_STATUS_LABELS } from "@/lib/labels";
 import { Pencil, Trash2, Users, ChevronDown, ChevronUp } from "lucide-react";
+import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { useSyncFromProps } from "@/lib/use-sync-from-props";
 
@@ -190,22 +191,40 @@ export default function AdminOpportunityList({
           {opportunities.map((opp) => (
             <li key={opp.id} className="rounded-lg border border-surface-border p-3 text-start">
               {editingId === opp.id ? (
-                <form onSubmit={(e) => handleSave(e, opp.id)} className="space-y-2">
-                  <select name="type" defaultValue={opp.type} className="input-field">
-                    <option value="TRAINING">تدريب</option>
-                    <option value="EMPLOYMENT">توظيف</option>
-                  </select>
-                  <input name="title" defaultValue={opp.title} className="input-field" required />
-                  <input name="provider" defaultValue={opp.provider} className="input-field" required />
-                  <input name="duration" defaultValue={opp.duration} className="input-field" required />
-                  <select name="status" defaultValue={opp.status} className="input-field" required>
-                    {Object.entries(OPPORTUNITY_STATUS_LABELS).map(([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                  <textarea name="requirements" defaultValue={opp.requirements} className="input-field resize-none" rows={2} />
+                <form onSubmit={(e) => handleSave(e, opp.id)} className="space-y-3">
+                  <FieldRow label="نوع الفرصة" htmlFor={`type-${opp.id}`}>
+                    <select id={`type-${opp.id}`} name="type" defaultValue={opp.type} className="input-field">
+                      <option value="TRAINING">تدريب</option>
+                      <option value="EMPLOYMENT">توظيف</option>
+                    </select>
+                  </FieldRow>
+                  <FieldRow label="العنوان" htmlFor={`title-${opp.id}`}>
+                    <input id={`title-${opp.id}`} name="title" defaultValue={opp.title} className="input-field" required />
+                  </FieldRow>
+                  <FieldRow label="مزود الفرصة" htmlFor={`provider-${opp.id}`}>
+                    <input id={`provider-${opp.id}`} name="provider" defaultValue={opp.provider} className="input-field" required />
+                  </FieldRow>
+                  <FieldRow label="المدة" htmlFor={`duration-${opp.id}`}>
+                    <input id={`duration-${opp.id}`} name="duration" defaultValue={opp.duration} className="input-field" required />
+                  </FieldRow>
+                  <FieldRow label="الشروط / المتطلبات" htmlFor={`requirements-${opp.id}`} align="start">
+                    <textarea id={`requirements-${opp.id}`} name="requirements" defaultValue={opp.requirements} className="input-field resize-none" rows={2} />
+                  </FieldRow>
+                  <FieldRow label="الراتب (للتوظيف)" htmlFor={`salary-${opp.id}`}>
+                    <input id={`salary-${opp.id}`} name="salary" defaultValue={opp.salary ?? ""} className="input-field" placeholder="اختياري" />
+                  </FieldRow>
+                  <FieldRow label="نوع الدوام (للتوظيف)" htmlFor={`jobType-${opp.id}`}>
+                    <input id={`jobType-${opp.id}`} name="jobType" defaultValue={opp.jobType ?? ""} className="input-field" placeholder="مثال: دوام كامل" />
+                  </FieldRow>
+                  <FieldRow label="الحالة" htmlFor={`status-${opp.id}`}>
+                    <select id={`status-${opp.id}`} name="status" defaultValue={opp.status} className="input-field" required>
+                      {Object.entries(OPPORTUNITY_STATUS_LABELS).map(([value, label]) => (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </FieldRow>
                   <div className="flex gap-2">
                     <SubmitButton loading={pending} className="btn-primary flex-1 !py-2 text-sm">
                       حفظ

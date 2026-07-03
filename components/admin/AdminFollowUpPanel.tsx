@@ -4,12 +4,11 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import FloatingModal from "@/components/admin/FloatingModal";
 import DetailRow from "@/components/ui/DetailRow";
-import FieldGrid from "@/components/ui/FieldGrid";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { useSyncFromProps } from "@/lib/use-sync-from-props";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { FOLLOW_UP_STATUS_LABELS } from "@/lib/labels";
-import { Eye, Trash2 } from "lucide-react";
+import { Eye, ExternalLink } from "lucide-react";
 
 type FollowUp = {
   id: string;
@@ -17,6 +16,8 @@ type FollowUp = {
   status: string;
   notes: string;
   answers?: Record<string, string> | null;
+  submittedAt?: string | null;
+  dueAt?: string | null;
   beneficiary: { id: string; name: string; phone: string };
 };
 
@@ -63,6 +64,28 @@ function MonthProgress({ records }: { records: FollowUp[] }) {
   );
 }
 
+function progressSummary(records: FollowUp[]) {
+  const completed = records.filter((r) => r.status === "COMPLETED").length;
+  return `${completed}/6 مكتمل`;
+}
+
+function latestStatusLabel(records: FollowUp[]) {
+  if (records.length === 0) return "—";
+  const sorted = [...records].sort((a, b) => b.month - a.month);
+  const latest =
+    sorted.find((r) => r.status === "COMPLETED" || r.status === "MISSED") ?? sorted[0];
+  const label =
+    FOLLOW_UP_STATUS_LABELS[latest.status as keyof typeof FOLLOW_UP_STATUS_LABELS] ??
+    latest.status;
+  const dateStr = latest.submittedAt ?? latest.dueAt;
+  if (!dateStr) return label;
+  return `${label} — ${new Date(dateStr).toLocaleDateString("ar-SA")}`;
+}
+
+function statusLabel(status: string) {
+  return FOLLOW_UP_STATUS_LABELS[status as keyof typeof FOLLOW_UP_STATUS_LABELS] ?? status;
+}
+
 export default function AdminFollowUpPanel({
   followUps: initial,
   employedBeneficiaries,
@@ -72,6 +95,7 @@ export default function AdminFollowUpPanel({
   const [selected, setSelected] = useState<GroupedBeneficiary | null>(null);
   const [viewAnswers, setViewAnswers] = useState<FollowUp | null>(null);
   const [answerLabels, setAnswerLabels] = useState<Record<string, string>>({});
+  const [monthNotes, setMonthNotes] = useState<Record<number, string>>({});
   const [pending, startTransition] = useTransition();
 
   const grouped = useMemo(() => {
@@ -103,6 +127,15 @@ export default function AdminFollowUpPanel({
     return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, "ar"));
   }, [followUps, employedBeneficiaries]);
 
+  function openBeneficiaryModal(g: GroupedBeneficiary) {
+    const notes: Record<number, string> = {};
+    for (const r of g.records) {
+      notes[r.month] = r.notes ?? "";
+    }
+    setMonthNotes(notes);
+    setSelected(g);
+  }
+
   async function openAnswers(record: FollowUp) {
     setViewAnswers(record);
     const res = await fetch(`/api/follow-up-form/questions?month=${record.month}`);
@@ -117,7 +150,7 @@ export default function AdminFollowUpPanel({
   function programAction(beneficiaryId: string, action: "complete" | "withdraw") {
     let reason: string | undefined;
     if (action === "withdraw") {
-      reason = window.prompt("سبب السحب من المتابعة (اختياري):") ?? undefined;
+      reason = window.prompt("سبب إيقاف المتابعة (اختياري):") ?? undefined;
       if (reason === null) return;
     }
     startTransition(async () => {
@@ -131,50 +164,37 @@ export default function AdminFollowUpPanel({
         toastError(data.error || "فشل العملية");
         return;
       }
-      toastSuccess(action === "complete" ? "تم إكمال البرنامج" : "تم سحب المستفيد");
+      toastSuccess(action === "complete" ? "تم إنهاء المتابعة" : "تم إيقاف المتابعة");
       setSelected(null);
       router.refresh();
     });
   }
 
-  async function handleSaveNote(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!selected) return;
-    const notes = new FormData(e.currentTarget).get("notes") as string;
-    const latest = [...selected.records].sort((a, b) => b.month - a.month)[0];
-    if (!latest) {
-      toastError("لا يوجد سجل متابعة — يبدأ البرنامج تلقائياً عند دخول مرحلة FOLLOW_UP");
-      return;
-    }
+  function saveMonthNote(record: FollowUp) {
+    const notes = monthNotes[record.month] ?? "";
     startTransition(async () => {
       const res = await fetch("/api/follow-ups", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: latest.id, notes }),
+        body: JSON.stringify({ id: record.id, notes }),
       });
       const data = await res.json();
       if (!res.ok) {
         toastError(data.error || "فشل الحفظ");
         return;
       }
-      toastSuccess("تم حفظ الملاحظة");
-      router.refresh();
-    });
-  }
-
-  async function handleDelete(id: string) {
-    startTransition(async () => {
-      const res = await fetch("/api/follow-ups", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      if (!res.ok) {
-        toastError("فشل الحذف");
-        return;
+      setFollowUps((prev) =>
+        prev.map((f) => (f.id === record.id ? { ...f, notes } : f))
+      );
+      if (selected) {
+        setSelected({
+          ...selected,
+          records: selected.records.map((r) =>
+            r.id === record.id ? { ...r, notes } : r
+          ),
+        });
       }
-      setFollowUps((prev) => prev.filter((f) => f.id !== id));
-      router.refresh();
+      toastSuccess("تم حفظ ملاحظات الشهر");
     });
   }
 
@@ -190,10 +210,10 @@ export default function AdminFollowUpPanel({
         <table className="w-full min-w-[720px] text-sm">
           <thead className="bg-primary/5 text-primary">
             <tr>
-              <th className="px-4 py-3">المستفيد</th>
-              <th className="px-4 py-3">الجوال</th>
-              <th className="px-4 py-3">التقدم (6 أشهر)</th>
-              <th className="px-4 py-3">آخر حالة</th>
+              <th className="px-4 py-3 text-start">اسم المستفيد</th>
+              <th className="px-4 py-3 text-start">رقم الجوال</th>
+              <th className="px-4 py-3 text-start">حالة المتابعة (6 أشهر)</th>
+              <th className="px-4 py-3 text-start">آخر حالة</th>
             </tr>
           </thead>
           <tbody>
@@ -204,32 +224,27 @@ export default function AdminFollowUpPanel({
                 </td>
               </tr>
             ) : (
-              grouped.map((g) => {
-                const sorted = [...g.records].sort((a, b) => b.month - a.month);
-                const latest = sorted[0];
-                return (
-                  <tr
-                    key={g.id}
-                    onClick={() => setSelected(g)}
-                    className="cursor-pointer border-t border-surface-border transition hover:bg-secondary/10"
-                  >
-                    <td className="px-4 py-3 font-medium">{g.name}</td>
-                    <td className="px-4 py-3 font-mono text-xs" dir="ltr">
-                      {g.phone}
-                    </td>
-                    <td className="px-4 py-3">
+              grouped.map((g) => (
+                <tr
+                  key={g.id}
+                  onClick={() => openBeneficiaryModal(g)}
+                  className="cursor-pointer border-t border-surface-border transition hover:bg-secondary/10"
+                >
+                  <td className="px-4 py-3 font-medium">{g.name}</td>
+                  <td className="px-4 py-3 font-mono text-xs" dir="ltr">
+                    {g.phone}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-semibold text-brand-gray">
+                        {progressSummary(g.records)}
+                      </span>
                       <MonthProgress records={g.records} />
-                    </td>
-                    <td className="px-4 py-3">
-                      {latest
-                        ? FOLLOW_UP_STATUS_LABELS[
-                            latest.status as keyof typeof FOLLOW_UP_STATUS_LABELS
-                          ] ?? latest.status
-                        : "—"}
-                    </td>
-                  </tr>
-                );
-              })
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-xs">{latestStatusLabel(g.records)}</td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
@@ -237,77 +252,100 @@ export default function AdminFollowUpPanel({
 
       {selected && (
         <FloatingModal title={`متابعة: ${selected.name}`} onClose={() => setSelected(null)} wide>
-          <div className="mb-4 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => programAction(selected.id, "complete")}
-              disabled={pending}
-              className="btn-primary !px-3 !py-1.5 text-xs"
+          <div className="space-y-4 text-start">
+            <a
+              href={`/dashboard/admin?tab=management&beneficiary=${selected.id}`}
+              className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
             >
-              إكمال البرنامج
-            </button>
-            <button
-              type="button"
-              onClick={() => programAction(selected.id, "withdraw")}
-              disabled={pending}
-              className="btn-secondary !px-3 !py-1.5 text-xs"
-            >
-              سحب من المتابعة
-            </button>
+              <ExternalLink className="h-4 w-4" />
+              الانتقال إلى بيانات المستفيد
+            </a>
+
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[600px] text-sm">
+                <thead className="bg-primary/5 text-primary">
+                  <tr>
+                    <th className="px-3 py-2 text-start">الشهر</th>
+                    <th className="px-3 py-2 text-start">الحالة</th>
+                    <th className="px-3 py-2 text-start">عرض الإجابات</th>
+                    <th className="px-3 py-2 text-start">ملاحظات الشهر</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[1, 2, 3, 4, 5, 6].map((month) => {
+                    const record = selected.records.find((r) => r.month === month);
+                    return (
+                      <tr key={month} className="border-t border-surface-border">
+                        <td className="px-3 py-2 font-medium">شهر {month}</td>
+                        <td className="px-3 py-2">
+                          {record ? statusLabel(record.status) : "—"}
+                        </td>
+                        <td className="px-3 py-2">
+                          {record?.status === "COMPLETED" && record.answers ? (
+                            <button
+                              type="button"
+                              onClick={() => openAnswers(record)}
+                              className="rounded p-1 text-primary hover:bg-surface-muted"
+                              title="عرض الإجابات"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
+                          ) : (
+                            <span className="text-xs text-brand-gray">—</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2">
+                          {record ? (
+                            <div className="flex gap-1">
+                              <input
+                                className="input-field !py-1 text-xs"
+                                value={monthNotes[month] ?? ""}
+                                onChange={(e) =>
+                                  setMonthNotes((prev) => ({
+                                    ...prev,
+                                    [month]: e.target.value,
+                                  }))
+                                }
+                              />
+                              <SubmitButton
+                                type="button"
+                                loading={pending}
+                                onClick={() => saveMonthNote(record)}
+                                className="btn-secondary shrink-0 !px-2 !py-1 text-xs"
+                              >
+                                حفظ
+                              </SubmitButton>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-brand-gray">لا يوجد سجل</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex flex-wrap gap-2 border-t border-surface-border pt-4">
+              <button
+                type="button"
+                onClick={() => programAction(selected.id, "withdraw")}
+                disabled={pending}
+                className="btn-secondary !px-4 !py-2 text-sm"
+              >
+                إيقاف المتابعة (مع حفظ التقدم)
+              </button>
+              <button
+                type="button"
+                onClick={() => programAction(selected.id, "complete")}
+                disabled={pending}
+                className="btn-primary !px-4 !py-2 text-sm"
+              >
+                إنهاء المتابعة
+              </button>
+            </div>
           </div>
-
-          <ul className="mb-6 max-h-56 space-y-2 overflow-y-auto">
-            {[...selected.records]
-              .sort((a, b) => a.month - b.month)
-              .map((f) => (
-                <li
-                  key={f.id}
-                  className="flex items-start gap-2 rounded-lg border border-surface-border p-3 text-sm"
-                >
-                  <div className="min-w-0 flex-1 text-start">
-                    <FieldGrid cols={1}>
-                      <DetailRow label="الشهر" value={`شهر ${f.month}`} />
-                      <DetailRow
-                        label="الحالة"
-                        value={
-                          FOLLOW_UP_STATUS_LABELS[
-                            f.status as keyof typeof FOLLOW_UP_STATUS_LABELS
-                          ] ?? f.status
-                        }
-                      />
-                    </FieldGrid>
-                  </div>
-                  <div className="flex shrink-0 gap-1">
-                    {f.status === "COMPLETED" && f.answers && (
-                      <button
-                        type="button"
-                        onClick={() => openAnswers(f)}
-                        className="rounded p-1 text-primary hover:bg-surface-muted"
-                        title="عرض الإجابات"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(f.id)}
-                      disabled={pending}
-                      className="text-red-600"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </li>
-              ))}
-          </ul>
-
-          <form onSubmit={handleSaveNote} className="space-y-3 border-t border-surface-border pt-4">
-            <h3 className="font-bold text-primary">ملاحظة إدارية</h3>
-            <textarea name="notes" rows={2} className="input-field resize-none" placeholder="ملاحظات على المستفيد..." required />
-            <SubmitButton loading={pending} className="btn-primary w-full !py-2 text-sm">
-              حفظ الملاحظة
-            </SubmitButton>
-          </form>
         </FloatingModal>
       )}
 
@@ -316,11 +354,11 @@ export default function AdminFollowUpPanel({
           title={`إجابات — شهر ${viewAnswers.month}`}
           onClose={() => setViewAnswers(null)}
         >
-          <FieldGrid cols={1}>
+          <div className="space-y-3 text-start">
             {Object.entries(viewAnswers.answers ?? {}).map(([qid, ans]) => (
               <DetailRow key={qid} label={answerLabels[qid] ?? qid} value={ans} />
             ))}
-          </FieldGrid>
+          </div>
         </FloatingModal>
       )}
     </>

@@ -37,7 +37,7 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
 
   if (!activeMonth) {
     return (
-      <section className="card">
+      <section id="follow-up" className="card">
         <h2 className="mb-2 flex items-center gap-2 text-xl font-bold text-primary">
           <ClipboardList className="h-6 w-6" />
           متابعة ما بعد التوظيف
@@ -50,7 +50,7 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
   const current = records.find((r) => r.month === activeMonth);
   if (current?.status === "COMPLETED") {
     return (
-      <section className="card">
+      <section id={`follow-up-month-${activeMonth}`} className="card">
         <h2 className="mb-2 text-xl font-bold text-primary">متابعة — الشهر {activeMonth}</h2>
         <p className="text-green-700">تم إرسال نموذج هذا الشهر بنجاح.</p>
       </section>
@@ -79,7 +79,7 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
   }
 
   return (
-    <section className="card border-2 border-primary/20">
+    <section id={`follow-up-month-${activeMonth}`} className="card border-2 border-primary/20">
       <h2 className="mb-1 flex items-center gap-2 text-xl font-bold text-primary">
         <ClipboardList className="h-6 w-6" />
         متابعة ما بعد التوظيف — الشهر {activeMonth}

@@ -135,6 +135,8 @@ export default function AdminBeneficiaryManagement({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           phone: form.get("phone"),
+          email: form.get("email"),
+          password: form.get("password") || undefined,
           educationLevel: form.get("educationLevel"),
           experience: form.get("experience"),
           skills: form.get("skills"),
@@ -150,6 +152,7 @@ export default function AdminBeneficiaryManagement({
       const guideName = guides.find((g) => g.id === guideIdRaw)?.name ?? null;
       const patch = {
         phone: String(form.get("phone") ?? ""),
+        email: String(form.get("email") ?? selected.email),
         educationLevel: String(form.get("educationLevel") ?? ""),
         experience: String(form.get("experience") ?? ""),
         skills: String(form.get("skills") ?? ""),
@@ -168,14 +171,16 @@ export default function AdminBeneficiaryManagement({
   const columns: DataTableColumn<ManagedBeneficiary>[] = [
     {
       key: "name",
-      header: "المستفيد",
+      header: "اسم المستفيد",
+      render: (b) => <span className="font-medium text-primary">{b.name}</span>,
+    },
+    {
+      key: "phone",
+      header: "رقم الجوال",
       render: (b) => (
-        <div className="flex flex-col gap-0.5">
-          <span className="font-medium text-primary">{b.name}</span>
-          <span className="text-xs font-mono text-brand-gray" dir="ltr">
-            {b.phone}
-          </span>
-        </div>
+        <span className="font-mono text-xs text-brand-gray" dir="ltr">
+          {b.phone}
+        </span>
       ),
     },
     {
@@ -194,12 +199,12 @@ export default function AdminBeneficiaryManagement({
     },
     {
       key: "guide",
-      header: "إسناد مرشد",
+      header: "المرشد المسند",
       render: (b) => (
         <select
           defaultValue={b.guideId ?? ""}
           disabled={pending}
-          className="input-field min-w-[140px] !rounded-lg !bg-surface-muted !py-2 text-sm"
+          className="input-field min-w-[110px] max-w-[140px] !rounded-lg !bg-surface-muted !py-1 !text-xs"
           onClick={(e) => e.stopPropagation()}
           onChange={(e) => assign(b.id, e.target.value)}
         >
@@ -215,42 +220,51 @@ export default function AdminBeneficiaryManagement({
     {
       key: "approve",
       header: "اعتماد",
-      render: (b) => (
-        <div className="flex flex-wrap justify-start gap-1" onClick={(e) => e.stopPropagation()}>
-          {b.stage === "PENDING_APPROVAL" && (
-            <button
-              type="button"
-              disabled={pending || !b.guideId}
-              onClick={() => approve(b.id, "registration")}
-              className="btn-primary !px-3 !py-1.5 text-xs disabled:opacity-50"
-              title={!b.guideId ? "يجب إسناد مرشد أولاً" : undefined}
-            >
-              <CheckCircle className="inline h-3 w-3" />
-              اعتماد التسجيل
-            </button>
-          )}
-          {b.pendingStage === "TRAINING" && (
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => approve(b.id, "transition")}
-              className="btn-primary !px-3 !py-1.5 text-xs"
-            >
-              اعتماد التدريب
-            </button>
-          )}
-          {b.pendingStage && b.pendingStage !== "TRAINING" && (
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => approve(b.id, "transition")}
-              className="btn-primary !px-3 !py-1.5 text-xs"
-            >
-              اعتماد الانتقال
-            </button>
-          )}
-        </div>
-      ),
+      render: (b) => {
+        const showRegistration = b.stage === "PENDING_APPROVAL";
+        const showTraining = b.pendingStage === "TRAINING";
+        const showOtherTransition =
+          b.pendingStage && b.pendingStage !== "TRAINING";
+        if (!showRegistration && !showTraining && !showOtherTransition) {
+          return <span className="text-xs text-brand-gray">—</span>;
+        }
+        return (
+          <div className="flex flex-wrap justify-start gap-1" onClick={(e) => e.stopPropagation()}>
+            {showRegistration && (
+              <button
+                type="button"
+                disabled={pending || !b.guideId}
+                onClick={() => approve(b.id, "registration")}
+                className="btn-primary !px-3 !py-1.5 text-xs disabled:opacity-50"
+                title={!b.guideId ? "يجب إسناد مرشد أولاً" : undefined}
+              >
+                <CheckCircle className="inline h-3 w-3" />
+                اعتماد التسجيل
+              </button>
+            )}
+            {showTraining && (
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => approve(b.id, "transition")}
+                className="btn-primary !px-3 !py-1.5 text-xs"
+              >
+                اعتماد التدريب
+              </button>
+            )}
+            {showOtherTransition && (
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => approve(b.id, "transition")}
+                className="btn-primary !px-3 !py-1.5 text-xs"
+              >
+                اعتماد الانتقال
+              </button>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: "cv",
@@ -297,9 +311,6 @@ export default function AdminBeneficiaryManagement({
         >
           <div className="space-y-4 text-start">
             <div className="flex flex-col gap-0.5 rounded-lg bg-surface-muted px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between">
-              <span dir="ltr" className="text-brand-gray">
-                {selected.phone}
-              </span>
               <div>
                 <span className="font-semibold text-primary">المرحلة: </span>
                 {STAGE_LABELS[selected.stage]}
@@ -322,6 +333,27 @@ export default function AdminBeneficiaryManagement({
                     className="input-field"
                     dir="ltr"
                     required
+                  />
+                </FieldRow>
+                <FieldRow label="البريد الإلكتروني" htmlFor="beneficiary-email" ltr>
+                  <input
+                    id="beneficiary-email"
+                    name="email"
+                    type="email"
+                    defaultValue={selected.email}
+                    className="input-field"
+                    dir="ltr"
+                    required
+                  />
+                </FieldRow>
+                <FieldRow label="كلمة مرور جديدة (اختياري)" htmlFor="beneficiary-password" ltr>
+                  <input
+                    id="beneficiary-password"
+                    name="password"
+                    type="password"
+                    placeholder="اتركه فارغاً للإبقاء"
+                    className="input-field"
+                    dir="ltr"
                   />
                 </FieldRow>
                 <FieldRow label="المستوى التعليمي" htmlFor="beneficiary-education">
@@ -400,6 +432,7 @@ export default function AdminBeneficiaryManagement({
                   </button>
                 </div>
                 <FieldGrid>
+                  <DetailRow label="رقم الجوال" value={selected.phone} ltr />
                   <DetailRow label="البريد" value={selected.email} ltr />
                   <DetailRow label="المرشد" value={selected.guideName} />
                   <DetailRow
