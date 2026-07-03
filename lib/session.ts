@@ -63,19 +63,16 @@ function verifySessionToken(token: string): string | null {
   const [userPart, tsPart, sigPart] = parts;
   const payload = `${userPart}.${tsPart}`;
 
-  let expected: Buffer;
-  let actual: Buffer;
+  let expectedSig: Buffer;
+  let actualSig: Buffer;
   try {
-    expected = Buffer.from(
-      createHmac("sha256", secret).update(payload).digest("base64url"),
-      "utf8"
-    );
-    actual = Buffer.from(sigPart, "base64url");
+    expectedSig = createHmac("sha256", secret).update(payload).digest();
+    actualSig = Buffer.from(sigPart, "base64url");
   } catch {
     return null;
   }
 
-  if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
+  if (expectedSig.length !== actualSig.length || !timingSafeEqual(expectedSig, actualSig)) {
     return null;
   }
 
