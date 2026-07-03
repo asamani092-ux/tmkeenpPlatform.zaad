@@ -114,32 +114,6 @@ export async function registerBeneficiary(data: {
   return { success: true };
 }
 
-export async function resetPasswordByPhone(data: {
-  phone: string;
-  password: string;
-}): Promise<ActionResult> {
-  if (!data.phone?.trim() || !data.password) {
-    return { success: false, error: "رقم الجوال وكلمة المرور مطلوبان" };
-  }
-  if (data.password.length < 6) {
-    return { success: false, error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" };
-  }
-
-  const user = await prisma.user.findFirst({
-    where: { phone: data.phone.trim() },
-  });
-  if (!user) {
-    return { success: false, error: "رقم الجوال غير مسجل" };
-  }
-
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { password: await hashPassword(data.password) },
-  });
-
-  return { success: true };
-}
-
 export async function applyToOpportunity(
   opportunityId: string
 ): Promise<ActionResult> {

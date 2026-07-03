@@ -43,11 +43,23 @@ export const registerCopy = {
 
 export const forgotPasswordCopy = {
   title: "استعادة كلمة المرور",
-  subtitle: "أدخل رقم الجوال المسجّل لإعادة تعيين كلمة المرور",
-  phoneLabel: "رقم الجوال",
-  passwordLabel: "كلمة المرور الجديدة",
-  submitBtn: "تعيين كلمة المرور",
+  subtitle: "أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين",
+  emailLabel: "البريد الإلكتروني",
+  submitBtn: "إرسال رابط إعادة التعيين",
   backToLogin: "العودة لتسجيل الدخول",
+  successMessage:
+    "إذا كان البريد مسجّلاً لدينا، ستصلك رسالة برابط إعادة التعيين خلال دقائق.",
+} as const;
+
+export const resetPasswordCopy = {
+  title: "تعيين كلمة مرور جديدة",
+  subtitle: "أدخل كلمة المرور الجديدة لحسابك",
+  passwordLabel: "كلمة المرور الجديدة",
+  confirmLabel: "تأكيد كلمة المرور",
+  submitBtn: "حفظ كلمة المرور",
+  backToLogin: "العودة لتسجيل الدخول",
+  invalidToken: "رابط إعادة التعيين غير صالح أو منتهٍ",
+  successMessage: "تم تعيين كلمة المرور. يمكنك تسجيل الدخول الآن.",
 } as const;
 
 export const adminCopy = {

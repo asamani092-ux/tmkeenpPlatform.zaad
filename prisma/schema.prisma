@@ -99,7 +99,20 @@ model User {
   followUps        FollowUp[]
   opportunityTargets OpportunityTarget[]
   notifications    InAppNotification[]
+  passwordResetTokens PasswordResetToken[]
   createdAt        DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
 }
 
 model InAppNotification {
