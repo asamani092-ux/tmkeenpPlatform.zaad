@@ -14,6 +14,8 @@ import GuideEvaluationsTab from "@/components/guide/GuideEvaluationsTab";
 import SlideOver from "@/components/SlideOver";
 import SubmitButton from "@/components/ui/SubmitButton";
 import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
+import DetailRow from "@/components/ui/DetailRow";
+import FieldGrid from "@/components/ui/FieldGrid";
 import { STAGE_LABELS, getNextStage } from "@/lib/stages";
 import { SESSION_STATUS_LABELS } from "@/lib/labels";
 import { getUpcomingSession } from "@/lib/upcoming-session";
@@ -931,113 +933,65 @@ export default function GuideBeneficiaryTable({
 
                   <h4 className="font-bold text-primary">بيانات المستفيد</h4>
 
-                  <dl className="grid gap-3 text-sm sm:grid-cols-2">
+                  <FieldGrid className="text-sm">
 
-                    <div>
+                    <DetailRow label="الاسم" value={<span className="font-medium">{selected.name}</span>} />
 
-                      <dt className="text-xs font-semibold text-brand-gray">الاسم</dt>
+                    <DetailRow label="البريد" value={selected.email} ltr />
 
-                      <dd className="font-medium text-primary">{selected.name}</dd>
+                    <DetailRow label="الجوال" value={selected.phone} ltr />
 
-                    </div>
+                    <DetailRow label="المستوى التعليمي" value={selected.educationLevel || "—"} />
 
-                    <div>
+                    <DetailRow
+                      label={guideCopy.commitmentScore}
+                      value={<span className="text-lg font-bold">{selected.commitmentScore}</span>}
+                    />
 
-                      <dt className="text-xs font-semibold text-brand-gray">البريد</dt>
+                    <div className="sm:col-span-2">
 
-                      <dd dir="ltr" className="text-left text-primary">{selected.email}</dd>
-
-                    </div>
-
-                    <div>
-
-                      <dt className="text-xs font-semibold text-brand-gray">الجوال</dt>
-
-                      <dd dir="ltr" className="text-left text-primary">{selected.phone}</dd>
-
-                    </div>
-
-                    <div>
-
-                      <dt className="text-xs font-semibold text-brand-gray">المستوى التعليمي</dt>
-
-                      <dd className="text-primary">{selected.educationLevel || "—"}</dd>
-
-                    </div>
-
-                    <div>
-
-                      <dt className="text-xs font-semibold text-brand-gray">{guideCopy.commitmentScore}</dt>
-
-                      <dd className="text-lg font-bold text-primary">{selected.commitmentScore}</dd>
+                      <DetailRow label="الخبرات" value={selected.experience || "—"} />
 
                     </div>
 
                     <div className="sm:col-span-2">
 
-                      <dt className="text-xs font-semibold text-brand-gray">الخبرات</dt>
-
-                      <dd className="text-brand-gray">{selected.experience || "—"}</dd>
+                      <DetailRow label="المهارات" value={selected.skills || "—"} />
 
                     </div>
 
                     <div className="sm:col-span-2">
 
-                      <dt className="text-xs font-semibold text-brand-gray">المهارات</dt>
-
-                      <dd className="text-brand-gray">{selected.skills || "—"}</dd>
+                      <DetailRow label="الميول المهنية" value={selected.careerInterests || "—"} />
 
                     </div>
 
                     <div className="sm:col-span-2">
 
-                      <dt className="text-xs font-semibold text-brand-gray">الميول المهنية</dt>
-
-                      <dd className="text-brand-gray">{selected.careerInterests || "—"}</dd>
-
-                    </div>
-
-                    <div className="sm:col-span-2">
-
-                      <dt className="mb-1 text-xs font-semibold text-brand-gray">السيرة الذاتية</dt>
-
-                      <dd>
-
-                        {selected.cvUrl ? (
-
-                          <a
-
-                            href={selected.cvUrl}
-
-                            target="_blank"
-
-                            rel="noopener noreferrer"
-
-                            className="btn-primary inline-flex !px-3 !py-1.5 text-xs"
-
-                          >
-
-                            <ExternalLink className="h-3 w-3" />
-
-                            عرض السيرة الذاتية المرفقة
-
-                          </a>
-
-                        ) : (
-
-                          <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-800">
-
-                            لا يوجد سيرة ذاتية - يرجى طلبها من المستفيد
-
-                          </span>
-
-                        )}
-
-                      </dd>
+                      <DetailRow
+                        label="السيرة الذاتية"
+                        value={
+                          selected.cvUrl ? (
+                            <a
+                              href={selected.cvUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn-primary inline-flex !px-3 !py-1.5 text-xs"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              عرض السيرة الذاتية المرفقة
+                            </a>
+                          ) : (
+                            <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-800">
+                              لا يوجد سيرة ذاتية - يرجى طلبها من المستفيد
+                            </span>
+                          )
+                        }
+                      />
 
                     </div>
 
-                  </dl>
+                  </FieldGrid>
 
                 </div>
 

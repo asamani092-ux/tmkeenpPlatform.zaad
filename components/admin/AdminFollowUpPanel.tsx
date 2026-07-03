@@ -3,6 +3,8 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import FloatingModal from "@/components/admin/FloatingModal";
+import DetailRow from "@/components/ui/DetailRow";
+import FieldGrid from "@/components/ui/FieldGrid";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { FOLLOW_UP_STATUS_LABELS } from "@/lib/labels";
@@ -194,13 +196,18 @@ export default function AdminFollowUpPanel({
                       className="flex items-start gap-2 rounded-lg border border-surface-border p-3 text-sm"
                     >
                       <div className="min-w-0 flex-1 text-start">
-                        <p className="font-semibold text-primary">شهر {f.month}</p>
-                        <p className="text-brand-gray">
-                          {FOLLOW_UP_STATUS_LABELS[
-                            f.status as keyof typeof FOLLOW_UP_STATUS_LABELS
-                          ] ?? f.status}
-                        </p>
-                        {f.notes && <p className="mt-1 text-brand-gray">{f.notes}</p>}
+                        <FieldGrid cols={1}>
+                          <DetailRow label="الشهر" value={`شهر ${f.month}`} />
+                          <DetailRow
+                            label="الحالة"
+                            value={
+                              FOLLOW_UP_STATUS_LABELS[
+                                f.status as keyof typeof FOLLOW_UP_STATUS_LABELS
+                              ] ?? f.status
+                            }
+                          />
+                          {f.notes && <DetailRow label="الإجابات / الملاحظات" value={f.notes} />}
+                        </FieldGrid>
                       </div>
                       <button
                         type="button"

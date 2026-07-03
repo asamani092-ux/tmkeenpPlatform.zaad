@@ -993,6 +993,31 @@ export async function toggleTaskCompletion(taskId: string): Promise<ActionResult
   return { success: true };
 }
 
+/** Beneficiary sets task completion explicitly — O(1) */
+export async function setTaskCompletion(
+  taskId: string,
+  isCompleted: boolean
+): Promise<ActionResult> {
+  const session = await getSession();
+  if (!session || session.role !== "BENEFICIARY") {
+    return { success: false, error: "غير مصرح" };
+  }
+
+  const existing = await prisma.task.findFirst({
+    where: { id: taskId, beneficiaryId: session.id },
+  });
+  if (!existing) {
+    return { success: false, error: "المهمة غير موجودة" };
+  }
+
+  await prisma.task.update({
+    where: { id: taskId },
+    data: { isCompleted },
+  });
+
+  return { success: true };
+}
+
 /** Admin approves PENDING_APPROVAL → GUIDANCE — O(1) */
 export async function approveRegistration(
   beneficiaryId: string

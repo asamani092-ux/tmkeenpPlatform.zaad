@@ -6,6 +6,9 @@ import { Stage } from "@/generated/prisma/client";
 import { STAGE_LABELS } from "@/lib/stages";
 import FloatingModal from "@/components/admin/FloatingModal";
 import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
+import DetailRow from "@/components/ui/DetailRow";
+import FieldGrid from "@/components/ui/FieldGrid";
+import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { CheckCircle, ExternalLink, FileText } from "lucide-react";
@@ -286,27 +289,27 @@ export default function AdminBeneficiaryManagement({ beneficiaries: initial, gui
             {editMode ? (
               <form onSubmit={handleProfileSave} className="card-section space-y-3">
                 <h4 className="font-bold text-primary">تعديل بيانات المستفيد</h4>
-                <div>
-                  <label className="label-field">الجوال</label>
+                <FieldRow label="الجوال" htmlFor="beneficiary-phone" ltr>
                   <input
+                    id="beneficiary-phone"
                     name="phone"
                     defaultValue={selected.phone}
                     className="input-field"
                     dir="ltr"
                     required
                   />
-                </div>
-                <div>
-                  <label className="label-field">المستوى التعليمي</label>
+                </FieldRow>
+                <FieldRow label="المستوى التعليمي" htmlFor="beneficiary-education">
                   <input
+                    id="beneficiary-education"
                     name="educationLevel"
                     defaultValue={selected.educationLevel}
                     className="input-field"
                   />
-                </div>
-                <div>
-                  <label className="label-field">المرشد</label>
+                </FieldRow>
+                <FieldRow label="المرشد" htmlFor="beneficiary-guide">
                   <select
+                    id="beneficiary-guide"
                     name="guideId"
                     defaultValue={selected.guideId ?? ""}
                     className="input-field"
@@ -318,34 +321,34 @@ export default function AdminBeneficiaryManagement({ beneficiaries: initial, gui
                       </option>
                     ))}
                   </select>
-                </div>
-                <div>
-                  <label className="label-field">الخبرات</label>
+                </FieldRow>
+                <FieldRow label="الخبرات" htmlFor="beneficiary-experience" align="start">
                   <textarea
+                    id="beneficiary-experience"
                     name="experience"
                     defaultValue={selected.experience}
                     rows={2}
                     className="input-field resize-none"
                   />
-                </div>
-                <div>
-                  <label className="label-field">المهارات</label>
+                </FieldRow>
+                <FieldRow label="المهارات" htmlFor="beneficiary-skills" align="start">
                   <textarea
+                    id="beneficiary-skills"
                     name="skills"
                     defaultValue={selected.skills}
                     rows={2}
                     className="input-field resize-none"
                   />
-                </div>
-                <div>
-                  <label className="label-field">الميول المهنية</label>
+                </FieldRow>
+                <FieldRow label="الميول المهنية" htmlFor="beneficiary-career" align="start">
                   <textarea
+                    id="beneficiary-career"
                     name="careerInterests"
                     defaultValue={selected.careerInterests}
                     rows={2}
                     className="input-field resize-none"
                   />
-                </div>
+                </FieldRow>
                 <div className="flex gap-2">
                   <SubmitButton loading={pending} className="btn-primary flex-1 !py-2 text-sm">
                     حفظ التعديلات
@@ -371,38 +374,24 @@ export default function AdminBeneficiaryManagement({ beneficiaries: initial, gui
                     تعديل البيانات
                   </button>
                 </div>
-                <dl className="grid gap-3 sm:grid-cols-2">
-                  <div>
-                    <dt className="text-xs font-semibold text-brand-gray">البريد</dt>
-                    <dd dir="ltr" className="text-primary">
-                      {selected.email}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-semibold text-brand-gray">المرشد</dt>
-                    <dd className="text-primary">{selected.guideName ?? "—"}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-semibold text-brand-gray">مؤشر الالتزام</dt>
-                    <dd className="font-bold text-primary">{selected.commitmentScore}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-semibold text-brand-gray">المستوى التعليمي</dt>
-                    <dd className="text-primary">{selected.educationLevel || "—"}</dd>
+                <FieldGrid>
+                  <DetailRow label="البريد" value={selected.email} ltr />
+                  <DetailRow label="المرشد" value={selected.guideName} />
+                  <DetailRow
+                    label="مؤشر الالتزام"
+                    value={<span className="font-bold">{selected.commitmentScore}</span>}
+                  />
+                  <DetailRow label="المستوى التعليمي" value={selected.educationLevel || "—"} />
+                  <div className="sm:col-span-2">
+                    <DetailRow label="الخبرات" value={selected.experience || "—"} />
                   </div>
                   <div className="sm:col-span-2">
-                    <dt className="text-xs font-semibold text-brand-gray">الخبرات</dt>
-                    <dd className="text-brand-gray">{selected.experience || "—"}</dd>
+                    <DetailRow label="المهارات" value={selected.skills || "—"} />
                   </div>
                   <div className="sm:col-span-2">
-                    <dt className="text-xs font-semibold text-brand-gray">المهارات</dt>
-                    <dd className="text-brand-gray">{selected.skills || "—"}</dd>
+                    <DetailRow label="الميول المهنية" value={selected.careerInterests || "—"} />
                   </div>
-                  <div className="sm:col-span-2">
-                    <dt className="text-xs font-semibold text-brand-gray">الميول المهنية</dt>
-                    <dd className="text-brand-gray">{selected.careerInterests || "—"}</dd>
-                  </div>
-                </dl>
+                </FieldGrid>
               </div>
             )}
 

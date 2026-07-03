@@ -1,25 +1,21 @@
 import { redirect } from "next/navigation";
 import Navbar from "@/components/Navbar";
-import StageProgress from "@/components/StageProgress";
 import CommitmentTracker from "@/components/CommitmentTracker";
 import OpportunityApplyCard from "@/components/OpportunityApplyCard";
 import NextSessionCard from "@/components/beneficiary/NextSessionCard";
 import CareerPlanChecklist from "@/components/beneficiary/CareerPlanChecklist";
-import BeneficiaryGuideHub from "@/components/beneficiary/BeneficiaryGuideHub";
-import BeneficiaryProfileEdit from "@/components/beneficiary/BeneficiaryProfileEdit";
+import BeneficiaryGuideDrawer from "@/components/beneficiary/BeneficiaryGuideDrawer";
+import BeneficiaryProfileCard from "@/components/beneficiary/BeneficiaryProfileCard";
+import FollowUpMonthForm from "@/components/beneficiary/FollowUpMonthForm";
+import VerticalStageTimeline from "@/components/beneficiary/VerticalStageTimeline";
+import { getFollowUpFormForBeneficiary } from "@/lib/follow-up-service";
+import { processFollowUpReminders } from "@/lib/follow-up-service";
 import { getDashboardPath } from "@/lib/auth";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
-import { STAGE_LABELS } from "@/lib/stages";
 import { APPLICATION_STATUS_LABELS } from "@/lib/labels";
 import { beneficiaryCanSeeOpportunity } from "@/lib/opportunity-visibility";
-import {
-  Briefcase,
-  BookOpen,
-  ClipboardList,
-  FileText,
-  Trophy,
-} from "lucide-react";
+import { Briefcase, BookOpen, ClipboardList } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +55,13 @@ export default async function BeneficiaryDashboardPage() {
   });
 
   if (!user) redirect("/login");
+
+  await processFollowUpReminders();
+
+  const followUpData =
+    user.stage === "FOLLOW_UP"
+      ? await getFollowUpFormForBeneficiary(user.id)
+      : null;
 
   const courseIds = parseCourseIds(user.selectedTrainingCourseIds);
   const recommendedCourses =
@@ -113,35 +116,43 @@ export default async function BeneficiaryDashboardPage() {
     guideName: note.guide.name,
   }));
 
+  const unifiedProfile = {
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    educationLevel: user.educationLevel,
+    experience: user.experience,
+    skills: user.skills,
+    careerInterests: user.careerInterests,
+    cvUrl: user.cvUrl,
+    certificatesUrls: user.certificatesUrls,
+  };
+
   return (
     <div className="min-h-screen bg-surface-muted">
-      <Navbar userName={user.name} userRole={session.role} userId={session.id} />
+      <Navbar
+        userName={user.name}
+        userRole={session.role}
+        userId={session.id}
+        unifiedProfile={unifiedProfile}
+      />
 
-      <main className="mx-auto max-w-6xl space-y-8 px-4 py-8">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-primary">الملف الرقمي للمستفيد</h1>
-            <p className="text-brand-gray">
-              المرحلة الحالية:{" "}
-              <span className="font-semibold text-primary">{STAGE_LABELS[user.stage]}</span>
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-lg font-bold text-primary">{user.name}</span>
-            <BeneficiaryProfileEdit
-              profile={{
-                name: user.name,
-                email: user.email,
-                phone: user.phone,
-                educationLevel: user.educationLevel,
-                experience: user.experience,
-                skills: user.skills,
-                careerInterests: user.careerInterests,
-                cvUrl: user.cvUrl,
-              }}
-            />
-          </div>
-        </div>
+      <main className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+        {followUpData && (
+          <FollowUpMonthForm
+            activeMonth={followUpData.activeMonth}
+            questions={(followUpData.questions ?? []).map((q) => ({
+              ...q,
+              options: Array.isArray(q.options) ? q.options.map(String) : [],
+            }))}
+            records={(followUpData.records ?? []).map((r) => ({
+              month: r.month,
+              status: r.status,
+              submittedAt: r.submittedAt?.toISOString() ?? null,
+              dueAt: r.dueAt?.toISOString() ?? null,
+            }))}
+          />
+        )}
 
         {user.stage === "PENDING_APPROVAL" && (
           <section className="card">
@@ -153,153 +164,95 @@ export default async function BeneficiaryDashboardPage() {
           </section>
         )}
 
-        <section className="space-y-6">
-          <h2 className="text-lg font-bold text-primary">الآن</h2>
-          <NextSessionCard sessions={sessionsSerialized} />
-          <StageProgress currentStage={user.stage} stageEnteredAt={user.stageEnteredAt} />
-        </section>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <aside className="md:col-span-1">
+            <VerticalStageTimeline
+              currentStage={user.stage}
+              stageEnteredAt={user.stageEnteredAt}
+            />
+          </aside>
 
-        <section>
-          <BeneficiaryGuideHub
-            guide={user.guide}
-            professionalRecommendations={user.professionalRecommendations}
-            recommendedCourses={recommendedCourses.map((c) => ({
-              ...c,
-              type: "TRAINING" as const,
-            }))}
-            notes={guideNotes}
-            applicationByOpp={Object.fromEntries(applicationByOpp)}
-          />
-        </section>
+          <div className="space-y-6 md:col-span-2">
+            <CommitmentTracker score={user.commitmentScore} variant="inline" />
 
-        <section className="space-y-6">
-          <h2 className="flex items-center gap-2 text-lg font-bold text-primary">
-            <Trophy className="h-6 w-6" />
-            الإنجازات
-          </h2>
-          <div className="grid gap-6 lg:grid-cols-2">
+            <BeneficiaryProfileCard profile={unifiedProfile} />
+
+            <NextSessionCard sessions={sessionsSerialized} />
+
+            <BeneficiaryGuideDrawer
+              guide={user.guide}
+              professionalRecommendations={user.professionalRecommendations}
+              recommendedCourses={recommendedCourses.map((c) => ({
+                ...c,
+                type: "TRAINING" as const,
+              }))}
+              notes={guideNotes}
+              applicationByOpp={Object.fromEntries(applicationByOpp)}
+            />
+
             <CareerPlanChecklist tasks={careerTasks} />
-            <CommitmentTracker score={user.commitmentScore} />
+
+            <section id="opportunities-section" className="space-y-6">
+              <h2 className="text-lg font-bold text-primary">الفرص المتاحة</h2>
+
+              {trainingOpportunities.length > 0 && (
+                <div className="card">
+                  <BookOpen className="mb-3 h-8 w-8 text-primary" />
+                  <h3 className="mb-4 text-xl font-bold text-primary">فرص تدريبية</h3>
+                  <ul className="space-y-4">
+                    {trainingOpportunities.map((opp) => (
+                      <OpportunityApplyCard
+                        key={opp.id}
+                        opportunity={opp}
+                        applicationStatus={applicationByOpp.get(opp.id) ?? null}
+                        canApply
+                      />
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {employmentOpportunities.length > 0 && (
+                <div className="card">
+                  <Briefcase className="mb-3 h-8 w-8 text-secondary-dark" />
+                  <h3 className="mb-4 text-xl font-bold text-primary">فرص توظيف</h3>
+                  <ul className="space-y-4">
+                    {employmentOpportunities.map((opp) => (
+                      <OpportunityApplyCard
+                        key={opp.id}
+                        opportunity={opp}
+                        applicationStatus={applicationByOpp.get(opp.id) ?? null}
+                        canApply
+                      />
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {user.applications.length > 0 && (
+                <div className="card">
+                  <h3 className="mb-4 text-xl font-bold text-primary">سجل التقديمات</h3>
+                  <ul className="space-y-2">
+                    {user.applications.map((app) => (
+                      <li
+                        key={app.id}
+                        className="flex justify-between rounded-lg bg-surface-muted px-4 py-3 text-sm"
+                      >
+                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                          {APPLICATION_STATUS_LABELS[app.status]}
+                        </span>
+                        <span className="text-brand-gray">
+                          {app.opportunity.title} —{" "}
+                          {new Date(app.appliedAt).toLocaleDateString("ar-SA")}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </section>
           </div>
-        </section>
-
-        <section id="opportunities-section" className="space-y-6">
-          <h2 className="text-lg font-bold text-primary">الفرص والملف</h2>
-
-          {trainingOpportunities.length > 0 && (
-            <div className="card">
-              <BookOpen className="mb-3 h-8 w-8 text-primary" />
-              <h3 className="mb-4 text-xl font-bold text-primary">فرص تدريبية</h3>
-              <ul className="space-y-4">
-                {trainingOpportunities.map((opp) => (
-                  <OpportunityApplyCard
-                    key={opp.id}
-                    opportunity={opp}
-                    applicationStatus={applicationByOpp.get(opp.id) ?? null}
-                    canApply
-                  />
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {employmentOpportunities.length > 0 && (
-            <div className="card">
-              <Briefcase className="mb-3 h-8 w-8 text-secondary-dark" />
-              <h3 className="mb-4 text-xl font-bold text-primary">فرص توظيف</h3>
-              <ul className="space-y-4">
-                {employmentOpportunities.map((opp) => (
-                  <OpportunityApplyCard
-                    key={opp.id}
-                    opportunity={opp}
-                    applicationStatus={applicationByOpp.get(opp.id) ?? null}
-                    canApply
-                  />
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {user.applications.length > 0 && (
-            <div className="card">
-              <h3 className="mb-4 text-xl font-bold text-primary">سجل التقديمات</h3>
-              <ul className="space-y-2">
-                {user.applications.map((app) => (
-                  <li
-                    key={app.id}
-                    className="flex justify-between rounded-lg bg-surface-muted px-4 py-3 text-sm"
-                  >
-                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
-                      {APPLICATION_STATUS_LABELS[app.status]}
-                    </span>
-                    <span className="text-brand-gray">
-                      {app.opportunity.title} —{" "}
-                      {new Date(app.appliedAt).toLocaleDateString("ar-SA")}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          <div className="card">
-            <h3 className="mb-4 flex items-center gap-2 text-xl font-bold text-primary">
-              <FileText className="h-6 w-6" />
-              بيانات الملف الموحد
-            </h3>
-            <dl className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <dt className="text-xs font-semibold text-brand-gray">المستوى التعليمي</dt>
-                <dd className="text-primary">{user.educationLevel || "—"}</dd>
-              </div>
-              <div>
-                <dt className="text-xs font-semibold text-brand-gray">السيرة الذاتية</dt>
-                <dd className="text-primary">
-                  {user.cvUrl ? (
-                    <a
-                      href={user.cvUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-semibold text-primary hover:underline"
-                    >
-                      عرض السيرة الذاتية
-                    </a>
-                  ) : (
-                    "—"
-                  )}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs font-semibold text-brand-gray">الشهادات</dt>
-                <dd className="text-primary">{user.certificatesUrls ? "مرفقة" : "—"}</dd>
-              </div>
-              <div className="sm:col-span-2">
-                <dt className="text-xs font-semibold text-brand-gray">الخبرات</dt>
-                <dd className="text-brand-gray">{user.experience || "—"}</dd>
-              </div>
-              <div className="sm:col-span-2">
-                <dt className="text-xs font-semibold text-brand-gray">المهارات</dt>
-                <dd className="text-brand-gray">{user.skills || "—"}</dd>
-              </div>
-              <div className="sm:col-span-2">
-                <dt className="text-xs font-semibold text-brand-gray">الميول المهنية</dt>
-                <dd className="text-brand-gray">{user.careerInterests || "—"}</dd>
-              </div>
-              <div>
-                <dt className="text-xs font-semibold text-brand-gray">الجوال</dt>
-                <dd dir="ltr" className="text-left text-brand-gray">
-                  {user.phone}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs font-semibold text-brand-gray">البريد</dt>
-                <dd dir="ltr" className="text-left text-brand-gray">
-                  {user.email}
-                </dd>
-              </div>
-            </dl>
-          </div>
-        </section>
+        </div>
       </main>
     </div>
   );

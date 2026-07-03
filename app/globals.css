@@ -52,6 +52,34 @@ body {
     @apply mb-2 block text-start text-sm font-semibold text-brand-gray;
   }
 
+  .field-cell {
+    @apply rounded-lg border-2 border-primary/20 bg-surface px-4 py-3 text-start;
+  }
+
+  .field-cell-row {
+    @apply flex items-center gap-3 text-start;
+  }
+
+  .field-cell-label {
+    @apply min-w-[7rem] shrink-0 text-sm font-semibold text-brand-gray sm:min-w-[9rem];
+  }
+
+  .field-cell-value {
+    @apply min-w-0 flex-1 break-words font-medium text-primary;
+  }
+
+  .field-cell-control {
+    @apply min-w-0 flex-1;
+  }
+
+  .field-cell-control .input-field {
+    @apply border-surface-border;
+  }
+
+  .field-grid {
+    @apply grid gap-3 sm:grid-cols-2;
+  }
+
   table {
     @apply text-start;
   }
