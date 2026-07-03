@@ -176,8 +176,19 @@ model FollowUp {
   @@unique([beneficiaryId, month])
 }
 
+model FollowUpFormTemplate {
+  id        String   @id @default(cuid())
+  title     String
+  months    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  questions FollowUpFormQuestion[]
+}
+
 model FollowUpFormQuestion {
   id         String   @id @default(cuid())
+  formId     String?
+  form       FollowUpFormTemplate? @relation(fields: [formId], references: [id], onDelete: Cascade)
   month      Int
   label      String
   fieldType  String   @default("text")
@@ -189,6 +200,7 @@ model FollowUpFormQuestion {
   updatedAt  DateTime @updatedAt
 
   @@index([month, sortOrder])
+  @@index([formId, sortOrder])
 }
 
 model Opportunity {

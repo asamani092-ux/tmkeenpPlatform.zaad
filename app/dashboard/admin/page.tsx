@@ -69,6 +69,7 @@ export default async function AdminDashboardPage() {
         stage: true,
         pendingStage: true,
         guideId: true,
+        followUpProgramStatus: true,
         educationLevel: true,
         experience: true,
         skills: true,
@@ -160,6 +161,24 @@ export default async function AdminDashboardPage() {
     beneficiaryCount: g._count.beneficiaries,
   }));
 
+  const beneficiariesByGuideId: Record<
+    string,
+    { id: string; name: string; phone: string; stage: string }[]
+  > = {};
+  for (const b of beneficiariesRaw) {
+    if (!b.guideId) continue;
+    const entry = {
+      id: b.id,
+      name: b.name,
+      phone: b.phone,
+      stage: b.stage,
+    };
+    if (!beneficiariesByGuideId[b.guideId]) {
+      beneficiariesByGuideId[b.guideId] = [];
+    }
+    beneficiariesByGuideId[b.guideId].push(entry);
+  }
+
   const managedBeneficiaries = beneficiariesRaw.map((b) => ({
     id: b.id,
     name: b.name,
@@ -203,7 +222,15 @@ export default async function AdminDashboardPage() {
   const exportSections: BulkExportSection[] = [
     {
       title: "المستفيدون",
-      headers: ["الاسم", "الجوال", "البريد", "المرحلة", "طلب معلّق", "المرشد"],
+      headers: [
+        "الاسم",
+        "الجوال",
+        "البريد",
+        "المرحلة",
+        "طلب معلّق",
+        "المرشد",
+        "حالة برنامج المتابعة",
+      ],
       rows: beneficiariesRaw.map((b) => [
         b.name,
         b.phone,
@@ -211,6 +238,7 @@ export default async function AdminDashboardPage() {
         STAGE_LABELS[b.stage],
         b.pendingStage ? STAGE_LABELS[b.pendingStage] : "—",
         b.guide?.name ?? "—",
+        b.followUpProgramStatus ?? "—",
       ]),
     },
     {
@@ -225,12 +253,13 @@ export default async function AdminDashboardPage() {
     },
     {
       title: "التقديمات",
-      headers: ["المستفيد", "الفرصة", "النوع", "الحالة", "تاريخ التقديم"],
+      headers: ["المستفيد", "الفرصة", "النوع", "الحالة", "ملاحظة المراجعة", "تاريخ التقديم"],
       rows: applicationsRaw.map((a) => [
         a.beneficiary.name,
         a.opportunity.title,
         a.opportunity.type === "TRAINING" ? "تدريب" : "توظيف",
         APPLICATION_STATUS_LABELS[a.status],
+        a.reviewNote || "—",
         a.appliedAt.toLocaleDateString("ar-SA"),
       ]),
     },
@@ -258,17 +287,39 @@ export default async function AdminDashboardPage() {
     },
     {
       title: "متابعة ما بعد التوظيف",
-      headers: ["المستفيد", "الشهر", "الحالة", "ملاحظات"],
+      headers: [
+        "المستفيد",
+        "الجوال",
+        "الشهر",
+        "الحالة",
+        "تاريخ الإرسال",
+        "ملاحظات",
+        "الإجابات",
+      ],
       rows: followUpsRaw.map((f) => [
         f.beneficiary.name,
+        f.beneficiary.phone,
         String(f.month),
         FOLLOW_UP_STATUS_LABELS[f.status as keyof typeof FOLLOW_UP_STATUS_LABELS] ?? f.status,
+        f.submittedAt ? f.submittedAt.toLocaleDateString("ar-SA") : "—",
         f.notes || "—",
+        f.answers ? JSON.stringify(f.answers) : "—",
       ]),
     },
   ];
 
 
+
+  const followUps = followUpsRaw.map((f) => ({
+    id: f.id,
+    month: f.month,
+    status: f.status,
+    notes: f.notes,
+    answers: f.answers,
+    submittedAt: f.submittedAt?.toISOString() ?? null,
+    dueAt: f.dueAt?.toISOString() ?? null,
+    beneficiary: f.beneficiary,
+  }));
 
   return (
     <div className="min-h-screen bg-surface-muted">
@@ -322,9 +373,10 @@ export default async function AdminDashboardPage() {
         <AdminDashboardTabs
           opportunities={opportunities}
           guides={guides}
+          beneficiariesByGuideId={beneficiariesByGuideId}
           beneficiaries={beneficiaries}
           managedBeneficiaries={managedBeneficiaries}
-          followUps={followUpsRaw}
+          followUps={followUps}
           employedBeneficiaries={employedBeneficiaries}
           applications={applications}
           impactStats={impactStats}

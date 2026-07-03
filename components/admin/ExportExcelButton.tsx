@@ -17,7 +17,7 @@ export default function ExportExcelButton({ filename, headers, rows }: Props) {
       className="btn-primary inline-flex !px-4 !py-2 text-sm"
     >
       <FileSpreadsheet className="h-4 w-4" />
-      تصدير Excel
+      تصدير CSV
     </button>
   );
 }

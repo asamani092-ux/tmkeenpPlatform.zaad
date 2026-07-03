@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 
+import { getQuestionsForMonth } from "@/lib/follow-up-form-templates";
+
 export async function GET(request: Request) {
   const session = await getSession();
   if (!session || session.role !== "ADMIN") {
@@ -9,10 +11,12 @@ export async function GET(request: Request) {
   }
 
   const month = Number(new URL(request.url).searchParams.get("month") ?? "0");
-  const where = month >= 1 && month <= 6 ? { month } : {};
+  if (month >= 1 && month <= 6) {
+    const questions = await getQuestionsForMonth(month);
+    return NextResponse.json({ questions });
+  }
 
   const questions = await prisma.followUpFormQuestion.findMany({
-    where,
     orderBy: [{ month: "asc" }, { sortOrder: "asc" }],
   });
 

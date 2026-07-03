@@ -9,6 +9,7 @@ import {
 } from "@/lib/follow-up-program";
 import type { ActionResult } from "@/lib/platform-service";
 import type { Prisma } from "@/generated/prisma/client";
+import { getQuestionsForMonth } from "@/lib/follow-up-form-templates";
 
 export async function initializeFollowUpProgram(beneficiaryId: string): Promise<void> {
   const startedAt = new Date();
@@ -50,7 +51,7 @@ export async function initializeFollowUpProgram(beneficiaryId: string): Promise<
     to: beneficiary.email,
     name: beneficiary.name,
     month: 1,
-    dashboardUrl: `${appUrl}/dashboard/beneficiary`,
+    dashboardUrl: `${appUrl}/dashboard/beneficiary#follow-up-month-1`,
     senderEmail: settings.senderEmail,
   });
   await notifyAdmins(
@@ -110,7 +111,7 @@ export async function processFollowUpReminders(): Promise<void> {
       to: b.email,
       name: b.name,
       month: currentMonth,
-      dashboardUrl: `${appUrl}/dashboard/beneficiary`,
+      dashboardUrl: `${appUrl}/dashboard/beneficiary#follow-up-month-${currentMonth}`,
       senderEmail: settings.senderEmail,
     });
     await prisma.followUp.update({
@@ -154,10 +155,7 @@ export async function submitFollowUpForm(
     return { success: false, error: "السجل غير متاح" };
   }
 
-  const questions = await prisma.followUpFormQuestion.findMany({
-    where: { month },
-    orderBy: { sortOrder: "asc" },
-  });
+  const questions = await getQuestionsForMonth(month);
   for (const q of questions) {
     if (q.required && !answers[q.id]?.trim()) {
       return { success: false, error: `الحقل "${q.label}" مطلوب` };
@@ -266,10 +264,7 @@ export async function getFollowUpFormForBeneficiary(beneficiaryId: string) {
   const activeMonth = getActiveFollowUpMonth(user.followUpProgramStartedAt);
   if (!activeMonth) return { user, activeMonth: null, questions: [], records: user.followUps };
 
-  const questions = await prisma.followUpFormQuestion.findMany({
-    where: { month: activeMonth },
-    orderBy: { sortOrder: "asc" },
-  });
+  const questions = await getQuestionsForMonth(activeMonth);
 
   return { user, activeMonth, questions, records: user.followUps };
 }
@@ -327,10 +322,7 @@ export async function getFollowUpSubmission(beneficiaryId: string, month: number
   });
   if (!record) return null;
 
-  const questions = await prisma.followUpFormQuestion.findMany({
-    where: { month },
-    orderBy: { sortOrder: "asc" },
-  });
+  const questions = await getQuestionsForMonth(month);
 
   const answers = (record.answers ?? {}) as Record<string, string>;
   const items = questions.map((q) => ({

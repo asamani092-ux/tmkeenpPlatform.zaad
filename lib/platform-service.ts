@@ -691,6 +691,8 @@ export async function adminUpdateBeneficiary(
   beneficiaryId: string,
   data: {
     phone?: string;
+    email?: string;
+    password?: string;
     educationLevel?: string;
     experience?: string;
     skills?: string;
@@ -710,6 +712,16 @@ export async function adminUpdateBeneficiary(
     return { success: false, error: "المستفيد غير موجود" };
   }
 
+  if (data.email !== undefined) {
+    const email = data.email.toLowerCase().trim();
+    const existing = await prisma.user.findFirst({
+      where: { email, id: { not: beneficiaryId } },
+    });
+    if (existing) {
+      return { success: false, error: "البريد مسجل مسبقاً" };
+    }
+  }
+
   if (data.guideId) {
     const guide = await prisma.user.findFirst({
       where: { id: data.guideId, role: "GUIDE" },
@@ -721,6 +733,8 @@ export async function adminUpdateBeneficiary(
     where: { id: beneficiaryId },
     data: {
       ...(data.phone !== undefined ? { phone: data.phone.trim() } : {}),
+      ...(data.email !== undefined ? { email: data.email.toLowerCase().trim() } : {}),
+      ...(data.password ? { password: await hashPassword(data.password) } : {}),
       ...(data.educationLevel !== undefined
         ? { educationLevel: data.educationLevel.trim() }
         : {}),

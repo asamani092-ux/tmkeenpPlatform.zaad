@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
-import FollowUpFormBuilder from "@/components/admin/FollowUpFormBuilder";
+import FollowUpFormTemplatesPanel from "@/components/admin/FollowUpFormTemplatesPanel";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { Settings, Mail } from "lucide-react";
 
@@ -130,7 +130,7 @@ export default function AdminSystemSettings() {
         </div>
       </div>
 
-      <FollowUpFormBuilder />
+      <FollowUpFormTemplatesPanel />
     </div>
   );
 }

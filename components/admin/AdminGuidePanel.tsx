@@ -17,17 +17,26 @@ type Guide = {
   beneficiaryCount: number;
 };
 
+type AssignedBeneficiary = {
+  id: string;
+  name: string;
+  phone: string;
+  stage: string;
+};
+
 type Props = {
   guides: Guide[];
+  beneficiariesByGuideId: Record<string, AssignedBeneficiary[]>;
 };
 
 type ModalMode = "add" | "edit" | null;
 
-export default function AdminGuidePanel({ guides: initial }: Props) {
+export default function AdminGuidePanel({ guides: initial, beneficiariesByGuideId }: Props) {
   const router = useRouter();
   const [guides, setGuides] = useSyncFromProps(initial);
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [editingGuide, setEditingGuide] = useState<Guide | null>(null);
+  const [viewBeneficiariesGuide, setViewBeneficiariesGuide] = useState<Guide | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -111,8 +120,15 @@ export default function AdminGuidePanel({ guides: initial }: Props) {
               <div className="min-w-0 flex-1 text-start">
                 <p className="font-semibold text-primary">{g.name}</p>
                 <p className="text-xs text-brand-gray" dir="ltr">
-                  {g.email} · {g.beneficiaryCount} مستفيد
+                  {g.email}
                 </p>
+                <button
+                  type="button"
+                  onClick={() => setViewBeneficiariesGuide(g)}
+                  className="btn-primary mt-2 !bg-red-800 !px-3 !py-1.5 text-xs"
+                >
+                  عرض المستفيدين ({g.beneficiaryCount})
+                </button>
               </div>
               <div className="flex shrink-0 gap-1">
                 <button
@@ -146,6 +162,31 @@ export default function AdminGuidePanel({ guides: initial }: Props) {
           </li>
         ))}
       </ul>
+
+      {viewBeneficiariesGuide && (
+        <FloatingModal
+          title={`مستفيدو ${viewBeneficiariesGuide.name}`}
+          onClose={() => setViewBeneficiariesGuide(null)}
+        >
+          <ul className="max-h-80 space-y-2 overflow-y-auto">
+            {(beneficiariesByGuideId[viewBeneficiariesGuide.id] ?? []).length === 0 ? (
+              <li className="text-sm text-brand-gray">لا يوجد مستفيدون مسندون</li>
+            ) : (
+              (beneficiariesByGuideId[viewBeneficiariesGuide.id] ?? []).map((b) => (
+                <li
+                  key={b.id}
+                  className="flex items-center justify-between gap-2 rounded-lg border border-surface-border px-3 py-2 text-sm"
+                >
+                  <span className="font-medium text-primary">{b.name}</span>
+                  <span className="font-mono text-xs text-brand-gray" dir="ltr">
+                    {b.phone}
+                  </span>
+                </li>
+              ))
+            )}
+          </ul>
+        </FloatingModal>
+      )}
 
       {modalMode && (
         <FloatingModal
