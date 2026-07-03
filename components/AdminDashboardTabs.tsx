@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import AdminOpportunitiesSection from "@/components/admin/AdminOpportunitiesSection";
 import AdminGuidePanel from "@/components/admin/AdminGuidePanel";
 import AdminBeneficiaryManagement from "@/components/admin/AdminBeneficiaryManagement";
@@ -51,6 +52,7 @@ type FollowUp = {
   month: number;
   status: string;
   notes: string;
+  answers?: unknown;
   beneficiary: { id: string; name: string; phone: string };
 };
 
@@ -86,7 +88,30 @@ export default function AdminDashboardTabs({
   applications,
   impactStats,
 }: Props) {
+  const searchParams = useSearchParams();
   const [tab, setTab] = useState<Tab>("pipeline");
+  const [openBeneficiaryId, setOpenBeneficiaryId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    const validTabs: Tab[] = [
+      "pipeline",
+      "opportunities",
+      "guides",
+      "management",
+      "applications",
+      "followup",
+      "impact",
+      "settings",
+    ];
+    if (tabParam && validTabs.includes(tabParam as Tab)) {
+      setTab(tabParam as Tab);
+    }
+    const beneficiaryId = searchParams.get("beneficiary");
+    if (beneficiaryId) {
+      setOpenBeneficiaryId(beneficiaryId);
+    }
+  }, [searchParams]);
 
   const tabs: { id: Tab; label: string; icon: typeof ClipboardList }[] = [
     { id: "pipeline", label: adminCopy.pipelineTab, icon: Kanban },
@@ -132,6 +157,8 @@ export default function AdminDashboardTabs({
         <AdminBeneficiaryManagement
           beneficiaries={managedBeneficiaries}
           guides={guides.map((g) => ({ id: g.id, name: g.name }))}
+          initialOpenBeneficiaryId={openBeneficiaryId}
+          onBeneficiaryOpened={() => setOpenBeneficiaryId(null)}
         />
       )}
 
@@ -141,7 +168,13 @@ export default function AdminDashboardTabs({
 
       {tab === "followup" && (
         <AdminFollowUpPanel
-          followUps={followUps}
+          followUps={followUps.map((f) => ({
+            ...f,
+            answers:
+              f.answers && typeof f.answers === "object" && !Array.isArray(f.answers)
+                ? (f.answers as Record<string, string>)
+                : null,
+          }))}
           employedBeneficiaries={employedBeneficiaries}
         />
       )}

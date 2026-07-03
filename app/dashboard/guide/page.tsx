@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Navbar from "@/components/Navbar";
-import GuideBeneficiaryTable from "@/components/GuideBeneficiaryTable";
+import GuideBeneficiaryTabs from "@/components/guide/GuideBeneficiaryTabs";
 import GuideDashboardKpis from "@/components/guide/GuideDashboardKpis";
 import { getDashboardPath } from "@/lib/auth";
 import { getSession } from "@/lib/session";
@@ -16,29 +16,8 @@ function parseCourseIds(raw: string): string[] {
   }
 }
 
-export default async function GuideDashboardPage() {
-  const session = await getSession();
-  if (!session) redirect("/login");
-  if (session.role !== "GUIDE") redirect(getDashboardPath(session.role));
-
-  const [beneficiaries, trainingCourses] = await Promise.all([
-    prisma.user.findMany({
-      where: { role: "BENEFICIARY", guideId: session.id, stage: "GUIDANCE" },
-      orderBy: { createdAt: "desc" },
-      include: {
-        notesAsBeneficiary: { orderBy: { createdAt: "desc" }, take: 10 },
-        sessionsAsBeneficiary: { orderBy: { date: "desc" }, take: 20 },
-        tasksAsBeneficiary: { orderBy: { createdAt: "asc" } },
-      },
-    }),
-    prisma.opportunity.findMany({
-      where: { type: "TRAINING", status: "متاحة" },
-      select: { id: true, title: true, provider: true },
-      orderBy: { title: "asc" },
-    }),
-  ]);
-
-  const serialized = beneficiaries.map((b) => ({
+function serializeBeneficiary(b: Awaited<ReturnType<typeof fetchBeneficiaries>>[number]) {
+  return {
     id: b.id,
     name: b.name,
     email: b.email,
@@ -76,7 +55,44 @@ export default async function GuideDashboardPage() {
       description: t.description,
       isCompleted: t.isCompleted,
     })),
-  }));
+  };
+}
+
+async function fetchBeneficiaries(guideId: string, stageFilter: "GUIDANCE" | "PREVIOUS") {
+  return prisma.user.findMany({
+    where: {
+      role: "BENEFICIARY",
+      guideId,
+      ...(stageFilter === "GUIDANCE"
+        ? { stage: "GUIDANCE" }
+        : { stage: { not: "GUIDANCE" } }),
+    },
+    orderBy: { createdAt: "desc" },
+    include: {
+      notesAsBeneficiary: { orderBy: { createdAt: "desc" }, take: 10 },
+      sessionsAsBeneficiary: { orderBy: { date: "desc" }, take: 20 },
+      tasksAsBeneficiary: { orderBy: { createdAt: "asc" } },
+    },
+  });
+}
+
+export default async function GuideDashboardPage() {
+  const session = await getSession();
+  if (!session) redirect("/login");
+  if (session.role !== "GUIDE") redirect(getDashboardPath(session.role));
+
+  const [activeRaw, previousRaw, trainingCourses] = await Promise.all([
+    fetchBeneficiaries(session.id, "GUIDANCE"),
+    fetchBeneficiaries(session.id, "PREVIOUS"),
+    prisma.opportunity.findMany({
+      where: { type: "TRAINING", status: "متاحة" },
+      select: { id: true, title: true, provider: true },
+      orderBy: { title: "asc" },
+    }),
+  ]);
+
+  const serialized = activeRaw.map(serializeBeneficiary);
+  const previousSerialized = previousRaw.map(serializeBeneficiary);
 
   const weekStart = new Date();
   weekStart.setHours(0, 0, 0, 0);
@@ -109,26 +125,26 @@ export default async function GuideDashboardPage() {
       <main className="mx-auto max-w-6xl space-y-8 px-4 py-8">
         <div className="flex items-center gap-3">
           <Users className="h-8 w-8 text-primary" />
-          <div className="text-right">
+          <div className="text-start">
             <h1 className="text-2xl font-bold text-primary">لوحة المرشد المهني</h1>
             <p className="text-brand-gray">
-              المستفيدون في مرحلة الإرشاد ({beneficiaries.length}) — عرض وتعديل فقط
+              المستفيدون في مرحلة الإرشاد ({serialized.length}) — عرض وتعديل
             </p>
           </div>
         </div>
 
         <GuideDashboardKpis
-          beneficiaryCount={beneficiaries.length}
+          beneficiaryCount={serialized.length}
           sessionsThisWeek={sessionsThisWeek}
           pendingTasks={pendingTasks}
           pendingTransitions={pendingTransitions}
         />
 
-        <p className="text-sm text-brand-gray">
-          انقر على المستفيد لإدارة الملف والجلسات والمهام. لا يمكنك إضافة أو حذف مستفيدين.
-        </p>
-
-        <GuideBeneficiaryTable beneficiaries={serialized} trainingCourses={trainingCourses} />
+        <GuideBeneficiaryTabs
+          activeBeneficiaries={serialized}
+          previousBeneficiaries={previousSerialized}
+          trainingCourses={trainingCourses}
+        />
       </main>
     </div>
   );

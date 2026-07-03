@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { APPLICATION_STATUS_LABELS } from "@/lib/labels";
 import { ApplicationStatus } from "@/generated/prisma/client";
+import SubmitButton from "@/components/ui/SubmitButton";
 import { Send } from "lucide-react";
 
 type Props = {
@@ -80,15 +81,15 @@ export default function OpportunityApplyCard({
           {APPLICATION_STATUS_LABELS[applicationStatus]}
         </span>
       ) : canApply ? (
-        <button
+        <SubmitButton
           type="button"
           onClick={handleApply}
-          disabled={pending}
-          className="btn-primary mt-4 flex w-full items-center justify-center gap-2 !py-2 text-sm"
+          loading={pending}
+          className="btn-primary mt-4 w-full !py-2 text-sm"
         >
           <Send className="h-4 w-4" />
-          {pending ? "جاري الإرسال..." : applyLabel}
-        </button>
+          {applyLabel}
+        </SubmitButton>
       ) : null}
 
       {message && (

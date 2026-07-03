@@ -52,7 +52,6 @@ export default function AdminOpportunityForm({ onSuccess }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-
       <FieldRow label="نوع الفرصة" htmlFor="type">
         <select id="type" name="type" required className="input-field">
           <option value="TRAINING">تدريب</option>
@@ -66,27 +65,34 @@ export default function AdminOpportunityForm({ onSuccess }: Props) {
         <input id="provider" name="provider" required className="input-field" />
       </FieldRow>
       <FieldRow label="المدة" htmlFor="duration">
-        <input id="duration" name="duration" required className="input-field" />
+        <div>
+          <input id="duration" name="duration" required className="input-field" />
+          <p className="mt-1 text-xs text-brand-gray">مثال: 3 أشهر، 6 أشهر، سنة</p>
+        </div>
       </FieldRow>
       <FieldRow label="الشروط / المتطلبات" htmlFor="requirements" align="start">
-        <textarea
-          id="requirements"
-          name="requirements"
-          rows={2}
-          className="input-field resize-none"
-          placeholder="شروط الالتحاق أو متطلبات الوظيفة"
-        />
+        <div>
+          <textarea
+            id="requirements"
+            name="requirements"
+            rows={2}
+            className="input-field resize-none"
+            placeholder="شروط الالتحاق أو متطلبات الوظيفة"
+          />
+          <p className="mt-1 text-xs text-brand-gray">اذكر المؤهلات والخبرة المطلوبة بوضوح</p>
+        </div>
       </FieldRow>
       <FieldRow label="الراتب (للتوظيف)" htmlFor="salary">
-        <input id="salary" name="salary" className="input-field" placeholder="اختياري" />
+        <div>
+          <input id="salary" name="salary" className="input-field" placeholder="اختياري" />
+          <p className="mt-1 text-xs text-brand-gray">لفرص التوظيف فقط — اتركه فارغاً للتدريب</p>
+        </div>
       </FieldRow>
       <FieldRow label="نوع الدوام (للتوظيف)" htmlFor="jobType">
-        <input
-          id="jobType"
-          name="jobType"
-          className="input-field"
-          placeholder="مثال: دوام كامل"
-        />
+        <div>
+          <input id="jobType" name="jobType" className="input-field" placeholder="مثال: دوام كامل" />
+          <p className="mt-1 text-xs text-brand-gray">دوام كامل، جزئي، عن بُعد، إلخ</p>
+        </div>
       </FieldRow>
       <FieldRow label="الحالة" htmlFor="status">
         <select id="status" name="status" required className="input-field" defaultValue="متاحة">

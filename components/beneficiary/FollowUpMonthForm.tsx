@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { formatDaysRemaining } from "@/lib/follow-up-program";
@@ -91,18 +90,16 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           {questions.map((q) => (
-            <FieldRow
-              key={q.id}
-              label={`${q.label}${q.required ? " *" : ""}`}
-              htmlFor={`follow-up-${q.id}`}
-              align={q.fieldType === "textarea" ? "start" : "center"}
-            >
+            <div key={q.id}>
+              <label className="label-field">
+                {q.label}
+                {q.required ? " *" : ""}
+              </label>
               {q.helperText && (
                 <p className="mb-1 text-xs text-brand-gray">{q.helperText}</p>
               )}
               {q.fieldType === "textarea" ? (
                 <textarea
-                  id={`follow-up-${q.id}`}
                   className="input-field resize-none"
                   rows={3}
                   required={q.required}
@@ -113,7 +110,6 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
                 />
               ) : q.fieldType === "yes_no" ? (
                 <select
-                  id={`follow-up-${q.id}`}
                   className="input-field"
                   required={q.required}
                   value={answers[q.id] ?? ""}
@@ -127,7 +123,6 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
                 </select>
               ) : q.fieldType === "select" ? (
                 <select
-                  id={`follow-up-${q.id}`}
                   className="input-field"
                   required={q.required}
                   value={answers[q.id] ?? ""}
@@ -142,27 +137,8 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
                     </option>
                   ))}
                 </select>
-              ) : q.fieldType === "radio" ? (
-                <div className="flex flex-wrap gap-4">
-                  {q.options.map((o) => (
-                    <label key={o} className="flex items-center gap-2 text-sm">
-                      <input
-                        type="radio"
-                        name={`q-${q.id}`}
-                        value={o}
-                        required={q.required}
-                        checked={answers[q.id] === o}
-                        onChange={() =>
-                          setAnswers((a) => ({ ...a, [q.id]: o }))
-                        }
-                      />
-                      {o}
-                    </label>
-                  ))}
-                </div>
               ) : (
                 <input
-                  id={`follow-up-${q.id}`}
                   className="input-field"
                   required={q.required}
                   value={answers[q.id] ?? ""}
@@ -171,7 +147,7 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
                   }
                 />
               )}
-            </FieldRow>
+            </div>
           ))}
           <SubmitButton loading={pending} className="btn-primary w-full">
             إرسال النموذج

@@ -4,6 +4,8 @@ import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { OPPORTUNITY_STATUS_LABELS } from "@/lib/labels";
 import { Pencil, Trash2, Users, ChevronDown, ChevronUp } from "lucide-react";
+import SubmitButton from "@/components/ui/SubmitButton";
+import { useSyncFromProps } from "@/lib/use-sync-from-props";
 
 
 type Opportunity = {
@@ -109,14 +111,14 @@ function OpportunityTargetPanel({
           </li>
         ))}
       </ul>
-      <button
+      <SubmitButton
         type="button"
         onClick={handleSave}
-        disabled={pending}
+        loading={pending}
         className="btn-primary w-full !py-2 text-sm"
       >
-        {pending ? "جاري الحفظ..." : "حفظ الاستهداف"}
-      </button>
+        حفظ الاستهداف
+      </SubmitButton>
     </div>
   );
 }
@@ -126,7 +128,7 @@ export default function AdminOpportunityList({
   beneficiaries,
 }: Props) {
   const router = useRouter();
-  const [opportunities, setOpportunities] = useState(initial);
+  const [opportunities, setOpportunities] = useSyncFromProps(initial);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [targetingId, setTargetingId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
@@ -205,9 +207,9 @@ export default function AdminOpportunityList({
                   </select>
                   <textarea name="requirements" defaultValue={opp.requirements} className="input-field resize-none" rows={2} />
                   <div className="flex gap-2">
-                    <button type="submit" disabled={pending} className="btn-primary flex-1 !py-2 text-sm">
+                    <SubmitButton loading={pending} className="btn-primary flex-1 !py-2 text-sm">
                       حفظ
-                    </button>
+                    </SubmitButton>
                     <button type="button" onClick={() => setEditingId(null)} className="btn-secondary flex-1 !py-2 text-sm">
                       إلغاء
                     </button>
