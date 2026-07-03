@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import FieldRow from "@/components/ui/FieldRow";
 import FloatingModal from "@/components/admin/FloatingModal";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastSuccess, toastError } from "@/lib/toast";
@@ -151,40 +152,52 @@ export default function AdminGuidePanel({ guides: initial }: Props) {
           onClose={closeModal}
         >
           <form onSubmit={handleSubmit} className="space-y-3">
-            <input
-              name="name"
-              placeholder="الاسم"
-              required
-              defaultValue={editingGuide?.name ?? ""}
-              className="input-field"
-            />
-            <input
-              name="email"
-              type="email"
-              placeholder="البريد"
-              required
-              defaultValue={editingGuide?.email ?? ""}
-              className="input-field"
-              dir="ltr"
-            />
-            <input
-              name="phone"
-              type="tel"
-              placeholder="الجوال"
-              required
-              defaultValue={editingGuide?.phone ?? ""}
-              className="input-field"
-              dir="ltr"
-            />
-            <input
-              name="password"
-              type="password"
-              placeholder={modalMode === "add" ? "كلمة المرور" : "كلمة مرور جديدة (اختياري)"}
-              required={modalMode === "add"}
-              minLength={modalMode === "add" ? 6 : undefined}
-              className="input-field"
-              dir="ltr"
-            />
+            <FieldRow label="الاسم" htmlFor="guide-name">
+              <input
+                id="guide-name"
+                name="name"
+                required
+                defaultValue={editingGuide?.name ?? ""}
+                className="input-field"
+              />
+            </FieldRow>
+            <FieldRow label="البريد" htmlFor="guide-email" ltr>
+              <input
+                id="guide-email"
+                name="email"
+                type="email"
+                required
+                defaultValue={editingGuide?.email ?? ""}
+                className="input-field"
+                dir="ltr"
+              />
+            </FieldRow>
+            <FieldRow label="الجوال" htmlFor="guide-phone" ltr>
+              <input
+                id="guide-phone"
+                name="phone"
+                type="tel"
+                required
+                defaultValue={editingGuide?.phone ?? ""}
+                className="input-field"
+                dir="ltr"
+              />
+            </FieldRow>
+            <FieldRow
+              label={modalMode === "add" ? "كلمة المرور" : "كلمة مرور جديدة (اختياري)"}
+              htmlFor="guide-password"
+              ltr
+            >
+              <input
+                id="guide-password"
+                name="password"
+                type="password"
+                required={modalMode === "add"}
+                minLength={modalMode === "add" ? 6 : undefined}
+                className="input-field"
+                dir="ltr"
+              />
+            </FieldRow>
             <div className="flex gap-2 pt-2">
               <SubmitButton loading={pending} className="btn-primary flex-1 !py-2 text-sm">
                 {modalMode === "add" ? "حفظ المرشد" : "حفظ التعديلات"}

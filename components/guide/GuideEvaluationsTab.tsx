@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { guideCopy } from "@/lib/copy/ar";
@@ -62,15 +63,17 @@ export default function GuideEvaluationsTab({
 
   return (
     <div className="space-y-4">
-      <div className="card-section space-y-2">
-        <h4 className="font-bold text-primary">{guideCopy.recommendationsSection}</h4>
-        <textarea
-          value={recommendations}
-          onChange={(e) => setRecommendations(e.target.value)}
-          rows={5}
-          className="input-field resize-none"
-          placeholder="اكتب التوصيات المهنية للمستفيد..."
-        />
+      <div className="card-section">
+        <FieldRow label={guideCopy.recommendationsSection} htmlFor="recommendations" align="start">
+          <textarea
+            id="recommendations"
+            value={recommendations}
+            onChange={(e) => setRecommendations(e.target.value)}
+            rows={5}
+            className="input-field resize-none"
+            placeholder="اكتب التوصيات المهنية للمستفيد..."
+          />
+        </FieldRow>
       </div>
 
       <div className="card-section space-y-2">

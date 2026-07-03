@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import FullPageLink from "@/components/FullPageLink";
+import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastError, toastSuccess } from "@/lib/toast";
 import { forgotPasswordCopy } from "@/lib/copy/ar";
@@ -54,10 +55,7 @@ export default function ForgotPasswordPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="phone" className="label-field">
-                {forgotPasswordCopy.phoneLabel}
-              </label>
+            <FieldRow label={forgotPasswordCopy.phoneLabel} htmlFor="phone" ltr>
               <input
                 id="phone"
                 name="phone"
@@ -66,11 +64,8 @@ export default function ForgotPasswordPage() {
                 className="input-field"
                 dir="ltr"
               />
-            </div>
-            <div>
-              <label htmlFor="password" className="label-field">
-                {forgotPasswordCopy.passwordLabel}
-              </label>
+            </FieldRow>
+            <FieldRow label={forgotPasswordCopy.passwordLabel} htmlFor="password" ltr>
               <input
                 id="password"
                 name="password"
@@ -80,7 +75,7 @@ export default function ForgotPasswordPage() {
                 className="input-field"
                 dir="ltr"
               />
-            </div>
+            </FieldRow>
             <SubmitButton loading={loading} className="btn-primary w-full">
               {forgotPasswordCopy.submitBtn}
             </SubmitButton>

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import FullPageLink from "@/components/FullPageLink";
+import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastError } from "@/lib/toast";
 import { uploadPdfFile } from "@/lib/upload-client";
@@ -76,16 +77,10 @@ export default function RegisterPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <label htmlFor="name" className="label-field">
-                  الاسم الكامل
-                </label>
+              <FieldRow label="الاسم الكامل" htmlFor="name" className="sm:col-span-2">
                 <input id="name" name="name" required className="input-field" />
-              </div>
-              <div>
-                <label htmlFor="phone" className="label-field">
-                  رقم الجوال
-                </label>
+              </FieldRow>
+              <FieldRow label="رقم الجوال" htmlFor="phone" ltr>
                 <input
                   id="phone"
                   name="phone"
@@ -94,11 +89,8 @@ export default function RegisterPage() {
                   className="input-field"
                   dir="ltr"
                 />
-              </div>
-              <div>
-                <label htmlFor="email" className="label-field">
-                  البريد الإلكتروني
-                </label>
+              </FieldRow>
+              <FieldRow label="البريد الإلكتروني" htmlFor="email" ltr>
                 <input
                   id="email"
                   name="email"
@@ -107,11 +99,8 @@ export default function RegisterPage() {
                   className="input-field"
                   dir="ltr"
                 />
-              </div>
-              <div className="sm:col-span-2">
-                <label htmlFor="password" className="label-field">
-                  كلمة المرور
-                </label>
+              </FieldRow>
+              <FieldRow label="كلمة المرور" htmlFor="password" className="sm:col-span-2" ltr>
                 <input
                   id="password"
                   name="password"
@@ -121,46 +110,31 @@ export default function RegisterPage() {
                   className="input-field"
                   dir="ltr"
                 />
-              </div>
+              </FieldRow>
             </div>
 
             <hr className="border-surface-border" />
             <p className="text-sm font-semibold text-primary">الملف الرقمي</p>
 
-            <div>
-              <label htmlFor="educationLevel" className="label-field">
-                المستوى التعليمي
-              </label>
+            <FieldRow label="المستوى التعليمي" htmlFor="educationLevel">
               <input id="educationLevel" name="educationLevel" className="input-field" />
-            </div>
-            <div>
-              <label htmlFor="experience" className="label-field">
-                الخبرات
-              </label>
+            </FieldRow>
+            <FieldRow label="الخبرات" htmlFor="experience" align="start">
               <textarea id="experience" name="experience" rows={2} className="input-field resize-none" />
-            </div>
-            <div>
-              <label htmlFor="skills" className="label-field">
-                المهارات
-              </label>
+            </FieldRow>
+            <FieldRow label="المهارات" htmlFor="skills" align="start">
               <textarea id="skills" name="skills" rows={2} className="input-field resize-none" />
-            </div>
-            <div>
-              <label htmlFor="careerInterests" className="label-field">
-                الميول المهنية
-              </label>
+            </FieldRow>
+            <FieldRow label="الميول المهنية" htmlFor="careerInterests" align="start">
               <textarea
                 id="careerInterests"
                 name="careerInterests"
                 rows={2}
                 className="input-field resize-none"
               />
-            </div>
+            </FieldRow>
 
-            <div>
-              <label htmlFor="cv" className="label-field">
-                {registerCopy.cvLabel}
-              </label>
+            <FieldRow label={registerCopy.cvLabel} htmlFor="cv">
               <input
                 id="cv"
                 type="file"
@@ -169,11 +143,8 @@ export default function RegisterPage() {
                 onChange={(e) => setCvFile(e.target.files?.[0] ?? null)}
               />
               <p className="mt-1 text-xs text-brand-gray">{registerCopy.cvHint}</p>
-            </div>
-            <div>
-              <label htmlFor="certificates" className="label-field">
-                {registerCopy.certificatesLabel}
-              </label>
+            </FieldRow>
+            <FieldRow label={registerCopy.certificatesLabel} htmlFor="certificates">
               <input
                 id="certificates"
                 type="file"
@@ -182,7 +153,7 @@ export default function RegisterPage() {
                 onChange={(e) => setCertFile(e.target.files?.[0] ?? null)}
               />
               <p className="mt-1 text-xs text-brand-gray">{registerCopy.certificatesHint}</p>
-            </div>
+            </FieldRow>
 
             <SubmitButton loading={pending} className="btn-primary w-full">
               {registerCopy.submitBtn}

@@ -4,6 +4,7 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import FullPageLink from "@/components/FullPageLink";
+import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastError } from "@/lib/toast";
 import { LogIn } from "lucide-react";
@@ -58,10 +59,7 @@ function LoginForm() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="email" className="label-field">
-            البريد الإلكتروني
-          </label>
+        <FieldRow label="البريد الإلكتروني" htmlFor="email" ltr>
           <input
             id="email"
             name="email"
@@ -71,11 +69,8 @@ function LoginForm() {
             placeholder="email@example.com"
             dir="ltr"
           />
-        </div>
-        <div>
-          <label htmlFor="password" className="label-field">
-            كلمة المرور
-          </label>
+        </FieldRow>
+        <FieldRow label="كلمة المرور" htmlFor="password" ltr>
           <input
             id="password"
             name="password"
@@ -85,7 +80,7 @@ function LoginForm() {
             placeholder="••••••••"
             dir="ltr"
           />
-        </div>
+        </FieldRow>
         <SubmitButton loading={loading} className="btn-primary w-full">
           دخول
         </SubmitButton>

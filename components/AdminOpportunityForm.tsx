@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastSuccess, toastError } from "@/lib/toast";
 
@@ -52,37 +53,22 @@ export default function AdminOpportunityForm({ onSuccess }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
 
-      <div>
-        <label htmlFor="type" className="label-field">
-          نوع الفرصة
-        </label>
+      <FieldRow label="نوع الفرصة" htmlFor="type">
         <select id="type" name="type" required className="input-field">
           <option value="TRAINING">تدريب</option>
           <option value="EMPLOYMENT">توظيف</option>
         </select>
-      </div>
-      <div>
-        <label htmlFor="title" className="label-field">
-          العنوان
-        </label>
+      </FieldRow>
+      <FieldRow label="العنوان" htmlFor="title">
         <input id="title" name="title" required className="input-field" />
-      </div>
-      <div>
-        <label htmlFor="provider" className="label-field">
-          مزود الفرصة / جهة العمل
-        </label>
+      </FieldRow>
+      <FieldRow label="مزود الفرصة / جهة العمل" htmlFor="provider">
         <input id="provider" name="provider" required className="input-field" />
-      </div>
-      <div>
-        <label htmlFor="duration" className="label-field">
-          المدة
-        </label>
+      </FieldRow>
+      <FieldRow label="المدة" htmlFor="duration">
         <input id="duration" name="duration" required className="input-field" />
-      </div>
-      <div>
-        <label htmlFor="requirements" className="label-field">
-          الشروط / المتطلبات
-        </label>
+      </FieldRow>
+      <FieldRow label="الشروط / المتطلبات" htmlFor="requirements" align="start">
         <textarea
           id="requirements"
           name="requirements"
@@ -90,33 +76,24 @@ export default function AdminOpportunityForm({ onSuccess }: Props) {
           className="input-field resize-none"
           placeholder="شروط الالتحاق أو متطلبات الوظيفة"
         />
-      </div>
-      <div>
-        <label htmlFor="salary" className="label-field">
-          الراتب (للتوظيف)
-        </label>
+      </FieldRow>
+      <FieldRow label="الراتب (للتوظيف)" htmlFor="salary">
         <input id="salary" name="salary" className="input-field" placeholder="اختياري" />
-      </div>
-      <div>
-        <label htmlFor="jobType" className="label-field">
-          نوع الدوام (للتوظيف)
-        </label>
+      </FieldRow>
+      <FieldRow label="نوع الدوام (للتوظيف)" htmlFor="jobType">
         <input
           id="jobType"
           name="jobType"
           className="input-field"
           placeholder="مثال: دوام كامل"
         />
-      </div>
-      <div>
-        <label htmlFor="status" className="label-field">
-          الحالة
-        </label>
+      </FieldRow>
+      <FieldRow label="الحالة" htmlFor="status">
         <select id="status" name="status" required className="input-field" defaultValue="متاحة">
           <option value="متاحة">متاحة</option>
           <option value="مغلقة">مغلقة</option>
         </select>
-      </div>
+      </FieldRow>
       <SubmitButton loading={pending} className="btn-primary w-full">
         إضافة الفرصة
       </SubmitButton>
