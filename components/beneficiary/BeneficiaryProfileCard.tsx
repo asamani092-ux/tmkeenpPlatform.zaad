@@ -1,6 +1,5 @@
 "use client";
 
-import BeneficiaryProfileEdit from "@/components/beneficiary/BeneficiaryProfileEdit";
 import DetailRow from "@/components/ui/DetailRow";
 import FieldGrid from "@/components/ui/FieldGrid";
 import { User, ExternalLink } from "lucide-react";
@@ -37,12 +36,11 @@ export default function BeneficiaryProfileCard({ profile }: Props) {
 
   return (
     <section className="card">
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+      <div className="mb-4 flex items-center gap-2">
         <h2 className="flex items-center gap-2 text-xl font-bold text-primary">
           <User className="h-6 w-6" />
           الملف الشخصي
         </h2>
-        <BeneficiaryProfileEdit profile={profile} />
       </div>
 
       <FieldGrid>

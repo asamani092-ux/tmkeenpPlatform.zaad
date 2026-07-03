@@ -850,6 +850,45 @@ export async function updateBeneficiaryProfile(data: {
   return { success: true };
 }
 
+/** Beneficiary updates account email/password — O(1) */
+export async function updateBeneficiaryAccount(data: {
+  email?: string;
+  password?: string;
+}): Promise<ActionResult> {
+  const session = await getSession();
+  if (!session || session.role !== "BENEFICIARY") {
+    return { success: false, error: "غير مصرح" };
+  }
+
+  if (!data.email && !data.password) {
+    return { success: false, error: "لا توجد بيانات للتحديث" };
+  }
+
+  if (data.password && data.password.length < 6) {
+    return { success: false, error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" };
+  }
+
+  if (data.email) {
+    const email = data.email.toLowerCase().trim();
+    const existing = await prisma.user.findFirst({
+      where: { email, id: { not: session.id } },
+    });
+    if (existing) {
+      return { success: false, error: "البريد مسجل مسبقاً" };
+    }
+  }
+
+  await prisma.user.update({
+    where: { id: session.id },
+    data: {
+      ...(data.email ? { email: data.email.toLowerCase().trim() } : {}),
+      ...(data.password ? { password: await hashPassword(data.password) } : {}),
+    },
+  });
+
+  return { success: true };
+}
+
 export async function setOpportunityTargets(
   opportunityId: string,
   beneficiaryIds: string[]

@@ -1,5 +1,6 @@
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
-import FullPageLink from "@/components/FullPageLink";
+import PlatformFooter from "@/components/PlatformFooter";
 import { getSession } from "@/lib/session";
 import { getDashboardPath } from "@/lib/auth";
 import { landingCopy, PARTNERS } from "@/lib/copy/ar";
@@ -24,19 +25,19 @@ export default async function HomePage() {
 
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row-reverse">
             {session && dashboardHref ? (
-              <FullPageLink href={dashboardHref} className="btn-primary min-w-[220px]">
+              <Link href={dashboardHref} className="btn-primary min-w-[220px]">
                 {landingCopy.dashboardBtn}
                 <ArrowLeft className="h-5 w-5" />
-              </FullPageLink>
+              </Link>
             ) : (
               <>
-                <FullPageLink href="/register" className="btn-register min-w-[220px]">
+                <Link href="/register" className="btn-register min-w-[220px]">
                   {landingCopy.registerBtn}
                   <ArrowLeft className="h-5 w-5" />
-                </FullPageLink>
-                <FullPageLink href="/login" className="btn-primary min-w-[220px]">
+                </Link>
+                <Link href="/login" className="btn-primary min-w-[220px]">
                   {landingCopy.loginBtn}
-                </FullPageLink>
+                </Link>
               </>
             )}
           </div>
@@ -105,31 +106,7 @@ export default async function HomePage() {
         </section>
       </main>
 
-      <footer className="border-t border-surface-border py-6 text-center text-sm text-brand-gray">
-        <nav className="mb-3 flex flex-wrap items-center justify-center gap-4">
-          {session && dashboardHref ? (
-            <FullPageLink href={dashboardHref} className="hover:text-primary">
-              لوحة التحكم
-            </FullPageLink>
-          ) : (
-            <>
-              <FullPageLink href="/login" className="hover:text-primary">
-                {landingCopy.loginBtn}
-              </FullPageLink>
-              <FullPageLink href="/register" className="hover:text-primary">
-                {landingCopy.registerBtn}
-              </FullPageLink>
-            </>
-          )}
-          <a href="#about" className="hover:text-primary">
-            {landingCopy.aboutTitle}
-          </a>
-          <a href="#partners" className="hover:text-primary">
-            {landingCopy.partnersTitle}
-          </a>
-        </nav>
-        © {new Date().getFullYear()} {landingCopy.footer}
-      </footer>
+      <PlatformFooter dashboardHref={dashboardHref} />
     </div>
   );
 }

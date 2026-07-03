@@ -56,6 +56,14 @@ body {
     @apply rounded-lg border-2 border-primary/20 bg-surface px-4 py-3 text-start;
   }
 
+  .auth-field {
+    @apply rounded-lg border border-surface-border bg-surface px-4 py-3 text-start;
+  }
+
+  .input-field-auth {
+    @apply w-full rounded-lg border border-surface-border bg-surface px-4 py-3 text-start text-brand-gray outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/10;
+  }
+
   .field-cell-row {
     @apply flex items-center gap-3 text-start;
   }

@@ -40,7 +40,8 @@ export async function PATCH(
     }
 
     return NextResponse.json({ error: "لا توجد بيانات للتحديث" }, { status: 400 });
-  } catch {
+  } catch (err) {
+    console.error("[PATCH /api/tasks]", err);
     return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
   }
 }

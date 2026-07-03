@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
-import FullPageLink from "@/components/FullPageLink";
 import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastError } from "@/lib/toast";
@@ -15,21 +15,36 @@ function LoginForm() {
   const registered = searchParams.get("registered");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("email") || params.has("password")) {
+      params.delete("email");
+      params.delete("password");
+      const qs = params.toString();
+      const next = `${window.location.pathname}${qs ? `?${qs}` : ""}`;
+      window.history.replaceState(null, "", next);
+    }
+  }, []);
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
 
     const form = new FormData(e.currentTarget);
-    const body = {
-      email: form.get("email"),
-      password: form.get("password"),
-    };
+    const email = String(form.get("email") ?? "").trim();
+    const password = String(form.get("password") ?? "");
+
+    if (!email || !password) {
+      toastError("أدخل البريد وكلمة المرور");
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -37,7 +52,6 @@ function LoginForm() {
         return;
       }
       router.push(data.redirect);
-      router.refresh();
     } catch {
       toastError("حدث خطأ في الاتصال. حاول مرة أخرى.");
     } finally {
@@ -58,25 +72,25 @@ function LoginForm() {
         </p>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <FieldRow label="البريد الإلكتروني" htmlFor="email" ltr>
+      <form method="post" action="#" onSubmit={handleSubmit} noValidate className="space-y-4">
+        <FieldRow label="البريد الإلكتروني" htmlFor="email" ltr variant="auth">
           <input
             id="email"
             name="email"
             type="email"
-            required
-            className="input-field"
+            autoComplete="username"
+            className="input-field-auth"
             placeholder="email@example.com"
             dir="ltr"
           />
         </FieldRow>
-        <FieldRow label="كلمة المرور" htmlFor="password" ltr>
+        <FieldRow label="كلمة المرور" htmlFor="password" ltr variant="auth">
           <input
             id="password"
             name="password"
             type="password"
-            required
-            className="input-field"
+            autoComplete="current-password"
+            className="input-field-auth"
             placeholder="••••••••"
             dir="ltr"
           />
@@ -87,16 +101,16 @@ function LoginForm() {
       </form>
 
       <p className="mt-4 text-center text-sm">
-        <FullPageLink href="/forgot-password" className="text-primary hover:underline">
+        <Link href="/forgot-password" className="text-primary hover:underline">
           نسيت كلمة المرور؟
-        </FullPageLink>
+        </Link>
       </p>
 
       <p className="mt-4 text-center text-sm text-brand-gray">
         مستفيد جديد؟{" "}
-        <FullPageLink href="/register" className="font-semibold text-primary hover:underline">
+        <Link href="/register" className="font-semibold text-primary hover:underline">
           سجّل هنا
-        </FullPageLink>
+        </Link>
       </p>
     </div>
   );
@@ -107,7 +121,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-surface-muted">
       <Navbar showAuth={false} />
       <main className="mx-auto max-w-md px-4 py-12">
-        <Suspense fallback={<div className="card animate-pulse h-64" />}>
+        <Suspense fallback={<div className="card h-64 animate-pulse" />}>
           <LoginForm />
         </Suspense>
       </main>

@@ -3,6 +3,7 @@ type Props = {
   htmlFor?: string;
   ltr?: boolean;
   align?: "center" | "start";
+  variant?: "default" | "auth";
   className?: string;
   children: React.ReactNode;
 };
@@ -12,11 +13,13 @@ export default function FieldRow({
   htmlFor,
   ltr,
   align = "center",
+  variant = "default",
   className = "",
   children,
 }: Props) {
+  const cellClass = variant === "auth" ? "auth-field" : "field-cell";
   return (
-    <div className={`field-cell ${className}`.trim()}>
+    <div className={`${cellClass} ${className}`.trim()}>
       <div
         className={`field-cell-row ${align === "start" ? "items-start" : "items-center"}`}
       >
