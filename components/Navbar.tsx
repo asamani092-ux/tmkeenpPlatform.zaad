@@ -44,7 +44,7 @@ export default function Navbar({
 
         <div className="flex shrink-0 items-center gap-3">
           {showAuth && userId && isBeneficiary && unifiedProfile ? (
-            <BeneficiaryNavbarActions userId={userId} profile={unifiedProfile} />
+            <BeneficiaryNavbarActions profile={unifiedProfile} />
           ) : showAuth && userId ? (
             <NotificationBell />
           ) : null}

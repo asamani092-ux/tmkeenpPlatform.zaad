@@ -7,11 +7,10 @@ import BeneficiaryUnifiedProfileModal, {
 import { LogOut } from "lucide-react";
 
 type Props = {
-  userId: string;
   profile: UnifiedProfile;
 };
 
-export default function BeneficiaryNavbarActions({ userId, profile }: Props) {
+export default function BeneficiaryNavbarActions({ profile }: Props) {
   return (
     <>
       <NotificationBell />

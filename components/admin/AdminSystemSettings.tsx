@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import FollowUpFormBuilder from "@/components/admin/FollowUpFormBuilder";
 import { toastSuccess, toastError } from "@/lib/toast";
@@ -85,10 +86,7 @@ export default function AdminSystemSettings() {
           <p className="text-sm text-brand-gray">جاري التحميل...</p>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="senderEmail" className="label-field">
-                البريد الإلكتروني للمرسل
-              </label>
+            <FieldRow label="البريد الإلكتروني للمرسل" htmlFor="senderEmail" ltr>
               <input
                 id="senderEmail"
                 type="email"
@@ -99,7 +97,7 @@ export default function AdminSystemSettings() {
                 dir="ltr"
                 placeholder="noreply@example.com"
               />
-            </div>
+            </FieldRow>
             <SubmitButton loading={pending} className="btn-primary w-full">
               حفظ الإعدادات
             </SubmitButton>

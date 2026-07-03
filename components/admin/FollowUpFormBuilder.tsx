@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { Plus, Trash2, Eye } from "lucide-react";
@@ -145,27 +146,32 @@ export default function FollowUpFormBuilder() {
             <p className="text-sm text-brand-gray">لا أسئلة بعد</p>
           ) : (
             monthQuestions.map((q) => (
-              <div key={q.id}>
-                <label className="label-field">{q.label}{q.required ? " *" : ""}</label>
-                {q.helperText && <p className="mb-1 text-xs text-brand-gray">{q.helperText}</p>}
-                {q.fieldType === "textarea" ? (
-                  <textarea className="input-field resize-none" rows={2} disabled />
-                ) : q.fieldType === "yes_no" ? (
-                  <div className="flex gap-4 text-sm">
-                    <span>نعم</span>
-                    <span>لا</span>
-                  </div>
-                ) : q.fieldType === "select" ? (
-                  <select className="input-field" disabled>
-                    <option>اختر...</option>
-                    {q.options.map((o) => (
-                      <option key={o}>{o}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <input className="input-field" disabled />
-                )}
-              </div>
+              <FieldRow
+                key={q.id}
+                label={`${q.label}${q.required ? " *" : ""}`}
+                align={q.fieldType === "textarea" ? "start" : "center"}
+              >
+                <div>
+                  {q.helperText && <p className="mb-1 text-xs text-brand-gray">{q.helperText}</p>}
+                  {q.fieldType === "textarea" ? (
+                    <textarea className="input-field resize-none" rows={2} disabled />
+                  ) : q.fieldType === "yes_no" ? (
+                    <div className="flex gap-4 text-sm">
+                      <span>نعم</span>
+                      <span>لا</span>
+                    </div>
+                  ) : q.fieldType === "select" ? (
+                    <select className="input-field" disabled>
+                      <option>اختر...</option>
+                      {q.options.map((o) => (
+                        <option key={o}>{o}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input className="input-field" disabled />
+                  )}
+                </div>
+              </FieldRow>
             ))
           )}
         </div>

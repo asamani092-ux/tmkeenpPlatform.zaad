@@ -1,5 +1,5 @@
 import { beneficiaryCopy } from "@/lib/copy/ar";
-import { Calendar, MapPin, AlertCircle } from "lucide-react";
+import { MapPin, AlertCircle } from "lucide-react";
 import { SESSION_STATUS_LABELS } from "@/lib/labels";
 import type { SessionStatus } from "@/generated/prisma/client";
 import SessionJoinButton from "@/components/beneficiary/SessionJoinButton";

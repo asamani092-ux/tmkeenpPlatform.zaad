@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { formatDaysRemaining } from "@/lib/follow-up-program";
@@ -90,14 +91,15 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           {questions.map((q) => (
-            <div key={q.id}>
-              <label className="label-field">
-                {q.label}
-                {q.required ? " *" : ""}
-              </label>
-              {q.helperText && (
-                <p className="mb-1 text-xs text-brand-gray">{q.helperText}</p>
-              )}
+            <FieldRow
+              key={q.id}
+              label={`${q.label}${q.required ? " *" : ""}`}
+              align={q.fieldType === "textarea" ? "start" : "center"}
+            >
+              <div>
+                {q.helperText && (
+                  <p className="mb-1 text-xs text-brand-gray">{q.helperText}</p>
+                )}
               {q.fieldType === "textarea" ? (
                 <textarea
                   className="input-field resize-none"
@@ -147,7 +149,8 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
                   }
                 />
               )}
-            </div>
+              </div>
+            </FieldRow>
           ))}
           <SubmitButton loading={pending} className="btn-primary w-full">
             إرسال النموذج

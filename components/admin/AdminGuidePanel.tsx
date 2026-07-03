@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useSyncFromProps } from "@/lib/use-sync-from-props";
 import { useRouter } from "next/navigation";
 import FloatingModal from "@/components/admin/FloatingModal";
+import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { Pencil, Trash2, UserPlus } from "lucide-react";
@@ -152,19 +153,19 @@ export default function AdminGuidePanel({ guides: initial }: Props) {
           onClose={closeModal}
         >
           <form onSubmit={handleSubmit} className="space-y-3">
-            <div>
-              <label className="label-field">الاسم</label>
+            <FieldRow label="الاسم" htmlFor="guide-name">
               <input
+                id="guide-name"
                 name="name"
                 placeholder="الاسم الكامل"
                 required
                 defaultValue={editingGuide?.name ?? ""}
                 className="input-field"
               />
-            </div>
-            <div>
-              <label className="label-field">البريد الإلكتروني</label>
+            </FieldRow>
+            <FieldRow label="البريد الإلكتروني" htmlFor="guide-email" ltr>
               <input
+                id="guide-email"
                 name="email"
                 type="email"
                 placeholder="email@example.com"
@@ -173,10 +174,10 @@ export default function AdminGuidePanel({ guides: initial }: Props) {
                 className="input-field"
                 dir="ltr"
               />
-            </div>
-            <div>
-              <label className="label-field">الجوال</label>
+            </FieldRow>
+            <FieldRow label="الجوال" htmlFor="guide-phone" ltr>
               <input
+                id="guide-phone"
                 name="phone"
                 type="tel"
                 placeholder="05xxxxxxxx"
@@ -185,12 +186,14 @@ export default function AdminGuidePanel({ guides: initial }: Props) {
                 className="input-field"
                 dir="ltr"
               />
-            </div>
-            <div>
-              <label className="label-field">
-                {modalMode === "add" ? "كلمة المرور" : "كلمة مرور جديدة (اختياري)"}
-              </label>
+            </FieldRow>
+            <FieldRow
+              label={modalMode === "add" ? "كلمة المرور" : "كلمة مرور جديدة (اختياري)"}
+              htmlFor="guide-password"
+              ltr
+            >
               <input
+                id="guide-password"
                 name="password"
                 type="password"
                 placeholder={modalMode === "add" ? "6 أحرف على الأقل" : "اتركه فارغاً للإبقاء"}
@@ -199,7 +202,7 @@ export default function AdminGuidePanel({ guides: initial }: Props) {
                 className="input-field"
                 dir="ltr"
               />
-            </div>
+            </FieldRow>
             <div className="flex gap-2 pt-2">
               <SubmitButton loading={pending} className="btn-primary flex-1 !py-2 text-sm">
                 {modalMode === "add" ? "حفظ المرشد" : "حفظ التعديلات"}

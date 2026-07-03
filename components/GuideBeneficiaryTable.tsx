@@ -16,6 +16,7 @@ import SubmitButton from "@/components/ui/SubmitButton";
 import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
 import DetailRow from "@/components/ui/DetailRow";
 import FieldGrid from "@/components/ui/FieldGrid";
+import FieldRow from "@/components/ui/FieldRow";
 import { STAGE_LABELS, getNextStage } from "@/lib/stages";
 import { SESSION_STATUS_LABELS } from "@/lib/labels";
 import { getUpcomingSession } from "@/lib/upcoming-session";
@@ -1083,41 +1084,35 @@ export default function GuideBeneficiaryTable({
 
                           <div className="space-y-2">
 
-                            <label className="label-field">{guideCopy.sessionDateLabel}</label>
+                            <FieldRow label={guideCopy.sessionDateLabel} ltr>
+                              <input type="datetime-local" value={editSessionDate} onChange={(e) => setEditSessionDate(e.target.value)} className="input-field" dir="ltr" />
+                            </FieldRow>
 
-                            <input type="datetime-local" value={editSessionDate} onChange={(e) => setEditSessionDate(e.target.value)} className="input-field" dir="ltr" />
+                            <FieldRow label={guideCopy.meetingLinkLabel} ltr>
+                              <input type="url" value={editSessionMeetingLink} onChange={(e) => setEditSessionMeetingLink(e.target.value)} className="input-field" dir="ltr" />
+                            </FieldRow>
 
-                            <label className="label-field">{guideCopy.meetingLinkLabel}</label>
+                            <FieldRow label={guideCopy.locationLabel}>
+                              <input type="text" value={editSessionLocation} onChange={(e) => setEditSessionLocation(e.target.value)} className="input-field" />
+                            </FieldRow>
 
-                            <input type="url" value={editSessionMeetingLink} onChange={(e) => setEditSessionMeetingLink(e.target.value)} className="input-field" dir="ltr" />
+                            <FieldRow label="حالة الجلسة">
+                              <select value={editSessionStatus} onChange={(e) => setEditSessionStatus(e.target.value as SessionStatus)} className="input-field">
+                                <option value="SCHEDULED">مجدولة</option>
+                                <option value="ATTENDED">حضر</option>
+                                <option value="MISSED">غاب</option>
+                                <option value="COMPLETED">مكتملة</option>
+                                <option value="CANCELED">ملغاة</option>
+                              </select>
+                            </FieldRow>
 
-                            <label className="label-field">{guideCopy.locationLabel}</label>
+                            <FieldRow label={guideCopy.commitmentRating} ltr>
+                              <input type="number" min={1} max={5} value={editSessionRating} onChange={(e) => setEditSessionRating(e.target.value)} className="input-field" dir="ltr" />
+                            </FieldRow>
 
-                            <input type="text" value={editSessionLocation} onChange={(e) => setEditSessionLocation(e.target.value)} className="input-field" />
-
-                            <label className="label-field">حالة الجلسة</label>
-
-                            <select value={editSessionStatus} onChange={(e) => setEditSessionStatus(e.target.value as SessionStatus)} className="input-field">
-
-                              <option value="SCHEDULED">مجدولة</option>
-
-                              <option value="ATTENDED">حضر</option>
-
-                              <option value="MISSED">غاب</option>
-
-                              <option value="COMPLETED">مكتملة</option>
-
-                              <option value="CANCELED">ملغاة</option>
-
-                            </select>
-
-                            <label className="label-field">{guideCopy.commitmentRating}</label>
-
-                            <input type="number" min={1} max={5} value={editSessionRating} onChange={(e) => setEditSessionRating(e.target.value)} className="input-field" dir="ltr" />
-
-                            <label className="label-field">{guideCopy.sessionNotesLabel}</label>
-
-                            <textarea value={editSessionNotes} onChange={(e) => setEditSessionNotes(e.target.value)} rows={2} className="input-field resize-none" />
+                            <FieldRow label={guideCopy.sessionNotesLabel} align="start">
+                              <textarea value={editSessionNotes} onChange={(e) => setEditSessionNotes(e.target.value)} rows={2} className="input-field resize-none" />
+                            </FieldRow>
 
                             <div className="flex gap-2">
 
@@ -1234,10 +1229,12 @@ export default function GuideBeneficiaryTable({
                   <li key={t.id} className="rounded-lg border border-surface-border px-3 py-2">
                     {editingTaskId === t.id ? (
                       <div className="space-y-2">
-                        <label className="label-field">{guideCopy.taskTitleLabel}</label>
-                        <input value={editTaskTitle} onChange={(e) => setEditTaskTitle(e.target.value)} className="input-field" />
-                        <label className="label-field">{guideCopy.taskDescriptionLabel}</label>
-                        <textarea value={editTaskDescription} onChange={(e) => setEditTaskDescription(e.target.value)} rows={2} className="input-field resize-none" />
+                        <FieldRow label={guideCopy.taskTitleLabel}>
+                          <input value={editTaskTitle} onChange={(e) => setEditTaskTitle(e.target.value)} className="input-field" />
+                        </FieldRow>
+                        <FieldRow label={guideCopy.taskDescriptionLabel} align="start">
+                          <textarea value={editTaskDescription} onChange={(e) => setEditTaskDescription(e.target.value)} rows={2} className="input-field resize-none" />
+                        </FieldRow>
                         <div className="flex gap-2">
                           <button type="button" onClick={handleUpdateTask} disabled={pending} className="btn-primary flex-1 !py-2 text-sm">حفظ</button>
                           <button type="button" onClick={() => setEditingTaskId(null)} className="btn-secondary flex-1 !py-2 text-sm">إلغاء</button>
@@ -1341,20 +1338,22 @@ export default function GuideBeneficiaryTable({
             title={guideCopy.addNewTask}
           >
             <div className="space-y-3">
-              <label className="label-field">{guideCopy.taskTitleLabel}</label>
-              <input
-                value={newTaskTitle}
-                onChange={(e) => setNewTaskTitle(e.target.value)}
-                className="input-field"
-                placeholder="مهمة جديدة..."
-              />
-              <label className="label-field">{guideCopy.taskDescriptionLabel}</label>
-              <textarea
-                value={newTaskDescription}
-                onChange={(e) => setNewTaskDescription(e.target.value)}
-                rows={3}
-                className="input-field resize-none"
-              />
+              <FieldRow label={guideCopy.taskTitleLabel}>
+                <input
+                  value={newTaskTitle}
+                  onChange={(e) => setNewTaskTitle(e.target.value)}
+                  className="input-field"
+                  placeholder="مهمة جديدة..."
+                />
+              </FieldRow>
+              <FieldRow label={guideCopy.taskDescriptionLabel} align="start">
+                <textarea
+                  value={newTaskDescription}
+                  onChange={(e) => setNewTaskDescription(e.target.value)}
+                  rows={3}
+                  className="input-field resize-none"
+                />
+              </FieldRow>
               <SubmitButton
                 type="button"
                 onClick={handleCreateTask}
@@ -1374,43 +1373,47 @@ export default function GuideBeneficiaryTable({
             title={guideCopy.scheduleSessionDrawer}
           >
             <div className="space-y-3">
-              <label htmlFor="session-date-drawer" className="label-field">{guideCopy.sessionDateLabel}</label>
-              <input
-                id="session-date-drawer"
-                type="datetime-local"
-                value={sessionDate}
-                onChange={(e) => setSessionDate(e.target.value)}
-                className="input-field"
-                dir="ltr"
-              />
-              <label htmlFor="session-meeting-link-drawer" className="label-field">{guideCopy.meetingLinkLabel}</label>
-              <input
-                id="session-meeting-link-drawer"
-                type="url"
-                value={sessionMeetingLink}
-                onChange={(e) => setSessionMeetingLink(e.target.value)}
-                className="input-field"
-                dir="ltr"
-                placeholder="https://..."
-              />
-              <label htmlFor="session-location-drawer" className="label-field">{guideCopy.locationLabel}</label>
-              <input
-                id="session-location-drawer"
-                type="text"
-                value={sessionLocation}
-                onChange={(e) => setSessionLocation(e.target.value)}
-                className="input-field"
-                placeholder="مثال: مقر الجمعية — الطابق الثاني"
-              />
-              <label htmlFor="session-notes-drawer" className="label-field">{guideCopy.sessionNotesLabel}</label>
-              <textarea
-                id="session-notes-drawer"
-                value={sessionNotes}
-                onChange={(e) => setSessionNotes(e.target.value)}
-                rows={3}
-                className="input-field resize-none"
-                placeholder="اختياري"
-              />
+              <FieldRow label={guideCopy.sessionDateLabel} htmlFor="session-date-drawer" ltr>
+                <input
+                  id="session-date-drawer"
+                  type="datetime-local"
+                  value={sessionDate}
+                  onChange={(e) => setSessionDate(e.target.value)}
+                  className="input-field"
+                  dir="ltr"
+                />
+              </FieldRow>
+              <FieldRow label={guideCopy.meetingLinkLabel} htmlFor="session-meeting-link-drawer" ltr>
+                <input
+                  id="session-meeting-link-drawer"
+                  type="url"
+                  value={sessionMeetingLink}
+                  onChange={(e) => setSessionMeetingLink(e.target.value)}
+                  className="input-field"
+                  dir="ltr"
+                  placeholder="https://..."
+                />
+              </FieldRow>
+              <FieldRow label={guideCopy.locationLabel} htmlFor="session-location-drawer">
+                <input
+                  id="session-location-drawer"
+                  type="text"
+                  value={sessionLocation}
+                  onChange={(e) => setSessionLocation(e.target.value)}
+                  className="input-field"
+                  placeholder="مثال: مقر الجمعية — الطابق الثاني"
+                />
+              </FieldRow>
+              <FieldRow label={guideCopy.sessionNotesLabel} htmlFor="session-notes-drawer" align="start">
+                <textarea
+                  id="session-notes-drawer"
+                  value={sessionNotes}
+                  onChange={(e) => setSessionNotes(e.target.value)}
+                  rows={3}
+                  className="input-field resize-none"
+                  placeholder="اختياري"
+                />
+              </FieldRow>
               <SubmitButton
                 type="button"
                 onClick={handleScheduleSession}
