@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
-import FullPageLink from "@/components/FullPageLink";
 import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastError } from "@/lib/toast";
@@ -162,9 +162,9 @@ export default function RegisterPage() {
 
           <p className="mt-6 text-center text-sm text-brand-gray">
             {registerCopy.hasAccount}{" "}
-            <FullPageLink href="/login" className="font-semibold text-primary hover:underline">
+            <Link href="/login" className="font-semibold text-primary hover:underline">
               {registerCopy.loginLink}
-            </FullPageLink>
+            </Link>
           </p>
         </div>
       </main>

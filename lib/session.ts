@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { Role, Stage } from "@/generated/prisma/client";
 import { prisma } from "./prisma";
@@ -46,7 +47,8 @@ export async function destroySession(): Promise<void> {
   cookieStore.delete(ROLE_COOKIE);
 }
 
-export async function getSession(): Promise<SessionUser | null> {
+/** O(1) per request — cached for the lifetime of one RSC render */
+export const getSession = cache(async (): Promise<SessionUser | null> => {
   const cookieStore = await cookies();
   const userId = cookieStore.get(SESSION_COOKIE)?.value;
   if (!userId) return null;
@@ -64,7 +66,7 @@ export async function getSession(): Promise<SessionUser | null> {
   });
 
   return user;
-}
+});
 
 export async function requireSession(
   allowedRoles?: Role[]

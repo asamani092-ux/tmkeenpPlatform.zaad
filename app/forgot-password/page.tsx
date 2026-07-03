@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
-import FullPageLink from "@/components/FullPageLink";
 import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastError, toastSuccess } from "@/lib/toast";
@@ -82,9 +82,9 @@ export default function ForgotPasswordPage() {
           </form>
 
           <p className="mt-6 text-center text-sm text-brand-gray">
-            <FullPageLink href="/login" className="font-semibold text-primary hover:underline">
+            <Link href="/login" className="font-semibold text-primary hover:underline">
               {forgotPasswordCopy.backToLogin}
-            </FullPageLink>
+            </Link>
           </p>
         </div>
       </main>

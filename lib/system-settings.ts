@@ -21,11 +21,20 @@ export async function getSystemSettings(): Promise<SystemSettings> {
   try {
     const raw = await fs.readFile(SETTINGS_PATH, "utf-8");
     const parsed = JSON.parse(raw) as Partial<SystemSettings>;
+    const smtpUser = process.env.SMTP_USER?.trim();
+    const stored = parsed.senderEmail?.trim();
+    const fallback =
+      stored && stored !== DEFAULT_SETTINGS.senderEmail
+        ? stored
+        : smtpUser || DEFAULT_SETTINGS.senderEmail;
     return {
-      senderEmail: parsed.senderEmail?.trim() || DEFAULT_SETTINGS.senderEmail,
+      senderEmail: fallback,
     };
   } catch {
-    return { ...DEFAULT_SETTINGS };
+    const smtpUser = process.env.SMTP_USER?.trim();
+    return {
+      senderEmail: smtpUser || DEFAULT_SETTINGS.senderEmail,
+    };
   }
 }
 
