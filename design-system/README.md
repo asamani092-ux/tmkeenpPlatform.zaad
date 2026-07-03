@@ -66,7 +66,15 @@
 | Class | الوصف |
 |-------|-------|
 | `.input-field` | حقل إدخال |
-| `.label-field` | تسمية الحقل |
+| `.label-field` | تسمية الحقل (عمودي — legacy) |
+| `.field-cell` | حاوية حقل — border primary/20 |
+| `.field-cell-row` | صف أفقي: عنوان + قيمة/إدخال |
+| `.field-cell-label` | عنوان الحقل |
+| `.field-cell-value` | قيمة للقراءة فقط |
+| `.field-cell-control` | غلاف عنصر الإدخال |
+| `.field-grid` | شبكة حقول (عمودين على sm+) |
+
+في React استخدم `DetailRow` / `FieldRow` / `FieldGrid` من `components/ui/`.
 
 ### شارات
 
