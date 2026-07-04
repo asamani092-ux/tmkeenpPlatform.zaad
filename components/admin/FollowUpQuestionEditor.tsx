@@ -1,12 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
+import OptionsListEditor from "@/components/admin/OptionsListEditor";
 
 export type FollowUpQuestionDraft = {
   label: string;
   fieldType: string;
-  options: string;
+  options: string[];
   required: boolean;
   helperText: string;
 };
@@ -36,15 +38,25 @@ export default function FollowUpQuestionEditor({
   onSubmit,
   onCancel,
 }: Props) {
+  const [label, setLabel] = useState(initial?.label ?? "");
+  const [fieldType, setFieldType] = useState(initial?.fieldType ?? "text");
+  const [options, setOptions] = useState<string[]>(
+    initial?.options?.length ? initial.options : [""]
+  );
+  const [required, setRequired] = useState(initial?.required ?? true);
+  const [helperText, setHelperText] = useState(initial?.helperText ?? "");
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const form = new FormData(e.currentTarget);
     onSubmit({
-      label: String(form.get("label") ?? "").trim(),
-      fieldType: String(form.get("fieldType") ?? "text"),
-      options: String(form.get("options") ?? ""),
-      required: form.get("required") === "on",
-      helperText: String(form.get("helperText") ?? "").trim(),
+      label: label.trim(),
+      fieldType,
+      options:
+        fieldType === "select" || fieldType === "radio"
+          ? options.map((s) => s.trim()).filter(Boolean)
+          : [],
+      required,
+      helperText: helperText.trim(),
     });
   }
 
@@ -56,18 +68,22 @@ export default function FollowUpQuestionEditor({
       <FieldRow label="نص السؤال" htmlFor="question-label">
         <input
           id="question-label"
-          name="label"
           className="input-field"
-          defaultValue={initial?.label ?? ""}
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
           required
         />
       </FieldRow>
       <FieldRow label="نوع الحقل" htmlFor="question-fieldType">
         <select
           id="question-fieldType"
-          name="fieldType"
           className="input-field"
-          defaultValue={initial?.fieldType ?? "text"}
+          value={fieldType}
+          onChange={(e) => {
+            const next = e.target.value;
+            setFieldType(next);
+            if (next !== "select" && next !== "radio") setOptions([""]);
+          }}
         >
           {FIELD_TYPES.map((ft) => (
             <option key={ft.value} value={ft.value}>
@@ -76,24 +92,25 @@ export default function FollowUpQuestionEditor({
           ))}
         </select>
       </FieldRow>
-      <FieldRow label="خيارات (select/radio) مفصولة بفاصلة" htmlFor="question-options">
-        <input
-          id="question-options"
-          name="options"
-          className="input-field"
-          defaultValue={initial?.options ?? ""}
-        />
-      </FieldRow>
+      {(fieldType === "select" || fieldType === "radio") && (
+        <FieldRow label="خيارات الإجابة" htmlFor="question-options-0">
+          <OptionsListEditor options={options} onChange={setOptions} />
+        </FieldRow>
+      )}
       <FieldRow label="نص توضيحي (اختياري)" htmlFor="question-helperText">
         <input
           id="question-helperText"
-          name="helperText"
           className="input-field"
-          defaultValue={initial?.helperText ?? ""}
+          value={helperText}
+          onChange={(e) => setHelperText(e.target.value)}
         />
       </FieldRow>
       <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" name="required" defaultChecked={initial?.required ?? true} />
+        <input
+          type="checkbox"
+          checked={required}
+          onChange={(e) => setRequired(e.target.checked)}
+        />
         مطلوب
       </label>
       <div className="flex gap-2">

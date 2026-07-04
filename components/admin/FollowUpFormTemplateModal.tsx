@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import FloatingModal from "@/components/admin/FloatingModal";
 import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
+import OptionsListEditor from "@/components/admin/OptionsListEditor";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { Plus, Trash2 } from "lucide-react";
 import type { FollowUpFormTemplate } from "@/components/admin/FollowUpFormTemplateCard";
@@ -18,7 +19,7 @@ const FIELD_TYPES = [
 type DraftQuestion = {
   label: string;
   fieldType: string;
-  options: string;
+  options: string[];
   required: boolean;
   helperText: string;
 };
@@ -42,7 +43,7 @@ export default function FollowUpFormTemplateModal({
     initial?.questions.map((q) => ({
       label: q.label,
       fieldType: q.fieldType,
-      options: q.options.join(", "),
+      options: q.options.length > 0 ? q.options : [""],
       required: q.required,
       helperText: q.helperText,
     })) ?? []
@@ -50,7 +51,7 @@ export default function FollowUpFormTemplateModal({
   const [draft, setDraft] = useState<DraftQuestion>({
     label: "",
     fieldType: "text",
-    options: "",
+    options: [""],
     required: true,
     helperText: "",
   });
@@ -64,8 +65,14 @@ export default function FollowUpFormTemplateModal({
 
   function addQuestion() {
     if (!draft.label.trim()) return;
-    setQuestions((prev) => [...prev, { ...draft, label: draft.label.trim() }]);
-    setDraft({ label: "", fieldType: "text", options: "", required: true, helperText: "" });
+    const options = draft.fieldType === "select"
+      ? draft.options.map((s) => s.trim()).filter(Boolean)
+      : [];
+    setQuestions((prev) => [
+      ...prev,
+      { ...draft, label: draft.label.trim(), options },
+    ]);
+    setDraft({ label: "", fieldType: "text", options: [""], required: true, helperText: "" });
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -81,10 +88,10 @@ export default function FollowUpFormTemplateModal({
       questions: questions.map((q) => ({
         label: q.label,
         fieldType: q.fieldType,
-        options: q.options
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean),
+        options:
+          q.fieldType === "select"
+            ? q.options.map((s) => s.trim()).filter(Boolean)
+            : [],
         required: q.required,
         helperText: q.helperText,
       })),
@@ -163,6 +170,9 @@ export default function FollowUpFormTemplateModal({
                 <p className="font-medium text-primary">{q.label}</p>
                 <p className="text-xs text-brand-gray">
                   {FIELD_TYPES.find((f) => f.value === q.fieldType)?.label}
+                  {q.fieldType === "select" && q.options.length > 0
+                    ? ` · ${q.options.join(" | ")}`
+                    : ""}
                 </p>
               </div>
               <button
@@ -189,7 +199,13 @@ export default function FollowUpFormTemplateModal({
             <select
               className="input-field"
               value={draft.fieldType}
-              onChange={(e) => setDraft((d) => ({ ...d, fieldType: e.target.value }))}
+              onChange={(e) =>
+                setDraft((d) => ({
+                  ...d,
+                  fieldType: e.target.value,
+                  options: e.target.value === "select" ? d.options : [""],
+                }))
+              }
             >
               {FIELD_TYPES.map((ft) => (
                 <option key={ft.value} value={ft.value}>
@@ -198,11 +214,9 @@ export default function FollowUpFormTemplateModal({
               ))}
             </select>
             {draft.fieldType === "select" && (
-              <input
-                className="input-field"
-                placeholder="خيارات مفصولة بفاصلة"
-                value={draft.options}
-                onChange={(e) => setDraft((d) => ({ ...d, options: e.target.value }))}
+              <OptionsListEditor
+                options={draft.options}
+                onChange={(options) => setDraft((d) => ({ ...d, options }))}
               />
             )}
             <input
