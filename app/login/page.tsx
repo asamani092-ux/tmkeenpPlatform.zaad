@@ -51,7 +51,7 @@ function LoginForm() {
         toastError(data.error || "بيانات الدخول غير صحيحة");
         return;
       }
-      router.push(data.redirect);
+      router.replace(data.redirect);
     } catch {
       toastError("حدث خطأ في الاتصال. حاول مرة أخرى.");
     } finally {

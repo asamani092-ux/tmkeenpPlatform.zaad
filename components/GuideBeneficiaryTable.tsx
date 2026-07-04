@@ -202,6 +202,22 @@ export default function GuideBeneficiaryTable({
 
 
 
+  const selectedId = selected?.id;
+
+
+
+  useEffect(() => {
+
+    if (!selectedId) return;
+
+    const fresh = beneficiaries.find((b) => b.id === selectedId);
+
+    if (fresh) setSelected(fresh);
+
+  }, [beneficiaries, selectedId]);
+
+
+
   function openBeneficiary(b: Beneficiary) {
 
     setSelected(b);
@@ -310,6 +326,21 @@ export default function GuideBeneficiaryTable({
 
       toastSuccess("تم جدولة الجلسة بنجاح");
 
+      if (data.session && selected) {
+        const newSession: SessionItem = {
+          id: data.session.id,
+          date: data.session.date,
+          status: data.session.status,
+          notes: data.session.notes,
+          meetingLink: data.session.meetingLink,
+          location: data.session.location,
+          commitmentRating: data.session.commitmentRating,
+        };
+        syncBeneficiary(selected.id, {
+          sessions: [newSession, ...selected.sessions],
+        });
+      }
+
       setSessionDate("");
 
       setSessionNotes("");
@@ -389,6 +420,24 @@ export default function GuideBeneficiaryTable({
 
       toastSuccess("تم تحديث الجلسة");
 
+      if (selected) {
+        syncBeneficiary(selected.id, {
+          sessions: selected.sessions.map((s) =>
+            s.id === editingSessionId
+              ? {
+                  ...s,
+                  date: editSessionDate,
+                  notes: editSessionNotes,
+                  meetingLink: editSessionMeetingLink || null,
+                  location: editSessionLocation || null,
+                  status: editSessionStatus,
+                  commitmentRating: editSessionRating ? Number(editSessionRating) : null,
+                }
+              : s
+          ),
+        });
+      }
+
       router.refresh();
 
     });
@@ -432,6 +481,20 @@ export default function GuideBeneficiaryTable({
       setAttendRating("");
 
       toastSuccess("تم تسجيل حضور الجلسة");
+
+      if (selected) {
+        syncBeneficiary(selected.id, {
+          sessions: selected.sessions.map((s) =>
+            s.id === sessionId
+              ? {
+                  ...s,
+                  status: "ATTENDED",
+                  commitmentRating: rating,
+                }
+              : s
+          ),
+        });
+      }
 
       router.refresh();
 
@@ -603,6 +666,8 @@ export default function GuideBeneficiaryTable({
       setEditingTaskId(null);
 
       toastSuccess("تم تحديث المهمة");
+
+      router.refresh();
 
     });
 

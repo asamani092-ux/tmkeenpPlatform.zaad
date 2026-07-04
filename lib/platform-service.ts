@@ -185,7 +185,21 @@ export async function scheduleSession(data: {
   notes: string;
   meetingLink?: string;
   location?: string;
-}): Promise<ActionResult> {
+}): Promise<
+  | {
+      success: true;
+      session: {
+        id: string;
+        date: Date;
+        status: string;
+        notes: string;
+        meetingLink: string | null;
+        location: string | null;
+        commitmentRating: number | null;
+      };
+    }
+  | { success: false; error: string }
+> {
   const session = await getSession();
   if (!session || session.role !== "GUIDE") {
     return { success: false, error: "غير مصرح" };
@@ -215,7 +229,7 @@ export async function scheduleSession(data: {
   const meetingLink = data.meetingLink?.trim() || null;
   const location = data.location?.trim() || null;
 
-  await prisma.session.create({
+  const created = await prisma.session.create({
     data: {
       beneficiaryId: data.beneficiaryId,
       guideId: session.id,
@@ -246,7 +260,18 @@ export async function scheduleSession(data: {
     senderEmail: settings.senderEmail,
   });
 
-  return { success: true };
+  return {
+    success: true,
+    session: {
+      id: created.id,
+      date: created.date,
+      status: created.status,
+      notes: created.notes,
+      meetingLink: created.meetingLink,
+      location: created.location,
+      commitmentRating: created.commitmentRating,
+    },
+  };
 }
 
 export async function updateSession(data: {

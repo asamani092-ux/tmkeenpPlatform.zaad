@@ -6,6 +6,7 @@ import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { Plus, Trash2, Eye } from "lucide-react";
+import OptionsListEditor from "@/components/admin/OptionsListEditor";
 
 type Question = {
   id: string;
@@ -35,7 +36,7 @@ export default function FollowUpFormBuilder() {
   const [form, setForm] = useState({
     label: "",
     fieldType: "text",
-    options: "",
+    options: [""] as string[],
     required: true,
     helperText: "",
   });
@@ -75,10 +76,10 @@ export default function FollowUpFormBuilder() {
           month,
           label: form.label,
           fieldType: form.fieldType,
-          options: form.options
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean),
+          options:
+            form.fieldType === "select"
+              ? form.options.map((s) => s.trim()).filter(Boolean)
+              : [],
           required: form.required,
           helperText: form.helperText,
         }),
@@ -89,7 +90,7 @@ export default function FollowUpFormBuilder() {
         return;
       }
       toastSuccess("تمت إضافة السؤال");
-      setForm({ label: "", fieldType: "text", options: "", required: true, helperText: "" });
+      setForm({ label: "", fieldType: "text", options: [""], required: true, helperText: "" });
       await loadQuestions(month);
       router.refresh();
     });
@@ -221,7 +222,13 @@ export default function FollowUpFormBuilder() {
             <select
               className="input-field"
               value={form.fieldType}
-              onChange={(e) => setForm((f) => ({ ...f, fieldType: e.target.value }))}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  fieldType: e.target.value,
+                  options: e.target.value === "select" ? f.options : [""],
+                }))
+              }
             >
               {FIELD_TYPES.map((ft) => (
                 <option key={ft.value} value={ft.value}>
@@ -230,11 +237,9 @@ export default function FollowUpFormBuilder() {
               ))}
             </select>
             {form.fieldType === "select" && (
-              <input
-                className="input-field"
-                placeholder="خيارات مفصولة بفاصلة"
-                value={form.options}
-                onChange={(e) => setForm((f) => ({ ...f, options: e.target.value }))}
+              <OptionsListEditor
+                options={form.options}
+                onChange={(options) => setForm((f) => ({ ...f, options }))}
               />
             )}
             <input
