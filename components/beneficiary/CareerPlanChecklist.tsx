@@ -84,14 +84,15 @@ export default function CareerPlanChecklist({ tasks: initial }: Props) {
                 type="button"
                 disabled={pending || task.isCompleted}
                 onClick={() => handleToggle(task.id)}
+                aria-pressed={task.isCompleted}
                 className={`flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition ${
                   task.isCompleted
-                    ? "bg-primary/15 text-primary"
+                    ? "bg-red-800 text-white shadow-sm"
                     : "bg-red-800 text-white shadow-sm hover:bg-red-900"
-                } disabled:opacity-60`}
+                } disabled:cursor-default disabled:opacity-100`}
               >
-                <CircleCheck className="h-4 w-4" />
-                {task.isCompleted ? "مكتملة" : "أتممت المهمة"}
+                <CircleCheck className="h-4 w-4" aria-hidden />
+                أتممت المهمة
               </button>
             </div>
           </li>
