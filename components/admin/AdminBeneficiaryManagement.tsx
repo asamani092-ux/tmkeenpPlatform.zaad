@@ -4,7 +4,7 @@ import { useState, useTransition, useEffect } from "react";
 import { useSyncFromProps } from "@/lib/use-sync-from-props";
 import { useRouter } from "next/navigation";
 import { Stage } from "@/generated/prisma/client";
-import { STAGE_LABELS } from "@/lib/stages";
+import { STAGE_LABELS, STAGE_ORDER } from "@/lib/stages";
 import FloatingModal from "@/components/admin/FloatingModal";
 import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
 import DetailRow from "@/components/ui/DetailRow";
@@ -142,6 +142,7 @@ export default function AdminBeneficiaryManagement({
           skills: form.get("skills"),
           careerInterests: form.get("careerInterests"),
           guideId: guideIdRaw || null,
+          stage: form.get("stage") || undefined,
         }),
       });
       const data = await res.json();
@@ -159,6 +160,7 @@ export default function AdminBeneficiaryManagement({
         careerInterests: String(form.get("careerInterests") ?? ""),
         guideId: guideIdRaw || null,
         guideName,
+        stage: (form.get("stage") as Stage) || selected.stage,
       };
       setRows((prev) => prev.map((b) => (b.id === selected.id ? { ...b, ...patch } : b)));
       setSelected((s) => (s ? { ...s, ...patch } : s));
@@ -363,6 +365,20 @@ export default function AdminBeneficiaryManagement({
                     defaultValue={selected.educationLevel}
                     className="input-field"
                   />
+                </FieldRow>
+                <FieldRow label="المرحلة" htmlFor="beneficiary-stage">
+                  <select
+                    id="beneficiary-stage"
+                    name="stage"
+                    defaultValue={selected.stage}
+                    className="input-field"
+                  >
+                    {STAGE_ORDER.map((s) => (
+                      <option key={s} value={s}>
+                        {STAGE_LABELS[s]}
+                      </option>
+                    ))}
+                  </select>
                 </FieldRow>
                 <FieldRow label="المرشد" htmlFor="beneficiary-guide">
                   <select

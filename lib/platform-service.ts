@@ -1,12 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { hashPassword } from "@/lib/auth";
-import { getNextStage, STAGE_LABELS } from "@/lib/stages";
+import { getNextStage, STAGE_LABELS, STAGE_ORDER } from "@/lib/stages";
 import {
   CareerPlanStatus,
   FollowUpStatus,
   OpportunityType,
   SessionStatus,
+  Stage,
 } from "@/generated/prisma/client";
 import { beneficiaryCanSeeOpportunity } from "@/lib/opportunity-visibility";
 import {
@@ -702,6 +703,7 @@ export async function adminUpdateBeneficiary(
     skills?: string;
     careerInterests?: string;
     guideId?: string | null;
+    stage?: Stage;
   }
 ): Promise<ActionResult> {
   const session = await getSession();
@@ -714,6 +716,10 @@ export async function adminUpdateBeneficiary(
   });
   if (!beneficiary) {
     return { success: false, error: "المستفيد غير موجود" };
+  }
+
+  if (data.stage !== undefined && !STAGE_ORDER.includes(data.stage)) {
+    return { success: false, error: "مرحلة غير صالحة" };
   }
 
   if (data.email !== undefined) {
@@ -733,6 +739,9 @@ export async function adminUpdateBeneficiary(
     if (!guide) return { success: false, error: "المرشد غير موجود" };
   }
 
+  const stageChanged =
+    data.stage !== undefined && data.stage !== beneficiary.stage;
+
   await prisma.user.update({
     where: { id: beneficiaryId },
     data: {
@@ -748,8 +757,24 @@ export async function adminUpdateBeneficiary(
         ? { careerInterests: data.careerInterests.trim() }
         : {}),
       ...(data.guideId !== undefined ? { guideId: data.guideId } : {}),
+      ...(stageChanged
+        ? {
+            stage: data.stage,
+            pendingStage: null,
+            stageEnteredAt: new Date(),
+            ...(data.stage === "EMPLOYMENT" ? { isEmployed: true } : {}),
+          }
+        : {}),
     },
   });
+
+  if (stageChanged && data.stage === "FOLLOW_UP") {
+    const updated = await prisma.user.findUnique({ where: { id: beneficiaryId } });
+    if (updated && !updated.followUpProgramStartedAt) {
+      const { initializeFollowUpProgram } = await import("@/lib/follow-up-service");
+      await initializeFollowUpProgram(beneficiaryId);
+    }
+  }
 
   return { success: true };
 }
