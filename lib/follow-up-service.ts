@@ -19,6 +19,7 @@ export async function initializeFollowUpProgram(beneficiaryId: string): Promise<
     data: {
       followUpProgramStatus: "ACTIVE",
       followUpProgramStartedAt: startedAt,
+      followUpStatusUpdatedAt: startedAt,
     },
   });
 
@@ -63,6 +64,7 @@ export async function initializeFollowUpProgram(beneficiaryId: string): Promise<
   );
 }
 
+/** Cron: send monthly reminders ONLY when program is ACTIVE and within 6-month window — O(n) */
 export async function processFollowUpReminders(): Promise<void> {
   const now = new Date();
   const active = await prisma.user.findMany({
@@ -405,6 +407,7 @@ export async function getFollowUpFormForBeneficiary(beneficiaryId: string) {
     where: { id: beneficiaryId, role: "BENEFICIARY", stage: "FOLLOW_UP" },
     include: { followUps: { orderBy: { month: "asc" } } },
   });
+  // PAUSED, COMPLETED, WITHDRAWN, or null → no form access
   if (!user?.followUpProgramStartedAt || user.followUpProgramStatus !== "ACTIVE") {
     return null;
   }
