@@ -36,17 +36,16 @@ export default function BeneficiaryProfileCard({ profile }: Props) {
 
   return (
     <section className="card">
-      <div className="mb-4 flex items-center gap-2">
-        <h2 className="flex items-center gap-2 text-xl font-bold text-primary">
-          <User className="h-6 w-6" />
-          الملف الشخصي
-        </h2>
-      </div>
+      <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-primary">
+        <User className="h-6 w-6 shrink-0" />
+        الملف الشخصي
+      </h2>
 
-      <FieldGrid>
+      <FieldGrid className="gap-3">
         <DetailRow label="الاسم" value={profile.name} />
         <DetailRow label="البريد" value={profile.email} ltr />
         <DetailRow label="الجوال" value={profile.phone} ltr />
+        <DetailRow label="المستوى التعليمي" value={profile.educationLevel || "—"} />
         <DetailRow
           label="السيرة الذاتية"
           value={
@@ -69,7 +68,7 @@ export default function BeneficiaryProfileCard({ profile }: Props) {
           label="الشهادات"
           value={
             certs.length > 0 ? (
-              <span className="flex flex-wrap gap-2">
+              <span className="flex flex-wrap justify-end gap-2">
                 {certs.map((url, i) => (
                   <a
                     key={url}
@@ -87,6 +86,13 @@ export default function BeneficiaryProfileCard({ profile }: Props) {
               "—"
             )
           }
+        />
+        <DetailRow label="الخبرات" value={profile.experience || "—"} className="sm:col-span-2" />
+        <DetailRow label="المهارات" value={profile.skills || "—"} className="sm:col-span-2" />
+        <DetailRow
+          label="الميول المهنية"
+          value={profile.careerInterests || "—"}
+          className="sm:col-span-2"
         />
       </FieldGrid>
     </section>

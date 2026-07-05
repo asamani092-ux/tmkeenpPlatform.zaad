@@ -15,15 +15,19 @@ export default function VerticalStageTimeline({ currentStage, stageEnteredAt }: 
     : null;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
+    <section className="card">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div className="text-start">
-          <h2 className="text-lg font-bold text-primary">مسار التمكين</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-bold text-primary">مسار المرحلة</h2>
+            <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-sm font-bold text-primary">
+              {progress}%
+            </span>
+          </div>
           {enteredLabel && (
-            <p className="text-xs text-brand-gray">في المرحلة الحالية منذ {enteredLabel}</p>
+            <p className="mt-1 text-xs text-brand-gray">في المرحلة الحالية منذ {enteredLabel}</p>
           )}
         </div>
-        <span className="text-2xl font-bold text-primary">{progress}%</span>
       </div>
 
       <ol className="relative space-y-0 ps-1">
@@ -72,15 +76,13 @@ export default function VerticalStageTimeline({ currentStage, stageEnteredAt }: 
                   {STAGE_LABELS[stage]}
                 </p>
                 {isCurrent && (
-                  <p className="mt-0.5 text-xs font-semibold text-secondary-dark">
-                    المرحلة الحالية · {progress}%
-                  </p>
+                  <p className="mt-0.5 text-xs font-semibold text-secondary-dark">المرحلة الحالية</p>
                 )}
               </div>
             </li>
           );
         })}
       </ol>
-    </div>
+    </section>
   );
 }
