@@ -1,4 +1,4 @@
-import { ApplicationStatus, FollowUpStatus, SessionStatus } from "@/generated/prisma/client";
+import { ApplicationStatus, FollowUpProgramStatus, FollowUpStatus, SessionStatus } from "@/generated/prisma/client";
 
 export const SESSION_STATUS_LABELS: Record<SessionStatus, string> = {
   SCHEDULED: "مجدولة",
@@ -18,6 +18,13 @@ export const FOLLOW_UP_STATUS_LABELS: Record<FollowUpStatus, string> = {
   PENDING: "قيد الانتظار",
   COMPLETED: "مكتمل",
   MISSED: "فائت",
+};
+
+export const FOLLOW_UP_PROGRAM_STATUS_LABELS: Record<FollowUpProgramStatus, string> = {
+  ACTIVE: "نشط",
+  PAUSED: "موقوف مؤقتاً",
+  COMPLETED: "مكتمل",
+  WITHDRAWN: "منسحب",
 };
 
 export const OPPORTUNITY_STATUS = ["متاحة", "مغلقة"] as const;
