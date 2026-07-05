@@ -211,10 +211,13 @@ export default async function BeneficiaryDashboardPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
+        <section
+          aria-label="المهام والفرص"
+          className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start"
+        >
           <CareerPlanChecklist tasks={careerTasks} />
           {opportunitiesSection}
-        </div>
+        </section>
       </main>
 
       <PlatformFooter showAuthLinks={false} />
