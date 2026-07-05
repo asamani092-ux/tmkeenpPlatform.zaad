@@ -85,7 +85,7 @@ export default function AdminSystemSettings() {
         {loading ? (
           <p className="text-sm text-brand-gray">جاري التحميل...</p>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form noValidate onSubmit={handleSubmit} className="space-y-4">
             <FieldRow label="البريد الإلكتروني للمرسل" htmlFor="senderEmail" ltr>
               <input
                 id="senderEmail"

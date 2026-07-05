@@ -30,7 +30,7 @@ export default function BeneficiaryNavbarActions({ userName, profile }: Props) {
         </button>
       </div>
       <NotificationBell />
-      <form action="/api/auth/logout" method="POST">
+      <form action="/api/auth/logout" method="POST" noValidate>
         <button
           type="submit"
           className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-brand-gray transition hover:bg-surface-muted hover:text-primary"

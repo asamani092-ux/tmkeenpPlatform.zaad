@@ -99,7 +99,7 @@ export default function BeneficiaryProfileEdit({ profile }: Props) {
               <h2 className="text-xl font-bold text-primary">{beneficiaryCopy.editProfileTitle}</h2>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-3">
+            <form noValidate onSubmit={handleSubmit} className="space-y-3">
               <FieldRow label="الاسم">
                 <input value={profile.name} disabled className="input-field bg-surface-muted" />
               </FieldRow>

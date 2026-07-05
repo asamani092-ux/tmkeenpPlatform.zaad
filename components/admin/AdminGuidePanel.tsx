@@ -193,7 +193,7 @@ export default function AdminGuidePanel({ guides: initial, beneficiariesByGuideI
           title={modalMode === "add" ? "إضافة مرشد جديد" : "تعديل بيانات المرشد"}
           onClose={closeModal}
         >
-          <form onSubmit={handleSubmit} className="space-y-3">
+          <form noValidate onSubmit={handleSubmit} className="space-y-3">
             <FieldRow label="الاسم" htmlFor="guide-name">
               <input
                 id="guide-name"

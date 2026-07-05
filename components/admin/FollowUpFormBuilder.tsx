@@ -207,7 +207,7 @@ export default function FollowUpFormBuilder() {
             </ul>
           )}
 
-          <form onSubmit={handleAdd} className="card-section space-y-3">
+          <form noValidate onSubmit={handleAdd} className="card-section space-y-3">
             <p className="flex items-center gap-2 font-semibold text-primary">
               <Plus className="h-4 w-4" />
               إضافة سؤال — شهر {month}

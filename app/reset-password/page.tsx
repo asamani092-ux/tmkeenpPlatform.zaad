@@ -8,12 +8,14 @@ import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastError, toastSuccess } from "@/lib/toast";
 import { resetPasswordCopy } from "@/lib/copy/ar";
+import { useFormFieldErrors } from "@/hooks/useFormFieldErrors";
 import { KeyRound } from "lucide-react";
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
   const [loading, setLoading] = useState(false);
+  const { validate, fieldError } = useFormFieldErrors();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -21,6 +23,7 @@ function ResetPasswordForm() {
       toastError(resetPasswordCopy.invalidToken);
       return;
     }
+    if (!validate(e.currentTarget)) return;
 
     setLoading(true);
     const form = new FormData(e.currentTarget);
@@ -74,8 +77,8 @@ function ResetPasswordForm() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <FieldRow label={resetPasswordCopy.passwordLabel} htmlFor="password" ltr>
+      <form noValidate onSubmit={handleSubmit} className="space-y-4">
+        <FieldRow label={resetPasswordCopy.passwordLabel} htmlFor="password" ltr error={fieldError("password")}>
           <input
             id="password"
             name="password"
@@ -87,7 +90,7 @@ function ResetPasswordForm() {
             autoComplete="new-password"
           />
         </FieldRow>
-        <FieldRow label={resetPasswordCopy.confirmLabel} htmlFor="confirm" ltr>
+        <FieldRow label={resetPasswordCopy.confirmLabel} htmlFor="confirm" ltr error={fieldError("confirm")}>
           <input
             id="confirm"
             name="confirm"

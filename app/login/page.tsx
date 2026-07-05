@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastError } from "@/lib/toast";
+import { useFormFieldErrors } from "@/hooks/useFormFieldErrors";
 import { LogIn } from "lucide-react";
 
 function LoginForm() {
@@ -14,6 +15,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const registered = searchParams.get("registered");
   const [loading, setLoading] = useState(false);
+  const { validate, fieldError } = useFormFieldErrors();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -28,6 +30,7 @@ function LoginForm() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!validate(e.currentTarget)) return;
     setLoading(true);
 
     const form = new FormData(e.currentTarget);
@@ -73,7 +76,7 @@ function LoginForm() {
       )}
 
       <form method="post" action="#" onSubmit={handleSubmit} noValidate className="space-y-4">
-        <FieldRow label="البريد الإلكتروني" htmlFor="email" ltr variant="auth">
+        <FieldRow label="البريد الإلكتروني" htmlFor="email" ltr variant="auth" error={fieldError("email")}>
           <input
             id="email"
             name="email"
@@ -84,7 +87,7 @@ function LoginForm() {
             dir="ltr"
           />
         </FieldRow>
-        <FieldRow label="كلمة المرور" htmlFor="password" ltr variant="auth">
+        <FieldRow label="كلمة المرور" htmlFor="password" ltr variant="auth" error={fieldError("password")}>
           <input
             id="password"
             name="password"

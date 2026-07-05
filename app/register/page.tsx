@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastError } from "@/lib/toast";
+import { useFormFieldErrors } from "@/hooks/useFormFieldErrors";
 import { uploadPdfFile } from "@/lib/upload-client";
 import { registerCopy } from "@/lib/copy/ar";
 import { UserPlus } from "lucide-react";
@@ -16,9 +17,11 @@ export default function RegisterPage() {
   const [pending, startTransition] = useTransition();
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [certFile, setCertFile] = useState<File | null>(null);
+  const { validate, fieldError } = useFormFieldErrors();
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!validate(e.currentTarget)) return;
     const form = new FormData(e.currentTarget);
 
     startTransition(async () => {
@@ -75,12 +78,12 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} noValidate className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <FieldRow label="الاسم الكامل" htmlFor="name" className="sm:col-span-2">
+              <FieldRow label="الاسم الكامل" htmlFor="name" className="sm:col-span-2" error={fieldError("name")}>
                 <input id="name" name="name" required className="input-field" />
               </FieldRow>
-              <FieldRow label="رقم الجوال" htmlFor="phone" ltr>
+              <FieldRow label="رقم الجوال" htmlFor="phone" ltr error={fieldError("phone")}>
                 <input
                   id="phone"
                   name="phone"
@@ -90,7 +93,7 @@ export default function RegisterPage() {
                   dir="ltr"
                 />
               </FieldRow>
-              <FieldRow label="البريد الإلكتروني" htmlFor="email" ltr>
+              <FieldRow label="البريد الإلكتروني" htmlFor="email" ltr error={fieldError("email")}>
                 <input
                   id="email"
                   name="email"
@@ -100,7 +103,7 @@ export default function RegisterPage() {
                   dir="ltr"
                 />
               </FieldRow>
-              <FieldRow label="كلمة المرور" htmlFor="password" className="sm:col-span-2" ltr>
+              <FieldRow label="كلمة المرور" htmlFor="password" className="sm:col-span-2" ltr error={fieldError("password")}>
                 <input
                   id="password"
                   name="password"

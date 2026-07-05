@@ -124,7 +124,7 @@ export default function FollowUpFormTemplateModal({
       onClose={onClose}
       wide
     >
-      <form onSubmit={handleSubmit} className="space-y-4 text-start">
+      <form noValidate onSubmit={handleSubmit} className="space-y-4 text-start">
         <FieldRow label="عنوان النموذج" htmlFor="template-title">
           <input
             id="template-title"

@@ -96,7 +96,7 @@ export default function BeneficiaryEditModal({ profile, open, onClose }: Props) 
       </div>
 
       {tab === "profile" ? (
-        <form onSubmit={handleProfileSubmit} className="space-y-3 text-start">
+        <form noValidate onSubmit={handleProfileSubmit} className="space-y-3 text-start">
           <FieldRow label="الاسم">
             <input value={profile.name} disabled className="input-field bg-surface-muted" />
           </FieldRow>
