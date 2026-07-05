@@ -1,19 +1,24 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
-import { updateBeneficiaryAccount } from "@/lib/platform-service";
+import {
+  updateBeneficiaryAccount,
+  updateGuideAccount,
+} from "@/lib/platform-service";
 
 export async function PATCH(request: Request) {
   try {
     const session = await getSession();
-    if (!session || session.role !== "BENEFICIARY") {
+    if (!session || (session.role !== "BENEFICIARY" && session.role !== "GUIDE")) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
     }
 
     const body = await request.json();
 
     if (body.email != null || body.password != null) {
-      const result = await updateBeneficiaryAccount({
+      const updater =
+        session.role === "GUIDE" ? updateGuideAccount : updateBeneficiaryAccount;
+      const result = await updater({
         email: body.email != null ? String(body.email) : undefined,
         password: body.password ? String(body.password) : undefined,
       });
@@ -21,6 +26,10 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ error: result.error }, { status: 400 });
       }
       return NextResponse.json({ success: true });
+    }
+
+    if (session.role !== "BENEFICIARY") {
+      return NextResponse.json({ error: "إجراء غير معروف" }, { status: 400 });
     }
 
     const { action, confirmText } = body;
