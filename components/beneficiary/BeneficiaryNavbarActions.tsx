@@ -16,7 +16,7 @@ export default function BeneficiaryNavbarActions({ userName, profile }: Props) {
 
   return (
     <>
-      <div className="flex items-center gap-2">
+      <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
         <span className="max-w-[140px] truncate text-sm font-semibold text-primary sm:max-w-[200px]">
           {userName}
         </span>
