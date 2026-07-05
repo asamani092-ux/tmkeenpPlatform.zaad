@@ -58,7 +58,7 @@ export default function Navbar({
                 <LayoutDashboard className="h-4 w-4" />
                 لوحة التحكم
               </Link>
-              <form action={logoutHref} method="POST">
+              <form action={logoutHref} method="POST" noValidate>
                 <button
                   type="submit"
                   className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-brand-gray transition hover:bg-surface-muted hover:text-primary"

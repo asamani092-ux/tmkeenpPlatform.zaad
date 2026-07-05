@@ -89,7 +89,7 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
       {questions.length === 0 ? (
         <p className="text-brand-gray">لم يُعدّ المدير أسئلة هذا الشهر بعد.</p>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form noValidate onSubmit={handleSubmit} className="space-y-4">
           {questions.map((q) => (
             <FieldRow
               key={q.id}

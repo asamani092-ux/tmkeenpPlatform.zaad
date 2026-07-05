@@ -225,6 +225,9 @@ export default async function AdminDashboardPage() {
         "طلب معلّق",
         "المرشد",
         "حالة برنامج المتابعة",
+        "المستوى التعليمي",
+        "المهارات",
+        "درجة الالتزام",
       ],
       rows: beneficiariesRaw.map((b) => [
         b.name,
@@ -234,6 +237,9 @@ export default async function AdminDashboardPage() {
         b.pendingStage ? STAGE_LABELS[b.pendingStage] : "—",
         b.guide?.name ?? "—",
         b.followUpProgramStatus ?? "—",
+        b.educationLevel || "—",
+        b.skills || "—",
+        String(b.commitmentScore),
       ]),
     },
     {
@@ -260,13 +266,25 @@ export default async function AdminDashboardPage() {
     },
     {
       title: "الفرص",
-      headers: ["العنوان", "المزود", "النوع", "المدة", "الحالة"],
+      headers: [
+        "العنوان",
+        "المزود",
+        "النوع",
+        "المدة",
+        "الحالة",
+        "المتطلبات",
+        "الراتب",
+        "نوع الدوام",
+      ],
       rows: opportunities.map((o) => [
         o.title,
         o.provider,
         o.type === "TRAINING" ? "تدريب" : "توظيف",
         o.duration,
         o.status,
+        o.requirements || "—",
+        o.salary || "—",
+        o.jobType || "—",
       ]),
     },
     {

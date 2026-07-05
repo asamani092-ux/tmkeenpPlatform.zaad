@@ -7,13 +7,16 @@ import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastError, toastSuccess } from "@/lib/toast";
 import { forgotPasswordCopy } from "@/lib/copy/ar";
+import { useFormFieldErrors } from "@/hooks/useFormFieldErrors";
 import { KeyRound } from "lucide-react";
 
 export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
+  const { validate, fieldError } = useFormFieldErrors();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!validate(e.currentTarget)) return;
     setLoading(true);
 
     const form = new FormData(e.currentTarget);
@@ -49,8 +52,8 @@ export default function ForgotPasswordPage() {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <FieldRow label={forgotPasswordCopy.emailLabel} htmlFor="email" ltr>
+          <form noValidate onSubmit={handleSubmit} className="space-y-4">
+            <FieldRow label={forgotPasswordCopy.emailLabel} htmlFor="email" ltr error={fieldError("email")}>
               <input
                 id="email"
                 name="email"

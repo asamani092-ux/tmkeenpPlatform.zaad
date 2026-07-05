@@ -61,7 +61,7 @@ export default function FollowUpQuestionEditor({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="card-section space-y-3">
+    <form noValidate onSubmit={handleSubmit} className="card-section space-y-3">
       <p className="font-semibold text-primary">
         {initial ? "تعديل سؤال" : "إضافة سؤال"} — شهر {month}
       </p>

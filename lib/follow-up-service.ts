@@ -3,6 +3,7 @@ import { getSession } from "@/lib/session";
 import { createNotification, notifyAdmins } from "@/lib/notifications";
 import { getSystemSettings } from "@/lib/system-settings";
 import { sendFollowUpFormReminderEmail, sendGenericEmail } from "@/lib/email-notify";
+import { safeSendEmail } from "@/lib/safe-email";
 import {
   computeMonthWindow,
   getActiveFollowUpMonth,
@@ -47,13 +48,15 @@ export async function initializeFollowUpProgram(beneficiaryId: string): Promise<
     "نموذج متابعة الشهر الأول",
     "برنامج متابعة ما بعد التوظيف بدأ. يُرجى إكمال نموذج الشهر الأول من لوحتك."
   );
-  await sendFollowUpFormReminderEmail({
-    to: beneficiary.email,
-    name: beneficiary.name,
-    month: 1,
-    dashboardUrl: `${appUrl}/dashboard/beneficiary#follow-up-month-1`,
-    senderEmail: settings.senderEmail,
-  });
+  await safeSendEmail("follow-up program start", () =>
+    sendFollowUpFormReminderEmail({
+      to: beneficiary.email,
+      name: beneficiary.name,
+      month: 1,
+      dashboardUrl: `${appUrl}/dashboard/beneficiary#follow-up-month-1`,
+      senderEmail: settings.senderEmail,
+    })
+  );
   await notifyAdmins(
     "بدء برنامج متابعة",
     `بدأ برنامج متابعة 6 أشهر للمستفيد ${beneficiary.name}.`
@@ -107,13 +110,15 @@ export async function processFollowUpReminders(): Promise<void> {
       `نموذج متابعة — الشهر ${currentMonth}`,
       "يُرجى الدخول إلى المنصة وإكمال نموذج المتابعة الشهري."
     );
-    await sendFollowUpFormReminderEmail({
-      to: b.email,
-      name: b.name,
-      month: currentMonth,
-      dashboardUrl: `${appUrl}/dashboard/beneficiary#follow-up-month-${currentMonth}`,
-      senderEmail: settings.senderEmail,
-    });
+    await safeSendEmail("follow-up reminder", () =>
+      sendFollowUpFormReminderEmail({
+        to: b.email,
+        name: b.name,
+        month: currentMonth,
+        dashboardUrl: `${appUrl}/dashboard/beneficiary#follow-up-month-${currentMonth}`,
+        senderEmail: settings.senderEmail,
+      })
+    );
     await prisma.followUp.update({
       where: { id: record.id },
       data: { lastReminderAt: now },
@@ -210,12 +215,14 @@ export async function completeFollowUpProgram(beneficiaryId: string): Promise<Ac
       "اكتمال برنامج المتابعة",
       "تهانينا! تم إكمال برنامج متابعة ما بعد التوظيف بنجاح."
     );
-    await sendGenericEmail({
-      to: user.email,
-      subject: "اكتمال برنامج المتابعة — منصة تمكين",
-      body: `مرحباً ${user.name},\n\nتم إكمال برنامج متابعة ما بعد التوظيف بنجاح.\n\nمع تحيات فريق منصة تمكين`,
-      senderEmail: settings.senderEmail,
-    });
+    await safeSendEmail("follow-up program complete", () =>
+      sendGenericEmail({
+        to: user.email,
+        subject: "اكتمال برنامج المتابعة — منصة تمكين",
+        body: `مرحباً ${user.name},\n\nتم إكمال برنامج متابعة ما بعد التوظيف بنجاح.\n\nمع تحيات فريق منصة تمكين`,
+        senderEmail: settings.senderEmail,
+      })
+    );
   }
 
   return { success: true };

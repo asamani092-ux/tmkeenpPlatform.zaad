@@ -323,7 +323,7 @@ export default function AdminBeneficiaryManagement({
             </div>
 
             {editMode ? (
-              <form onSubmit={handleProfileSave} className="card-section space-y-3">
+              <form noValidate onSubmit={handleProfileSave} className="card-section space-y-3">
                 <h4 className="font-bold text-primary">تعديل بيانات المستفيد</h4>
                 <FieldRow label="الجوال" htmlFor="beneficiary-phone" ltr>
                   <input

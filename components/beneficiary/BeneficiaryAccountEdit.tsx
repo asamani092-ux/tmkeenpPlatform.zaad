@@ -44,7 +44,7 @@ export default function BeneficiaryAccountEdit({ email, onSaved }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
+    <form noValidate onSubmit={handleSubmit} className="space-y-3">
       <FieldRow label="البريد الإلكتروني" htmlFor="account-email" ltr>
         <input
           id="account-email"

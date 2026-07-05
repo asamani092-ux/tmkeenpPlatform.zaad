@@ -15,6 +15,7 @@ import {
 } from "@/lib/notifications";
 import { getSystemSettings } from "@/lib/system-settings";
 import { sendSessionScheduledEmails } from "@/lib/email-notify";
+import { safeSendEmail } from "@/lib/safe-email";
 import type { CareerPlanTask } from "@/lib/copy/ar";
 
 export type ActionResult = { success: true } | { success: false; error: string };
@@ -103,12 +104,14 @@ export async function registerBeneficiary(data: {
     select: { email: true },
   });
   for (const admin of admins) {
-    await sendGenericEmail({
-      to: admin.email,
-      subject: "تسجيل مستفيد جديد — منصة تمكين",
-      body: `تم تسجيل مستفيد جديد: ${created.name} (${created.email}).\n\nيُرجى مراجعة الطلب واعتماده من لوحة المدير.`,
-      senderEmail: settings.senderEmail,
-    });
+    await safeSendEmail("register notify admin", () =>
+      sendGenericEmail({
+        to: admin.email,
+        subject: "تسجيل مستفيد جديد — منصة تمكين",
+        body: `تم تسجيل مستفيد جديد: ${created.name} (${created.email}).\n\nيُرجى مراجعة الطلب واعتماده من لوحة المدير.`,
+        senderEmail: settings.senderEmail,
+      })
+    );
   }
 
   return { success: true };
@@ -249,16 +252,18 @@ export async function scheduleSession(data: {
   );
 
   const settings = await getSystemSettings();
-  await sendSessionScheduledEmails({
-    beneficiaryEmail: beneficiary.email,
-    beneficiaryName: beneficiary.name,
-    guideEmail: guide.email,
-    guideName: guide.name,
-    sessionDate: date,
-    meetingLink,
-    location,
-    senderEmail: settings.senderEmail,
-  });
+  await safeSendEmail("session scheduled", () =>
+    sendSessionScheduledEmails({
+      beneficiaryEmail: beneficiary.email,
+      beneficiaryName: beneficiary.name,
+      guideEmail: guide.email,
+      guideName: guide.name,
+      sessionDate: date,
+      meetingLink,
+      location,
+      senderEmail: settings.senderEmail,
+    })
+  );
 
   return {
     success: true,
@@ -1130,12 +1135,14 @@ export async function approveRegistration(
 
   const settings = await getSystemSettings();
   const { sendGenericEmail } = await import("@/lib/email-notify");
-  await sendGenericEmail({
-    to: beneficiary.email,
-    subject: "تم اعتماد تسجيلك في منصة تمكين",
-    body: `مرحباً ${beneficiary.name}،\n\nتم اعتماد حسابك. يمكنك تسجيل الدخول والبدء بمرحلة الإرشاد.\n\nمع تحيات فريق منصة تمكين`,
-    senderEmail: settings.senderEmail,
-  });
+  await safeSendEmail("approve registration", () =>
+    sendGenericEmail({
+      to: beneficiary.email,
+      subject: "تم اعتماد تسجيلك في منصة تمكين",
+      body: `مرحباً ${beneficiary.name}،\n\nتم اعتماد حسابك. يمكنك تسجيل الدخول والبدء بمرحلة الإرشاد.\n\nمع تحيات فريق منصة تمكين`,
+      senderEmail: settings.senderEmail,
+    })
+  );
 
   return { success: true };
 }
@@ -1181,12 +1188,14 @@ export async function approveStageTransition(
 
   const settings = await getSystemSettings();
   const { sendGenericEmail } = await import("@/lib/email-notify");
-  await sendGenericEmail({
-    to: beneficiary.email,
-    subject: `انتقال إلى مرحلة ${STAGE_LABELS[newStage]}`,
-    body: `مرحباً ${beneficiary.name}،\n\nتم اعتماد انتقالك إلى مرحلة: ${STAGE_LABELS[newStage]}.\n\nمع تحيات فريق منصة تمكين`,
-    senderEmail: settings.senderEmail,
-  });
+  await safeSendEmail("approve stage transition", () =>
+    sendGenericEmail({
+      to: beneficiary.email,
+      subject: `انتقال إلى مرحلة ${STAGE_LABELS[newStage]}`,
+      body: `مرحباً ${beneficiary.name}،\n\nتم اعتماد انتقالك إلى مرحلة: ${STAGE_LABELS[newStage]}.\n\nمع تحيات فريق منصة تمكين`,
+      senderEmail: settings.senderEmail,
+    })
+  );
 
   return { success: true, stage: newStage };
 }
@@ -1280,12 +1289,14 @@ export async function reviewApplication(data: {
 
   const settings = await getSystemSettings();
   const { sendGenericEmail } = await import("@/lib/email-notify");
-  await sendGenericEmail({
-    to: app.beneficiary.email,
-    subject: `تحديث تقديمك — ${app.opportunity.title}`,
-    body: `مرحباً ${app.beneficiary.name}،\n\nتم ${statusLabel} تقديمك على "${app.opportunity.title}".${data.reviewNote ? `\n\nملاحظة: ${data.reviewNote}` : ""}\n\nمع تحيات فريق منصة تمكين`,
-    senderEmail: settings.senderEmail,
-  });
+  await safeSendEmail("review application", () =>
+    sendGenericEmail({
+      to: app.beneficiary.email,
+      subject: `تحديث تقديمك — ${app.opportunity.title}`,
+      body: `مرحباً ${app.beneficiary.name}،\n\nتم ${statusLabel} تقديمك على "${app.opportunity.title}".${data.reviewNote ? `\n\nملاحظة: ${data.reviewNote}` : ""}\n\nمع تحيات فريق منصة تمكين`,
+      senderEmail: settings.senderEmail,
+    })
+  );
 
   if (
     data.status === "ACCEPTED" &&

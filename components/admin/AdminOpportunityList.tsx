@@ -191,7 +191,7 @@ export default function AdminOpportunityList({
           {opportunities.map((opp) => (
             <li key={opp.id} className="rounded-lg border border-surface-border p-3 text-start">
               {editingId === opp.id ? (
-                <form onSubmit={(e) => handleSave(e, opp.id)} className="space-y-3">
+                <form noValidate onSubmit={(e) => handleSave(e, opp.id)} className="space-y-3">
                   <FieldRow label="نوع الفرصة" htmlFor={`type-${opp.id}`}>
                     <select id={`type-${opp.id}`} name="type" defaultValue={opp.type} className="input-field">
                       <option value="TRAINING">تدريب</option>

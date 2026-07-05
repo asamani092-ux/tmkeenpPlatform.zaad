@@ -51,7 +51,7 @@ export default function AdminOpportunityForm({ onSuccess }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form noValidate onSubmit={handleSubmit} className="space-y-4">
       <FieldRow label="نوع الفرصة" htmlFor="type">
         <select id="type" name="type" required className="input-field">
           <option value="TRAINING">تدريب</option>
