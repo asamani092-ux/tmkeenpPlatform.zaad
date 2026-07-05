@@ -5,10 +5,15 @@ import { useRouter } from "next/navigation";
 import FloatingModal from "@/components/admin/FloatingModal";
 import DetailRow from "@/components/ui/DetailRow";
 import SubmitButton from "@/components/ui/SubmitButton";
+import FieldRow from "@/components/ui/FieldRow";
 import { useSyncFromProps } from "@/lib/use-sync-from-props";
 import { toastSuccess, toastError } from "@/lib/toast";
-import { FOLLOW_UP_STATUS_LABELS } from "@/lib/labels";
-import { Eye, ExternalLink } from "lucide-react";
+import {
+  FOLLOW_UP_PROGRAM_STATUS_LABELS,
+  FOLLOW_UP_STATUS_LABELS,
+} from "@/lib/labels";
+import type { FollowUpProgramStatus } from "@/generated/prisma/client";
+import { Eye, ExternalLink, Pause, Play, StopCircle } from "lucide-react";
 
 type FollowUp = {
   id: string;
@@ -25,6 +30,10 @@ type EmployedBeneficiary = {
   id: string;
   name: string;
   phone?: string;
+  followUpProgramStatus?: FollowUpProgramStatus | null;
+  followUpPauseReason?: string | null;
+  followUpEndReason?: string | null;
+  followUpStatusUpdatedAt?: string | null;
 };
 
 type Props = {
@@ -37,7 +46,13 @@ type GroupedBeneficiary = {
   name: string;
   phone: string;
   records: FollowUp[];
+  programStatus: FollowUpProgramStatus | null;
+  pauseReason: string | null;
+  endReason: string | null;
+  statusUpdatedAt: string | null;
 };
+
+type ModalKind = "pause" | "end" | null;
 
 function MonthProgress({ records }: { records: FollowUp[] }) {
   return (
@@ -69,17 +84,42 @@ function progressSummary(records: FollowUp[]) {
   return `${completed}/6 مكتمل`;
 }
 
-function latestStatusLabel(records: FollowUp[]) {
-  if (records.length === 0) return "—";
-  const sorted = [...records].sort((a, b) => b.month - a.month);
-  const latest =
-    sorted.find((r) => r.status === "COMPLETED" || r.status === "MISSED") ?? sorted[0];
-  const label =
-    FOLLOW_UP_STATUS_LABELS[latest.status as keyof typeof FOLLOW_UP_STATUS_LABELS] ??
-    latest.status;
-  const dateStr = latest.submittedAt ?? latest.dueAt;
-  if (!dateStr) return label;
-  return `${label} — ${new Date(dateStr).toLocaleDateString("ar-SA")}`;
+function isProgramComplete(records: FollowUp[]) {
+  return [1, 2, 3, 4, 5, 6].every((m) => {
+    const r = records.find((x) => x.month === m);
+    return r?.status === "COMPLETED";
+  });
+}
+
+function latestStatusLabel(g: GroupedBeneficiary) {
+  const parts: string[] = [];
+
+  if (g.programStatus) {
+    const programLabel =
+      FOLLOW_UP_PROGRAM_STATUS_LABELS[g.programStatus] ?? g.programStatus;
+    parts.push(programLabel);
+    if (g.statusUpdatedAt) {
+      parts.push(new Date(g.statusUpdatedAt).toLocaleDateString("ar-SA"));
+    }
+  }
+
+  if (g.records.length > 0) {
+    const sorted = [...g.records].sort((a, b) => b.month - a.month);
+    const latest =
+      sorted.find((r) => r.status === "COMPLETED" || r.status === "MISSED") ??
+      sorted[0];
+    const monthLabel =
+      FOLLOW_UP_STATUS_LABELS[latest.status as keyof typeof FOLLOW_UP_STATUS_LABELS] ??
+      latest.status;
+    const dateStr = latest.submittedAt ?? latest.dueAt;
+    if (dateStr) {
+      parts.push(`${monthLabel} — ${new Date(dateStr).toLocaleDateString("ar-SA")}`);
+    } else if (!g.programStatus) {
+      parts.push(monthLabel);
+    }
+  }
+
+  return parts.length > 0 ? parts.join(" · ") : "—";
 }
 
 function statusLabel(status: string) {
@@ -96,12 +136,28 @@ export default function AdminFollowUpPanel({
   const [viewAnswers, setViewAnswers] = useState<FollowUp | null>(null);
   const [answerLabels, setAnswerLabels] = useState<Record<string, string>>({});
   const [monthNotes, setMonthNotes] = useState<Record<number, string>>({});
+  const [modalKind, setModalKind] = useState<ModalKind>(null);
+  const [modalReason, setModalReason] = useState("");
+  const [endConfirm, setEndConfirm] = useState(false);
   const [pending, startTransition] = useTransition();
 
   const grouped = useMemo(() => {
+    const meta = new Map(
+      employedBeneficiaries.map((b) => [
+        b.id,
+        {
+          programStatus: b.followUpProgramStatus ?? null,
+          pauseReason: b.followUpPauseReason ?? null,
+          endReason: b.followUpEndReason ?? null,
+          statusUpdatedAt: b.followUpStatusUpdatedAt ?? null,
+        },
+      ])
+    );
+
     const map = new Map<string, GroupedBeneficiary>();
     for (const f of followUps) {
       const id = f.beneficiary.id;
+      const m = meta.get(id);
       const existing = map.get(id);
       if (existing) {
         existing.records.push(f);
@@ -111,16 +167,25 @@ export default function AdminFollowUpPanel({
           name: f.beneficiary.name,
           phone: f.beneficiary.phone,
           records: [f],
+          programStatus: m?.programStatus ?? null,
+          pauseReason: m?.pauseReason ?? null,
+          endReason: m?.endReason ?? null,
+          statusUpdatedAt: m?.statusUpdatedAt ?? null,
         });
       }
     }
     for (const b of employedBeneficiaries) {
       if (!map.has(b.id)) {
+        const m = meta.get(b.id);
         map.set(b.id, {
           id: b.id,
           name: b.name,
           phone: b.phone ?? "—",
           records: [],
+          programStatus: m?.programStatus ?? null,
+          pauseReason: m?.pauseReason ?? null,
+          endReason: m?.endReason ?? null,
+          statusUpdatedAt: m?.statusUpdatedAt ?? null,
         });
       }
     }
@@ -134,6 +199,9 @@ export default function AdminFollowUpPanel({
     }
     setMonthNotes(notes);
     setSelected(g);
+    setModalKind(null);
+    setModalReason("");
+    setEndConfirm(false);
   }
 
   async function openAnswers(record: FollowUp) {
@@ -147,12 +215,11 @@ export default function AdminFollowUpPanel({
     setAnswerLabels(labels);
   }
 
-  function programAction(beneficiaryId: string, action: "complete" | "withdraw") {
-    let reason: string | undefined;
-    if (action === "withdraw") {
-      reason = window.prompt("سبب إيقاف المتابعة (اختياري):") ?? undefined;
-      if (reason === null) return;
-    }
+  function runProgramAction(
+    beneficiaryId: string,
+    action: "pause" | "resume" | "end",
+    reason?: string
+  ) {
     startTransition(async () => {
       const res = await fetch("/api/follow-up-program", {
         method: "POST",
@@ -164,7 +231,15 @@ export default function AdminFollowUpPanel({
         toastError(data.error || "فشل العملية");
         return;
       }
-      toastSuccess(action === "complete" ? "تم إنهاء المتابعة" : "تم إيقاف المتابعة");
+      const messages: Record<string, string> = {
+        pause: "تم إيقاف المتابعة مؤقتاً",
+        resume: "تم استئناف المتابعة",
+        end: "تم إنهاء برنامج المتابعة",
+      };
+      toastSuccess(messages[action]);
+      setModalKind(null);
+      setModalReason("");
+      setEndConfirm(false);
       setSelected(null);
       router.refresh();
     });
@@ -198,6 +273,11 @@ export default function AdminFollowUpPanel({
     });
   }
 
+  const canPause = selected?.programStatus === "ACTIVE";
+  const canResume =
+    selected?.programStatus === "PAUSED" || selected?.programStatus === "COMPLETED";
+  const canEnd = selected && isProgramComplete(selected.records);
+
   return (
     <>
       <div className="card overflow-x-auto p-0">
@@ -211,7 +291,7 @@ export default function AdminFollowUpPanel({
           <thead className="bg-primary/5 text-primary">
             <tr>
               <th className="px-4 py-3 text-start">اسم المستفيد</th>
-              <th className="px-4 py-3 text-start">رقم الجوال</th>
+              <th className="px-4 py-3 text-end">رقم الجوال</th>
               <th className="px-4 py-3 text-start">حالة المتابعة (6 أشهر)</th>
               <th className="px-4 py-3 text-start">آخر حالة</th>
             </tr>
@@ -231,7 +311,7 @@ export default function AdminFollowUpPanel({
                   className="cursor-pointer border-t border-surface-border transition hover:bg-secondary/10"
                 >
                   <td className="px-4 py-3 font-medium">{g.name}</td>
-                  <td className="px-4 py-3 font-mono text-xs" dir="ltr">
+                  <td className="px-4 py-3 text-end font-mono text-xs" dir="ltr">
                     {g.phone}
                   </td>
                   <td className="px-4 py-3">
@@ -242,7 +322,7 @@ export default function AdminFollowUpPanel({
                       <MonthProgress records={g.records} />
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-xs">{latestStatusLabel(g.records)}</td>
+                  <td className="px-4 py-3 text-xs">{latestStatusLabel(g)}</td>
                 </tr>
               ))
             )}
@@ -260,6 +340,28 @@ export default function AdminFollowUpPanel({
               <ExternalLink className="h-4 w-4" />
               الانتقال إلى بيانات المستفيد
             </a>
+
+            {selected.programStatus && (
+              <div className="rounded-lg bg-surface-muted px-3 py-2 text-sm">
+                <span className="font-semibold text-primary">حالة البرنامج: </span>
+                {FOLLOW_UP_PROGRAM_STATUS_LABELS[selected.programStatus]}
+                {selected.statusUpdatedAt && (
+                  <span className="ms-2 text-xs text-brand-gray">
+                    ({new Date(selected.statusUpdatedAt).toLocaleString("ar-SA")})
+                  </span>
+                )}
+                {selected.pauseReason && (
+                  <p className="mt-1 text-xs text-brand-gray">
+                    سبب الإيقاف: {selected.pauseReason}
+                  </p>
+                )}
+                {selected.endReason && (
+                  <p className="mt-1 text-xs text-brand-gray">
+                    سبب الإنهاء: {selected.endReason}
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="overflow-x-auto">
               <table className="w-full min-w-[600px] text-sm">
@@ -328,21 +430,144 @@ export default function AdminFollowUpPanel({
             </div>
 
             <div className="flex flex-wrap gap-2 border-t border-surface-border pt-4">
+              {canPause && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setModalKind("pause");
+                    setModalReason("");
+                  }}
+                  disabled={pending}
+                  className="btn-secondary inline-flex !px-4 !py-2 text-sm"
+                >
+                  <Pause className="h-4 w-4" />
+                  إيقاف المتابعة مؤقتاً
+                </button>
+              )}
+              {canResume && (
+                <button
+                  type="button"
+                  onClick={() => runProgramAction(selected.id, "resume")}
+                  disabled={pending}
+                  className="btn-primary inline-flex !px-4 !py-2 text-sm"
+                >
+                  <Play className="h-4 w-4" />
+                  استئناف المتابعة
+                </button>
+              )}
+              {selected.programStatus !== "COMPLETED" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!canEnd) {
+                      toastError(
+                        "لا يمكن إنهاء البرنامج — يجب إكمال جميع نماذج الستة أشهر أولاً"
+                      );
+                      return;
+                    }
+                    setModalKind("end");
+                    setModalReason("");
+                    setEndConfirm(false);
+                  }}
+                  disabled={pending}
+                  className="btn-primary inline-flex !px-4 !py-2 text-sm"
+                >
+                  <StopCircle className="h-4 w-4" />
+                  إنهاء المتابعة
+                </button>
+              )}
+            </div>
+          </div>
+        </FloatingModal>
+      )}
+
+      {modalKind === "pause" && selected && (
+        <FloatingModal
+          title="إيقاف المتابعة مؤقتاً"
+          onClose={() => setModalKind(null)}
+        >
+          <div className="space-y-4 text-start">
+            <p className="text-sm text-brand-gray">
+              يُوقف إرسال النماذج والتذكيرات مؤقتاً دون فقدان التقدم المسجّل. استخدم
+              هذا عند التحقق من البيانات أو عندما لا ترغب بإرسال رسائل للمستفيد
+              (مثل فترة إجازة). يمكنك استئناف المتابعة لاحقاً من نفس الشاشة.
+            </p>
+            <FieldRow label="سبب الإيقاف" htmlFor="pause-reason" align="start">
+              <textarea
+                id="pause-reason"
+                value={modalReason}
+                onChange={(e) => setModalReason(e.target.value)}
+                rows={3}
+                className="input-field resize-none"
+                placeholder="مثال: إجازة المستفيد — إيقاف التذكيرات حتى العودة"
+                required
+              />
+            </FieldRow>
+            <div className="flex gap-2">
+              <SubmitButton
+                loading={pending}
+                disabled={!modalReason.trim()}
+                onClick={() => runProgramAction(selected.id, "pause", modalReason)}
+                className="btn-primary flex-1 !py-2 text-sm"
+              >
+                تأكيد الإيقاف المؤقت
+              </SubmitButton>
               <button
                 type="button"
-                onClick={() => programAction(selected.id, "withdraw")}
-                disabled={pending}
-                className="btn-secondary !px-4 !py-2 text-sm"
+                onClick={() => setModalKind(null)}
+                className="btn-secondary flex-1 !py-2 text-sm"
               >
-                إيقاف المتابعة (مع حفظ التقدم)
+                إلغاء
               </button>
+            </div>
+          </div>
+        </FloatingModal>
+      )}
+
+      {modalKind === "end" && selected && (
+        <FloatingModal
+          title="إنهاء برنامج المتابعة"
+          onClose={() => setModalKind(null)}
+        >
+          <div className="space-y-4 text-start">
+            <div className="rounded-lg border-2 border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+              تحذير: سيتم إغلاق برنامج المتابعة رسمياً. لن تُرسل نماذج أو تذكيرات
+              جديدة. يمكنك استئناف المتابعة لاحقاً إذا رغبت بذلك.
+            </div>
+            <FieldRow label="سبب الإنهاء (إلزامي)" htmlFor="end-reason" align="start">
+              <textarea
+                id="end-reason"
+                value={modalReason}
+                onChange={(e) => setModalReason(e.target.value)}
+                rows={3}
+                className="input-field resize-none"
+                placeholder="اذكر سبب إنهاء البرنامج..."
+                required
+              />
+            </FieldRow>
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={endConfirm}
+                onChange={(e) => setEndConfirm(e.target.checked)}
+              />
+              أؤكد إنهاء برنامج المتابعة لهذا المستفيد
+            </label>
+            <div className="flex gap-2">
+              <SubmitButton
+                loading={pending}
+                disabled={!modalReason.trim() || !endConfirm}
+                onClick={() => runProgramAction(selected.id, "end", modalReason)}
+                className="btn-primary flex-1 !py-2 text-sm"
+              >
+                تأكيد الإنهاء
+              </SubmitButton>
               <button
                 type="button"
-                onClick={() => programAction(selected.id, "complete")}
-                disabled={pending}
-                className="btn-primary !px-4 !py-2 text-sm"
+                onClick={() => setModalKind(null)}
+                className="btn-secondary flex-1 !py-2 text-sm"
               >
-                إنهاء المتابعة
+                إلغاء
               </button>
             </div>
           </div>

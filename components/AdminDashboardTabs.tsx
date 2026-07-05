@@ -81,7 +81,15 @@ type Props = {
   beneficiaries: Beneficiary[];
   managedBeneficiaries: ManagedBeneficiary[];
   followUps: FollowUp[];
-  employedBeneficiaries: { id: string; name: string; phone?: string }[];
+  employedBeneficiaries: {
+    id: string;
+    name: string;
+    phone?: string;
+    followUpProgramStatus?: import("@/generated/prisma/client").FollowUpProgramStatus | null;
+    followUpPauseReason?: string | null;
+    followUpEndReason?: string | null;
+    followUpStatusUpdatedAt?: string | null;
+  }[];
   applications: ApplicationRow[];
   impactStats: ImpactStats;
 };

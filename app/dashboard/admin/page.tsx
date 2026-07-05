@@ -89,7 +89,15 @@ export default async function AdminDashboardPage() {
         OR: [{ isEmployed: true }, { stage: "FOLLOW_UP" }, { stage: "EMPLOYMENT" }],
       },
       orderBy: { createdAt: "desc" },
-      select: { id: true, name: true, phone: true },
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        followUpProgramStatus: true,
+        followUpPauseReason: true,
+        followUpEndReason: true,
+        followUpStatusUpdatedAt: true,
+      },
     }),
     prisma.application.findMany({
       include: {
@@ -334,6 +342,16 @@ export default async function AdminDashboardPage() {
     beneficiary: f.beneficiary,
   }));
 
+  const employedForPanel = employedBeneficiaries.map((b) => ({
+    id: b.id,
+    name: b.name,
+    phone: b.phone,
+    followUpProgramStatus: b.followUpProgramStatus,
+    followUpPauseReason: b.followUpPauseReason,
+    followUpEndReason: b.followUpEndReason,
+    followUpStatusUpdatedAt: b.followUpStatusUpdatedAt?.toISOString() ?? null,
+  }));
+
   return (
     <div className="min-h-screen bg-surface-muted">
       <Navbar userName={session.name} userRole={session.role} userId={session.id} />
@@ -390,7 +408,7 @@ export default async function AdminDashboardPage() {
           beneficiaries={beneficiaries}
           managedBeneficiaries={managedBeneficiaries}
           followUps={followUps}
-          employedBeneficiaries={employedBeneficiaries}
+          employedBeneficiaries={employedForPanel}
           applications={applications}
           impactStats={impactStats}
         />
