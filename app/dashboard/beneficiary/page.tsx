@@ -3,7 +3,6 @@ import Navbar from "@/components/Navbar";
 import PlatformFooter from "@/components/PlatformFooter";
 import CommitmentTracker from "@/components/CommitmentTracker";
 import OpportunityApplyCard from "@/components/OpportunityApplyCard";
-import NextSessionCard from "@/components/beneficiary/NextSessionCard";
 import CareerPlanChecklist from "@/components/beneficiary/CareerPlanChecklist";
 import BeneficiaryGuideSummaryCard from "@/components/beneficiary/BeneficiaryGuideSummaryCard";
 import BeneficiaryProfileCard from "@/components/beneficiary/BeneficiaryProfileCard";
@@ -205,10 +204,12 @@ export default async function BeneficiaryDashboardPage() {
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <BeneficiaryGuideSummaryCard guide={user.guide} />
-          <CommitmentTracker score={user.commitmentScore} variant="card" />
+          <CommitmentTracker
+            score={user.commitmentScore}
+            variant="card"
+            sessions={sessionsSerialized}
+          />
         </div>
-
-        <NextSessionCard sessions={sessionsSerialized} />
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
           <CareerPlanChecklist tasks={careerTasks} />
