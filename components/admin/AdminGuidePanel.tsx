@@ -144,8 +144,8 @@ export default function AdminGuidePanel({ guides: initial, beneficiariesByGuideI
                   disabled={pending}
                   className={`rounded px-2 py-1 text-xs font-semibold ${
                     confirmDeleteId === g.id
-                      ? "bg-red-600 text-white"
-                      : "text-red-600 hover:bg-red-50"
+                      ? "bg-danger text-onPrimary"
+                      : "text-danger hover:bg-dangerBg"
                   }`}
                 >
                   {confirmDeleteId === g.id ? (

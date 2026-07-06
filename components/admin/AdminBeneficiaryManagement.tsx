@@ -192,7 +192,7 @@ export default function AdminBeneficiaryManagement({
         <>
           {STAGE_LABELS[b.stage]}
           {b.pendingStage && (
-            <span className="ms-1 block text-xs font-semibold text-red-800">
+            <span className="ms-1 block text-xs font-semibold text-warning">
               طلب: {STAGE_LABELS[b.pendingStage]}
             </span>
           )}
@@ -273,9 +273,9 @@ export default function AdminBeneficiaryManagement({
       header: "السيرة الذاتية",
       render: (b) =>
         b.cvUrl ? (
-          <span className="text-xs font-semibold text-green-700">مرفقة</span>
+          <span className="text-xs font-semibold text-success">مرفقة</span>
         ) : (
-          <span className="text-xs font-semibold text-red-600">غير مرفقة</span>
+          <span className="text-xs font-semibold text-danger">غير مرفقة</span>
         ),
     },
   ];
@@ -317,7 +317,7 @@ export default function AdminBeneficiaryManagement({
                 <span className="font-semibold text-primary">المرحلة: </span>
                 {STAGE_LABELS[selected.stage]}
                 {selected.pendingStage && (
-                  <span className="ms-2 rounded bg-yellow-100 px-2 py-0.5 text-xs font-semibold text-red-900">
+                  <span className="ms-2 rounded bg-warningBg px-2 py-0.5 text-xs font-semibold text-warning">
                     طلب معلّق: {STAGE_LABELS[selected.pendingStage]}
                   </span>
                 )}
@@ -485,7 +485,7 @@ export default function AdminBeneficiaryManagement({
                   عرض السيرة الذاتية
                 </a>
               ) : (
-                <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-800">
+                <span className="inline-block rounded-full bg-dangerBg px-3 py-1 text-xs font-semibold text-danger">
                   لا يوجد سيرة ذاتية مرفقة
                 </span>
               )}
@@ -519,7 +519,7 @@ export default function AdminBeneficiaryManagement({
             )}
 
             {selected.stage === "PENDING_APPROVAL" && (
-              <div className="card-section space-y-3 border-2 border-amber-200 bg-amber-50/40">
+              <div className="card-section space-y-3 border-2 border-warning/30 bg-warningBg/40">
                 <h4 className="font-bold text-primary">اعتماد التسجيل</h4>
                 <p className="text-sm text-brand-gray">
                   1. اختر المرشد المناسب للمستفيد
@@ -543,7 +543,7 @@ export default function AdminBeneficiaryManagement({
                   </select>
                 </div>
                 {!selected.guideId && (
-                  <p className="text-xs font-semibold text-amber-900">
+                  <p className="text-xs font-semibold text-warning">
                     يجب إسناد مرشد قبل اعتماد التسجيل
                   </p>
                 )}

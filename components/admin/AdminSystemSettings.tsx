@@ -76,7 +76,7 @@ export default function AdminSystemSettings() {
 
         <div
           className={`rounded-lg px-4 py-3 text-sm ${
-            smtpConfigured ? "bg-secondary/10 text-primary" : "bg-amber-50 text-amber-900"
+            smtpConfigured ? "bg-secondary/10 text-primary" : "bg-warningBg text-warning"
           }`}
         >
           البريد: {smtpConfigured ? "مفعّل" : "غير مفعّل"}

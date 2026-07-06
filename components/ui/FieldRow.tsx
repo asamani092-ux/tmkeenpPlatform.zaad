@@ -21,7 +21,7 @@ export default function FieldRow({
 }: Props) {
   const cellClass = variant === "auth" ? "auth-field" : "field-cell";
   const invalidClass = error
-    ? "[&_.input-field]:border-red-800 [&_.input-field]:ring-2 [&_.input-field]:ring-red-800/25 [&_.input-field-auth]:border-red-800 [&_.input-field-auth]:ring-2 [&_.input-field-auth]:ring-red-800/25"
+    ? "[&_.input-field]:border-danger [&_.input-field]:ring-2 [&_.input-field]:ring-danger/25 [&_.input-field-auth]:border-danger [&_.input-field-auth]:ring-2 [&_.input-field-auth]:ring-danger/25"
     : "";
   return (
     <div className={`${cellClass} ${className}`.trim()}>
@@ -36,7 +36,7 @@ export default function FieldRow({
           dir={ltr ? "ltr" : undefined}
         >
           {children}
-          {error && <p className="mt-1 text-xs font-medium text-red-800">{error}</p>}
+          {error && <p className="mt-1 text-xs font-medium text-danger">{error}</p>}
         </div>
       </div>
     </div>

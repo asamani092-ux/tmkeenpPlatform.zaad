@@ -46,7 +46,7 @@ export default function FollowUpFormTemplateCard({
         <button
           type="button"
           onClick={onDelete}
-          className="rounded-lg px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50"
+          className="rounded-lg px-3 py-1.5 text-xs font-semibold text-danger hover:bg-dangerBg"
         >
           حذف
         </button>

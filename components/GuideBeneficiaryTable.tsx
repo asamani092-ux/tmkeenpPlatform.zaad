@@ -888,7 +888,7 @@ export default function GuideBeneficiaryTable({
                 <p className="text-sm text-brand-gray">
                   المرحلة: {STAGE_LABELS[selected.stage]}
                   {selected.pendingStage && (
-                    <span className="mr-2 rounded bg-yellow-100 px-2 py-0.5 text-xs font-semibold text-red-900">
+                    <span className="mr-2 rounded bg-warningBg px-2 py-0.5 text-xs font-semibold text-warning">
                       طلب معلّق: {STAGE_LABELS[selected.pendingStage]}
                     </span>
                   )}
@@ -1050,7 +1050,7 @@ export default function GuideBeneficiaryTable({
                               عرض السيرة الذاتية المرفقة
                             </a>
                           ) : (
-                            <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-800">
+                            <span className="inline-block rounded-full bg-dangerBg px-3 py-1 text-xs font-semibold text-danger">
                               لا يوجد سيرة ذاتية - يرجى طلبها من المستفيد
                             </span>
                           )
@@ -1271,7 +1271,7 @@ export default function GuideBeneficiaryTable({
 
                               <button type="button" onClick={() => startEditSession(s)} className="text-primary" title={guideCopy.editSession}><Pencil className="h-4 w-4" /></button>
 
-                              <button type="button" onClick={() => handleDeleteSession(s.id)} className="text-red-600" title={guideCopy.deleteSession}><Trash2 className="h-4 w-4" /></button>
+                              <button type="button" onClick={() => handleDeleteSession(s.id)} className="text-danger" title={guideCopy.deleteSession}><Trash2 className="h-4 w-4" /></button>
 
                             </div>
 
@@ -1347,7 +1347,7 @@ export default function GuideBeneficiaryTable({
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex gap-1">
                           <button type="button" onClick={() => startEditTask(t)} className="text-primary" title={guideCopy.editTask}><Pencil className="h-4 w-4" /></button>
-                          <button type="button" onClick={() => handleDeleteTask(t.id)} className="text-red-600" title={guideCopy.deleteTask}><Trash2 className="h-4 w-4" /></button>
+                          <button type="button" onClick={() => handleDeleteTask(t.id)} className="text-danger" title={guideCopy.deleteTask}><Trash2 className="h-4 w-4" /></button>
                         </div>
                         <div className="text-start">
                           <span className={`text-sm font-medium ${t.isCompleted ? "line-through opacity-60" : "text-primary"}`}>{t.title}</span>

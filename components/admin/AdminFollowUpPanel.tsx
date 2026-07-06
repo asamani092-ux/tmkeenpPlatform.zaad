@@ -61,11 +61,11 @@ function MonthProgress({ records }: { records: FollowUp[] }) {
         const r = records.find((x) => x.month === m);
         const color =
           r?.status === "COMPLETED"
-            ? "bg-green-600"
+            ? "bg-success"
             : r?.status === "MISSED"
-              ? "bg-red-500"
+              ? "bg-danger"
               : r
-                ? "bg-yellow-400"
+                ? "bg-warning"
                 : "bg-surface-border";
         return (
           <span
@@ -530,7 +530,7 @@ export default function AdminFollowUpPanel({
           onClose={() => setModalKind(null)}
         >
           <div className="space-y-4 text-start">
-            <div className="rounded-lg border-2 border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+            <div className="rounded-lg border-2 border-warning/30 bg-warningBg px-3 py-2 text-sm text-warning">
               تحذير: سيتم إغلاق برنامج المتابعة رسمياً. لن تُرسل نماذج أو تذكيرات
               جديدة. يمكنك استئناف المتابعة لاحقاً إذا رغبت بذلك.
             </div>

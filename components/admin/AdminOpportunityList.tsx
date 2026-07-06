@@ -250,7 +250,7 @@ export default function AdminOpportunityList({
                       <button type="button" onClick={() => setEditingId(opp.id)} className="rounded p-1 text-primary hover:bg-surface-muted">
                         <Pencil className="h-4 w-4" />
                       </button>
-                      <button type="button" onClick={() => handleDelete(opp.id)} disabled={pending} className="rounded p-1 text-red-600 hover:bg-red-50">
+                      <button type="button" onClick={() => handleDelete(opp.id)} disabled={pending} className="rounded p-1 text-danger hover:bg-dangerBg">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -260,8 +260,8 @@ export default function AdminOpportunityList({
                     <span
                       className={
                         opp.status === "متاحة"
-                          ? "font-semibold text-green-700"
-                          : "font-semibold text-red-700"
+                          ? "font-semibold text-success"
+                          : "font-semibold text-danger"
                       }
                     >
                       {OPPORTUNITY_STATUS_LABELS[opp.status as keyof typeof OPPORTUNITY_STATUS_LABELS] ??

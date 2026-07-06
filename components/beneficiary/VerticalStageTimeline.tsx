@@ -48,7 +48,7 @@ export default function VerticalStageTimeline({ currentStage, stageEnteredAt }: 
               )}
               <div className="relative z-10 shrink-0">
                 {isComplete ? (
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-red-900">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-onSecondary">
                     <Check className="h-4 w-4" />
                   </span>
                 ) : (
