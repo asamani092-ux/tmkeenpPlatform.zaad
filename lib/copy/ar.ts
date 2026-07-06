@@ -98,6 +98,7 @@ export const guideCopy = {
   recommendationsSection: "التوصيات المهنية",
   trainingCoursesSection: "اختيار الدورات التدريبية المناسبة",
   saveProfileSections: "حفظ أقسام الملف",
+  editProfile: "تعديل البيانات",
   scheduleNew: "جدولة جلسة جديدة",
   sessionDateLabel: "تاريخ ووقت الجلسة",
   sessionNotesLabel: "ملاحظات الجلسة",

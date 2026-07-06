@@ -120,7 +120,12 @@ export default async function GuideDashboardPage() {
 
   return (
     <div className="min-h-screen bg-surface-muted">
-      <Navbar userName={session.name} userRole={session.role} userId={session.id} />
+      <Navbar
+        userName={session.name}
+        userRole={session.role}
+        userId={session.id}
+        userEmail={session.email}
+      />
 
       <main className="mx-auto max-w-6xl space-y-8 px-4 py-8">
         <div className="flex items-center gap-3">

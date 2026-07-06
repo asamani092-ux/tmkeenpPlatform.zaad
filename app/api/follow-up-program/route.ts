@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import {
   completeFollowUpProgram,
   withdrawFollowUpProgram,
+  pauseFollowUp,
+  resumeFollowUp,
+  endFollowUp,
 } from "@/lib/follow-up-service";
 
 export async function POST(request: Request) {
@@ -19,6 +22,30 @@ export async function POST(request: Request) {
 
     if (action === "withdraw") {
       const result = await withdrawFollowUpProgram(beneficiaryId, reason);
+      if (!result.success) {
+        return NextResponse.json({ error: result.error }, { status: 400 });
+      }
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === "pause") {
+      const result = await pauseFollowUp(beneficiaryId, String(reason ?? ""));
+      if (!result.success) {
+        return NextResponse.json({ error: result.error }, { status: 400 });
+      }
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === "resume") {
+      const result = await resumeFollowUp(beneficiaryId);
+      if (!result.success) {
+        return NextResponse.json({ error: result.error }, { status: 400 });
+      }
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === "end") {
+      const result = await endFollowUp(beneficiaryId, String(reason ?? ""));
       if (!result.success) {
         return NextResponse.json({ error: result.error }, { status: 400 });
       }

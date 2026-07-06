@@ -11,6 +11,8 @@ import { Stage, SessionStatus } from "@/generated/prisma/client";
 import { guideCopy } from "@/lib/copy/ar";
 import type { BeneficiaryTask } from "@/lib/copy/ar";
 import GuideEvaluationsTab from "@/components/guide/GuideEvaluationsTab";
+import GuideProfileSections from "@/components/guide/GuideProfileSections";
+import SessionJoinButton from "@/components/beneficiary/SessionJoinButton";
 import SlideOver from "@/components/SlideOver";
 import SubmitButton from "@/components/ui/SubmitButton";
 import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
@@ -20,7 +22,7 @@ import FieldRow from "@/components/ui/FieldRow";
 import { STAGE_LABELS, getNextStage } from "@/lib/stages";
 import { SESSION_STATUS_LABELS } from "@/lib/labels";
 import { getUpcomingSession } from "@/lib/upcoming-session";
-import { formatCountdown, canJoinSession } from "@/lib/follow-up-program";
+import { formatCountdown } from "@/lib/follow-up-program";
 import ContactLinks from "@/components/ui/ContactLinks";
 import { useSyncFromProps } from "@/lib/use-sync-from-props";
 import { toastSuccess, toastError } from "@/lib/toast";
@@ -179,6 +181,7 @@ export default function GuideBeneficiaryTable({
   const [sessionDrawerOpen, setSessionDrawerOpen] = useState(false);
 
   const [noteContent, setNoteContent] = useState("");
+  const [profileEditOpen, setProfileEditOpen] = useState(false);
 
   const [pending, startTransition] = useTransition();
 
@@ -243,6 +246,7 @@ export default function GuideBeneficiaryTable({
     setSessionDrawerOpen(false);
 
     setNoteContent("");
+    setProfileEditOpen(false);
 
   }
 
@@ -792,23 +796,22 @@ export default function GuideBeneficiaryTable({
       render: (b) => {
         const upcoming = getUpcomingSession(b.sessions);
         if (!upcoming) return <span className="text-brand-gray">—</span>;
-        const canJoin = canJoinSession(new Date(upcoming.date));
         return (
-          <div className="flex flex-col items-start gap-1 text-xs">
+          <div
+            className="flex flex-col items-start gap-1 text-xs"
+            onClick={(e) => e.stopPropagation()}
+          >
             <span className="inline-flex items-center gap-1 text-primary">
               <Calendar className="h-4 w-4" />
-              {formatCountdown(new Date(upcoming.date))}
+              {new Date(upcoming.date).toLocaleDateString("ar-SA")}
             </span>
-            {upcoming.meetingLink && canJoin && (
-              <a
-                href={upcoming.meetingLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-semibold text-primary hover:underline"
-                onClick={(e) => e.stopPropagation()}
-              >
-                دخول الجلسة
-              </a>
+            <span className="text-brand-gray">{formatCountdown(new Date(upcoming.date))}</span>
+            {upcoming.meetingLink && (
+              <SessionJoinButton
+                meetingLink={upcoming.meetingLink}
+                sessionDate={upcoming.date}
+                compact
+              />
             )}
           </div>
         );
@@ -818,7 +821,7 @@ export default function GuideBeneficiaryTable({
       key: "contact",
       header: "التواصل",
       render: (b) => (
-        <ContactLinks phone={b.phone} email={b.email} size="sm" />
+        <ContactLinks phone={b.phone} email={b.email} whatsapp={b.phone} size="sm" />
       ),
     },
   ];
@@ -975,15 +978,38 @@ export default function GuideBeneficiaryTable({
 
                 <div className="card-section space-y-3">
 
-                  <h4 className="font-bold text-primary">بيانات المستفيد</h4>
+                  <div className="mb-3 flex items-center justify-between gap-2">
+                    <h4 className="font-bold text-primary">بيانات المستفيد</h4>
+                    {!readOnly && (
+                      <button
+                        type="button"
+                        onClick={() => setProfileEditOpen((v) => !v)}
+                        className="btn-recommend shrink-0 !px-3 !py-1.5 text-xs"
+                      >
+                        <Pencil className="inline h-3 w-3" />
+                        {guideCopy.editProfile}
+                      </button>
+                    )}
+                  </div>
 
                   <FieldGrid className="text-sm">
 
                     <DetailRow label="الاسم" value={<span className="font-medium">{selected.name}</span>} />
 
-                    <DetailRow label="البريد" value={selected.email} ltr />
+                    <div className="sm:col-span-2">
+                      <DetailRow
+                        label="البريد"
+                        value={
+                          <span className="block w-full truncate text-end" dir="ltr">
+                            {selected.email}
+                          </span>
+                        }
+                      />
+                    </div>
 
                     <DetailRow label="الجوال" value={selected.phone} ltr />
+
+                    <DetailRow label="التواصل" value={<ContactLinks phone={selected.phone} email={selected.email} whatsapp={selected.phone} />} />
 
                     <DetailRow label="المستوى التعليمي" value={selected.educationLevel || "—"} />
 
@@ -1037,7 +1063,19 @@ export default function GuideBeneficiaryTable({
 
                 </div>
 
-
+                {profileEditOpen && !readOnly && (
+                  <GuideProfileSections
+                    beneficiaryId={selected.id}
+                    cvContent={selected.cvContent}
+                    professionalRecommendations={selected.professionalRecommendations}
+                    selectedCourseIds={selected.selectedTrainingCourseIds}
+                    trainingCourses={trainingCourses}
+                    onSaved={() => {
+                      setProfileEditOpen(false);
+                      router.refresh();
+                    }}
+                  />
+                )}
 
                 {!readOnly && selected.stage !== "CLOSED" && !selected.pendingStage && getNextStage(selected.stage) && (
                   <button

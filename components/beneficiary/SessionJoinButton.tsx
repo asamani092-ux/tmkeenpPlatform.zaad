@@ -8,9 +8,10 @@ import { canJoinSession } from "@/lib/follow-up-program";
 type Props = {
   meetingLink: string;
   sessionDate: string;
+  compact?: boolean;
 };
 
-export default function SessionJoinButton({ meetingLink, sessionDate }: Props) {
+export default function SessionJoinButton({ meetingLink, sessionDate, compact = false }: Props) {
   const [canJoin, setCanJoin] = useState(false);
 
   useEffect(() => {
@@ -19,6 +20,27 @@ export default function SessionJoinButton({ meetingLink, sessionDate }: Props) {
     const id = setInterval(check, 30000);
     return () => clearInterval(id);
   }, [sessionDate]);
+
+  if (compact) {
+    return (
+      <div className="space-y-0.5">
+        {!canJoin && meetingLink && (
+          <span className="text-[10px] text-brand-gray">يفتح قبل 15 د</span>
+        )}
+        {meetingLink && canJoin ? (
+          <a
+            href={meetingLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 font-semibold text-primary hover:underline"
+          >
+            <Video className="h-3 w-3" />
+            انضم
+          </a>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-2">

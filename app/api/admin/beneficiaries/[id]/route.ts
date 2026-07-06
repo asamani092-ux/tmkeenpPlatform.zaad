@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Stage } from "@/generated/prisma/client";
 import { adminUpdateBeneficiary } from "@/lib/platform-service";
 
 export async function PATCH(
@@ -24,6 +25,7 @@ export async function PATCH(
           : body.guideId != null
             ? String(body.guideId)
             : undefined,
+      stage: body.stage != null ? (String(body.stage) as Stage) : undefined,
     });
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 400 });

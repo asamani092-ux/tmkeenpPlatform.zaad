@@ -3,6 +3,7 @@ import Link from "next/link";
 import { LogOut } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
 import BeneficiaryNavbarActions from "@/components/beneficiary/BeneficiaryNavbarActions";
+import GuideNavbarActions from "@/components/guide/GuideNavbarActions";
 import type { UnifiedProfile } from "@/components/beneficiary/BeneficiaryUnifiedProfileModal";
 import type { Role } from "@/generated/prisma/client";
 
@@ -11,6 +12,7 @@ type NavbarProps = {
   userName?: string;
   userRole?: Role;
   userId?: string;
+  userEmail?: string;
   logoutHref?: string;
   unifiedProfile?: UnifiedProfile;
 };
@@ -20,18 +22,22 @@ export default function Navbar({
   userName,
   userRole,
   userId,
+  userEmail,
   logoutHref = "/api/auth/logout",
   unifiedProfile,
 }: NavbarProps) {
   const isBeneficiary = userRole === "BENEFICIARY";
+  const isGuide = userRole === "GUIDE";
 
   return (
     <header className="border-b border-surface-border bg-surface shadow-sm">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
-        {/* RTL start (يمين): اسم المستخدم + تعديل + إشعارات + خروج */}
+        {/* RTL start (يمين): اسم المستخدم + تعديل + إشعارات + لوحة التحكم + خروج */}
         <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden sm:gap-3">
           {showAuth && userName && isBeneficiary && unifiedProfile ? (
             <BeneficiaryNavbarActions userName={userName} profile={unifiedProfile} />
+          ) : showAuth && userName && isGuide && userEmail ? (
+            <GuideNavbarActions userName={userName} email={userEmail} />
           ) : showAuth && userName ? (
             <>
               <span className="truncate text-sm font-semibold text-primary">{userName}</span>

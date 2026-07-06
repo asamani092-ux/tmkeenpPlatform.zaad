@@ -19,6 +19,7 @@ export async function initializeFollowUpProgram(beneficiaryId: string): Promise<
     data: {
       followUpProgramStatus: "ACTIVE",
       followUpProgramStartedAt: startedAt,
+      followUpStatusUpdatedAt: startedAt,
     },
   });
 
@@ -63,6 +64,7 @@ export async function initializeFollowUpProgram(beneficiaryId: string): Promise<
   );
 }
 
+/** Cron: send monthly reminders ONLY when program is ACTIVE and within 6-month window — O(n) */
 export async function processFollowUpReminders(): Promise<void> {
   const now = new Date();
   const active = await prisma.user.findMany({
@@ -242,6 +244,8 @@ export async function withdrawFollowUpProgram(
     data: {
       stage: "CLOSED",
       followUpProgramStatus: "WITHDRAWN",
+      followUpPauseReason: reason?.trim() || null,
+      followUpStatusUpdatedAt: new Date(),
       pendingStage: null,
       stageEnteredAt: new Date(),
     },
@@ -259,11 +263,151 @@ export async function withdrawFollowUpProgram(
   return { success: true };
 }
 
+/** Admin pauses follow-up program — O(1) time, O(1) space */
+export async function pauseFollowUp(
+  beneficiaryId: string,
+  reason: string
+): Promise<ActionResult> {
+  const session = await getSession();
+  if (!session || session.role !== "ADMIN") {
+    return { success: false, error: "غير مصرح" };
+  }
+
+  const trimmed = reason.trim();
+  if (!trimmed) {
+    return { success: false, error: "سبب الإيقاف مطلوب" };
+  }
+
+  const user = await prisma.user.findFirst({
+    where: {
+      id: beneficiaryId,
+      role: "BENEFICIARY",
+      followUpProgramStatus: "ACTIVE",
+    },
+  });
+  if (!user) {
+    return { success: false, error: "البرنامج غير نشط أو المستفيد غير موجود" };
+  }
+
+  const now = new Date();
+  await prisma.user.update({
+    where: { id: beneficiaryId },
+    data: {
+      followUpProgramStatus: "PAUSED",
+      followUpPauseReason: trimmed,
+      followUpStatusUpdatedAt: now,
+    },
+  });
+
+  await createNotification(
+    beneficiaryId,
+    "إيقاف مؤقت لبرنامج المتابعة",
+    `تم إيقاف نماذج المتابعة مؤقتاً. السبب: ${trimmed}`
+  );
+
+  return { success: true };
+}
+
+/** Admin resumes follow-up program from PAUSED or COMPLETED — O(1) */
+export async function resumeFollowUp(beneficiaryId: string): Promise<ActionResult> {
+  const session = await getSession();
+  if (!session || session.role !== "ADMIN") {
+    return { success: false, error: "غير مصرح" };
+  }
+
+  const user = await prisma.user.findFirst({
+    where: {
+      id: beneficiaryId,
+      role: "BENEFICIARY",
+      followUpProgramStatus: { in: ["PAUSED", "COMPLETED"] },
+    },
+  });
+  if (!user) {
+    return { success: false, error: "لا يمكن استئناف البرنامج — الحالة غير مناسبة" };
+  }
+
+  const now = new Date();
+  await prisma.user.update({
+    where: { id: beneficiaryId },
+    data: {
+      followUpProgramStatus: "ACTIVE",
+      followUpStatusUpdatedAt: now,
+    },
+  });
+
+  await createNotification(
+    beneficiaryId,
+    "استئناف برنامج المتابعة",
+    "تم استئناف برنامج متابعة ما بعد التوظيف. ستصلك النماذج والتذكيرات حسب الجدول."
+  );
+
+  return { success: true };
+}
+
+/** Admin ends follow-up after all 6 months completed — O(6) time, O(1) space */
+export async function endFollowUp(
+  beneficiaryId: string,
+  reason: string
+): Promise<ActionResult> {
+  const session = await getSession();
+  if (!session || session.role !== "ADMIN") {
+    return { success: false, error: "غير مصرح" };
+  }
+
+  const trimmed = reason.trim();
+  if (!trimmed) {
+    return { success: false, error: "سبب الإنهاء مطلوب" };
+  }
+
+  const user = await prisma.user.findFirst({
+    where: { id: beneficiaryId, role: "BENEFICIARY" },
+    include: { followUps: true },
+  });
+  if (!user) {
+    return { success: false, error: "المستفيد غير موجود" };
+  }
+
+  const records = user.followUps;
+  if (records.length < 6) {
+    return { success: false, error: "لم يكتمل برنامج المتابعة — يجب وجود 6 سجلات شهرية" };
+  }
+
+  const allCompleted = [1, 2, 3, 4, 5, 6].every((m) => {
+    const r = records.find((x) => x.month === m);
+    return r?.status === "COMPLETED";
+  });
+  if (!allCompleted) {
+    return {
+      success: false,
+      error: "لا يمكن إنهاء البرنامج — يجب إكمال جميع نماذج الستة أشهر أولاً",
+    };
+  }
+
+  const now = new Date();
+  await prisma.user.update({
+    where: { id: beneficiaryId },
+    data: {
+      followUpProgramStatus: "COMPLETED",
+      followUpEndReason: trimmed,
+      followUpStatusUpdatedAt: now,
+    },
+  });
+
+  await createNotification(
+    beneficiaryId,
+    "إنهاء برنامج المتابعة",
+    `تم إنهاء برنامج المتابعة بنجاح. السبب: ${trimmed}`
+  );
+
+  return { success: true };
+}
+
 export async function getFollowUpFormForBeneficiary(beneficiaryId: string) {
   const user = await prisma.user.findFirst({
     where: { id: beneficiaryId, role: "BENEFICIARY", stage: "FOLLOW_UP" },
     include: { followUps: { orderBy: { month: "asc" } } },
   });
+  // PAUSED, COMPLETED, WITHDRAWN, or null → no form access
   if (!user?.followUpProgramStartedAt || user.followUpProgramStatus !== "ACTIVE") {
     return null;
   }

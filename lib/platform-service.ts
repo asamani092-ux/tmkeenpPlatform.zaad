@@ -1,12 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { hashPassword } from "@/lib/auth";
-import { getNextStage, STAGE_LABELS } from "@/lib/stages";
+import { getNextStage, STAGE_LABELS, STAGE_ORDER } from "@/lib/stages";
 import {
   CareerPlanStatus,
   FollowUpStatus,
   OpportunityType,
   SessionStatus,
+  Stage,
 } from "@/generated/prisma/client";
 import { beneficiaryCanSeeOpportunity } from "@/lib/opportunity-visibility";
 import {
@@ -702,6 +703,7 @@ export async function adminUpdateBeneficiary(
     skills?: string;
     careerInterests?: string;
     guideId?: string | null;
+    stage?: Stage;
   }
 ): Promise<ActionResult> {
   const session = await getSession();
@@ -714,6 +716,10 @@ export async function adminUpdateBeneficiary(
   });
   if (!beneficiary) {
     return { success: false, error: "المستفيد غير موجود" };
+  }
+
+  if (data.stage !== undefined && !STAGE_ORDER.includes(data.stage)) {
+    return { success: false, error: "مرحلة غير صالحة" };
   }
 
   if (data.email !== undefined) {
@@ -733,6 +739,9 @@ export async function adminUpdateBeneficiary(
     if (!guide) return { success: false, error: "المرشد غير موجود" };
   }
 
+  const stageChanged =
+    data.stage !== undefined && data.stage !== beneficiary.stage;
+
   await prisma.user.update({
     where: { id: beneficiaryId },
     data: {
@@ -748,8 +757,24 @@ export async function adminUpdateBeneficiary(
         ? { careerInterests: data.careerInterests.trim() }
         : {}),
       ...(data.guideId !== undefined ? { guideId: data.guideId } : {}),
+      ...(stageChanged
+        ? {
+            stage: data.stage,
+            pendingStage: null,
+            stageEnteredAt: new Date(),
+            ...(data.stage === "EMPLOYMENT" ? { isEmployed: true } : {}),
+          }
+        : {}),
     },
   });
+
+  if (stageChanged && data.stage === "FOLLOW_UP") {
+    const updated = await prisma.user.findUnique({ where: { id: beneficiaryId } });
+    if (updated && !updated.followUpProgramStartedAt) {
+      const { initializeFollowUpProgram } = await import("@/lib/follow-up-service");
+      await initializeFollowUpProgram(beneficiaryId);
+    }
+  }
 
   return { success: true };
 }
@@ -875,6 +900,45 @@ export async function updateBeneficiaryAccount(data: {
 }): Promise<ActionResult> {
   const session = await getSession();
   if (!session || session.role !== "BENEFICIARY") {
+    return { success: false, error: "غير مصرح" };
+  }
+
+  if (!data.email && !data.password) {
+    return { success: false, error: "لا توجد بيانات للتحديث" };
+  }
+
+  if (data.password && data.password.length < 6) {
+    return { success: false, error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" };
+  }
+
+  if (data.email) {
+    const email = data.email.toLowerCase().trim();
+    const existing = await prisma.user.findFirst({
+      where: { email, id: { not: session.id } },
+    });
+    if (existing) {
+      return { success: false, error: "البريد مسجل مسبقاً" };
+    }
+  }
+
+  await prisma.user.update({
+    where: { id: session.id },
+    data: {
+      ...(data.email ? { email: data.email.toLowerCase().trim() } : {}),
+      ...(data.password ? { password: await hashPassword(data.password) } : {}),
+    },
+  });
+
+  return { success: true };
+}
+
+/** Guide updates account email/password — O(1) */
+export async function updateGuideAccount(data: {
+  email?: string;
+  password?: string;
+}): Promise<ActionResult> {
+  const session = await getSession();
+  if (!session || session.role !== "GUIDE") {
     return { success: false, error: "غير مصرح" };
   }
 
