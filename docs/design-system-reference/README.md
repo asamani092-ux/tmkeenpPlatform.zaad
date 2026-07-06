@@ -1,5 +1,7 @@
 # نظام تصميم منصة التمكين (Tmkeen Design System)
 
+> **مرجع العلامة التجارية:** هذا المجلد (`docs/design-system-reference/`) هو المصدر الرسمي لـ `tokens.json` والأصول المرافقة. التطبيق الحي يقرأ هذه القيم من [`tailwind.config.ts`](../../tailwind.config.ts) (الألوان الأساسية + الدلالية + `text.*`) ومن [`app/globals.css`](../../app/globals.css) (فئات المكوّنات). لا يستورد Next.js هذا المجلد مباشرةً.
+
 حزمة قابلة للنقل لاعتماد هوية **جمعية الزاد — منصة التمكين المستدام** في أي مشروع (Next.js، React، Vue، WordPress، HTML).
 
 ## محتويات الحزمة
