@@ -80,37 +80,37 @@ export default function RegisterPage() {
 
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <FieldRow label="الاسم الكامل" htmlFor="name" className="sm:col-span-2" error={fieldError("name")}>
-                <input id="name" name="name" required className="input-field" />
+              <FieldRow label="الاسم الكامل" htmlFor="name" className="sm:col-span-2" variant="auth" error={fieldError("name")}>
+                <input id="name" name="name" required className="input-field-auth" />
               </FieldRow>
-              <FieldRow label="رقم الجوال" htmlFor="phone" ltr error={fieldError("phone")}>
+              <FieldRow label="رقم الجوال" htmlFor="phone" ltr variant="auth" error={fieldError("phone")}>
                 <input
                   id="phone"
                   name="phone"
                   type="tel"
                   required
-                  className="input-field"
+                  className="input-field-auth"
                   dir="ltr"
                 />
               </FieldRow>
-              <FieldRow label="البريد الإلكتروني" htmlFor="email" ltr error={fieldError("email")}>
+              <FieldRow label="البريد الإلكتروني" htmlFor="email" ltr variant="auth" error={fieldError("email")}>
                 <input
                   id="email"
                   name="email"
                   type="email"
                   required
-                  className="input-field"
+                  className="input-field-auth"
                   dir="ltr"
                 />
               </FieldRow>
-              <FieldRow label="كلمة المرور" htmlFor="password" className="sm:col-span-2" ltr error={fieldError("password")}>
+              <FieldRow label="كلمة المرور" htmlFor="password" className="sm:col-span-2" ltr variant="auth" error={fieldError("password")}>
                 <input
                   id="password"
                   name="password"
                   type="password"
                   required
                   minLength={6}
-                  className="input-field"
+                  className="input-field-auth"
                   dir="ltr"
                 />
               </FieldRow>
@@ -119,40 +119,40 @@ export default function RegisterPage() {
             <hr className="border-surface-border" />
             <p className="text-sm font-semibold text-primary">الملف الرقمي</p>
 
-            <FieldRow label="المستوى التعليمي" htmlFor="educationLevel">
-              <input id="educationLevel" name="educationLevel" className="input-field" />
+            <FieldRow label="المستوى التعليمي" htmlFor="educationLevel" variant="auth">
+              <input id="educationLevel" name="educationLevel" className="input-field-auth" />
             </FieldRow>
-            <FieldRow label="الخبرات" htmlFor="experience" align="start">
-              <textarea id="experience" name="experience" rows={2} className="input-field resize-none" />
+            <FieldRow label="الخبرات" htmlFor="experience" align="start" variant="auth">
+              <textarea id="experience" name="experience" rows={2} className="input-field-auth resize-none" />
             </FieldRow>
-            <FieldRow label="المهارات" htmlFor="skills" align="start">
-              <textarea id="skills" name="skills" rows={2} className="input-field resize-none" />
+            <FieldRow label="المهارات" htmlFor="skills" align="start" variant="auth">
+              <textarea id="skills" name="skills" rows={2} className="input-field-auth resize-none" />
             </FieldRow>
-            <FieldRow label="الميول المهنية" htmlFor="careerInterests" align="start">
+            <FieldRow label="الميول المهنية" htmlFor="careerInterests" align="start" variant="auth">
               <textarea
                 id="careerInterests"
                 name="careerInterests"
                 rows={2}
-                className="input-field resize-none"
+                className="input-field-auth resize-none"
               />
             </FieldRow>
 
-            <FieldRow label={registerCopy.cvLabel} htmlFor="cv">
+            <FieldRow label={registerCopy.cvLabel} htmlFor="cv" variant="auth">
               <input
                 id="cv"
                 type="file"
                 accept=".pdf"
-                className="input-field"
+                className="input-field-auth"
                 onChange={(e) => setCvFile(e.target.files?.[0] ?? null)}
               />
               <p className="mt-1 text-xs text-brand-gray">{registerCopy.cvHint}</p>
             </FieldRow>
-            <FieldRow label={registerCopy.certificatesLabel} htmlFor="certificates">
+            <FieldRow label={registerCopy.certificatesLabel} htmlFor="certificates" variant="auth">
               <input
                 id="certificates"
                 type="file"
                 accept=".pdf"
-                className="input-field"
+                className="input-field-auth"
                 onChange={(e) => setCertFile(e.target.files?.[0] ?? null)}
               />
               <p className="mt-1 text-xs text-brand-gray">{registerCopy.certificatesHint}</p>
