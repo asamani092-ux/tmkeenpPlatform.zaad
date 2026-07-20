@@ -78,26 +78,26 @@ function ResetPasswordForm() {
       </div>
 
       <form noValidate onSubmit={handleSubmit} className="space-y-4">
-        <FieldRow label={resetPasswordCopy.passwordLabel} htmlFor="password" ltr error={fieldError("password")}>
+        <FieldRow label={resetPasswordCopy.passwordLabel} htmlFor="password" ltr variant="auth" error={fieldError("password")}>
           <input
             id="password"
             name="password"
             type="password"
             required
             minLength={6}
-            className="input-field"
+            className="input-field-auth"
             dir="ltr"
             autoComplete="new-password"
           />
         </FieldRow>
-        <FieldRow label={resetPasswordCopy.confirmLabel} htmlFor="confirm" ltr error={fieldError("confirm")}>
+        <FieldRow label={resetPasswordCopy.confirmLabel} htmlFor="confirm" ltr variant="auth" error={fieldError("confirm")}>
           <input
             id="confirm"
             name="confirm"
             type="password"
             required
             minLength={6}
-            className="input-field"
+            className="input-field-auth"
             dir="ltr"
             autoComplete="new-password"
           />

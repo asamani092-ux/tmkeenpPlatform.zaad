@@ -53,13 +53,13 @@ export default function ForgotPasswordPage() {
           </div>
 
           <form noValidate onSubmit={handleSubmit} className="space-y-4">
-            <FieldRow label={forgotPasswordCopy.emailLabel} htmlFor="email" ltr error={fieldError("email")}>
+            <FieldRow label={forgotPasswordCopy.emailLabel} htmlFor="email" ltr variant="auth" error={fieldError("email")}>
               <input
                 id="email"
                 name="email"
                 type="email"
                 required
-                className="input-field"
+                className="input-field-auth"
                 dir="ltr"
                 autoComplete="email"
               />
