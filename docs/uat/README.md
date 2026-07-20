@@ -1,13 +1,21 @@
 # UAT checklist
 
-The interactive fillable form lives in **Cursor Canvas**, not in this repo folder.
+## Fillable form (recommended)
 
-Open it from the agent chat Canvas panel, or ask the agent to show `uat-tools-checklist`.
+Open in the browser while the dev server runs:
 
-Canvas source (local only):
+**http://localhost:3000/uat-checklist**
+
+Progress is saved in `localStorage` (`tmkeen-uat-checklist-v1`).
+
+## Cursor Canvas (optional)
+
+Interactive Canvas lives outside the git repo:
 
 `~/.cursor/projects/workspace/canvases/uat-tools-checklist.canvas.tsx`
 
-Do **not** open `.canvas.tsx` files from `docs/` — they render as code, not as a form.
+Open it from the **Canvas panel beside the agent chat**, not as a normal file in `docs/`.
+
+If Canvas fails to load, use `/uat-checklist` instead.
 
 Static reference: [uat-tools-checklist.md](./uat-tools-checklist.md)
