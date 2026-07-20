@@ -7,6 +7,35 @@ type Props = {
   stageEnteredAt?: Date | string | null;
 };
 
+function StageDot({
+  index,
+  isComplete,
+  isCurrent,
+}: {
+  index: number;
+  isComplete: boolean;
+  isCurrent: boolean;
+}) {
+  if (isComplete) {
+    return (
+      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-red-900">
+        <Check className="h-3.5 w-3.5" />
+      </span>
+    );
+  }
+  return (
+    <span
+      className={`flex h-7 w-7 items-center justify-center rounded-full border-2 text-[11px] font-bold ${
+        isCurrent
+          ? "border-primary bg-primary text-white"
+          : "border-primary/30 bg-transparent text-brand-gray"
+      }`}
+    >
+      {index + 1}
+    </span>
+  );
+}
+
 export default function VerticalStageTimeline({ currentStage, stageEnteredAt }: Props) {
   const currentIndex = STAGE_ORDER.indexOf(currentStage);
   const progress = getStageProgress(currentStage);
@@ -15,7 +44,7 @@ export default function VerticalStageTimeline({ currentStage, stageEnteredAt }: 
     : null;
 
   return (
-    <section className="max-w-xs bg-transparent p-0 lg:max-w-[16.5rem]">
+    <section className="w-full bg-transparent p-0 lg:max-w-[16.5rem]">
       <div className="mb-3 text-start">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-base font-bold text-primary">مسار المرحلة</h2>
@@ -28,14 +57,57 @@ export default function VerticalStageTimeline({ currentStage, stageEnteredAt }: 
         )}
       </div>
 
-      <ol className="relative space-y-0 ps-0.5">
+      {/* Mobile: horizontal scroll above profile */}
+      <ol className="flex gap-0 overflow-x-auto pb-1 lg:hidden">
         {STAGE_ORDER.map((stage, index) => {
           const isComplete = index < currentIndex;
           const isCurrent = index === currentIndex;
           const isLast = index === STAGE_ORDER.length - 1;
 
           return (
-            <li key={stage} className="relative flex gap-3 pb-4 last:pb-0">
+            <li
+              key={`h-${stage}`}
+              className="relative flex min-w-[4.75rem] flex-1 flex-col items-center px-1 text-center"
+            >
+              {!isLast && (
+                <span
+                  className={`absolute start-1/2 top-[13px] h-0.5 w-full ${
+                    isComplete ? "bg-secondary" : "bg-primary/20"
+                  }`}
+                  aria-hidden
+                />
+              )}
+              <div className="relative z-10 mb-1.5">
+                <StageDot index={index} isComplete={isComplete} isCurrent={isCurrent} />
+              </div>
+              <p
+                className={`text-[11px] leading-tight ${
+                  isCurrent
+                    ? "font-bold text-primary"
+                    : isComplete
+                      ? "font-semibold text-primary"
+                      : "text-brand-gray"
+                }`}
+              >
+                {STAGE_LABELS[stage]}
+              </p>
+              {isCurrent && (
+                <p className="mt-0.5 text-[10px] font-semibold text-secondary-dark">الحالية</p>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+
+      {/* Desktop: vertical beside profile */}
+      <ol className="relative hidden space-y-0 ps-0.5 lg:block">
+        {STAGE_ORDER.map((stage, index) => {
+          const isComplete = index < currentIndex;
+          const isCurrent = index === currentIndex;
+          const isLast = index === STAGE_ORDER.length - 1;
+
+          return (
+            <li key={`v-${stage}`} className="relative flex gap-3 pb-4 last:pb-0">
               {!isLast && (
                 <span
                   className={`absolute start-[13px] top-7 h-[calc(100%-6px)] w-0.5 ${
@@ -45,21 +117,7 @@ export default function VerticalStageTimeline({ currentStage, stageEnteredAt }: 
                 />
               )}
               <div className="relative z-10 shrink-0">
-                {isComplete ? (
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-red-900">
-                    <Check className="h-3.5 w-3.5" />
-                  </span>
-                ) : (
-                  <span
-                    className={`flex h-7 w-7 items-center justify-center rounded-full border-2 text-[11px] font-bold ${
-                      isCurrent
-                        ? "border-primary bg-primary text-white"
-                        : "border-primary/30 bg-transparent text-brand-gray"
-                    }`}
-                  >
-                    {index + 1}
-                  </span>
-                )}
+                <StageDot index={index} isComplete={isComplete} isCurrent={isCurrent} />
               </div>
               <div className="min-w-0 flex-1 pt-0.5 text-start">
                 <p
