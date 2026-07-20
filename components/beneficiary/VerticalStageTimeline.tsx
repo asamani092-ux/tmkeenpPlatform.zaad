@@ -57,8 +57,8 @@ export default function VerticalStageTimeline({ currentStage, stageEnteredAt }: 
         )}
       </div>
 
-      {/* Mobile: horizontal scroll above profile */}
-      <ol className="flex gap-0 overflow-x-auto pb-1 lg:hidden">
+      {/* Mobile: fixed horizontal row — no scroll; tighter gaps on small widths */}
+      <ol className="flex w-full items-start justify-between gap-0 lg:hidden">
         {STAGE_ORDER.map((stage, index) => {
           const isComplete = index < currentIndex;
           const isCurrent = index === currentIndex;
@@ -67,32 +67,35 @@ export default function VerticalStageTimeline({ currentStage, stageEnteredAt }: 
           return (
             <li
               key={`h-${stage}`}
-              className="relative flex min-w-[4.75rem] flex-1 flex-col items-center px-1 text-center"
+              className="relative flex min-w-0 flex-1 flex-col items-center px-0.5 text-center"
             >
               {!isLast && (
                 <span
-                  className={`absolute start-1/2 top-[13px] h-0.5 w-full ${
+                  className={`absolute start-1/2 top-[11px] h-0.5 w-full ${
                     isComplete ? "bg-secondary" : "bg-primary/20"
                   }`}
                   aria-hidden
                 />
               )}
-              <div className="relative z-10 mb-1.5">
+              <div className="relative z-10 mb-1 scale-90 sm:mb-1.5 sm:scale-100">
                 <StageDot index={index} isComplete={isComplete} isCurrent={isCurrent} />
               </div>
               <p
-                className={`text-[11px] leading-tight ${
+                className={`w-full truncate text-[9px] leading-tight sm:text-[11px] ${
                   isCurrent
                     ? "font-bold text-primary"
                     : isComplete
                       ? "font-semibold text-primary"
                       : "text-brand-gray"
                 }`}
+                title={STAGE_LABELS[stage]}
               >
                 {STAGE_LABELS[stage]}
               </p>
               {isCurrent && (
-                <p className="mt-0.5 text-[10px] font-semibold text-secondary-dark">الحالية</p>
+                <p className="mt-0.5 text-[9px] font-semibold text-secondary-dark sm:text-[10px]">
+                  الحالية
+                </p>
               )}
             </li>
           );
