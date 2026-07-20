@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import FieldRow from "@/components/ui/FieldRow";
@@ -11,7 +11,6 @@ import { useFormFieldErrors } from "@/hooks/useFormFieldErrors";
 import { LogIn } from "lucide-react";
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const registered = searchParams.get("registered");
   const [loading, setLoading] = useState(false);
@@ -54,7 +53,8 @@ function LoginForm() {
         toastError(data.error || "بيانات الدخول غير صحيحة");
         return;
       }
-      router.replace(data.redirect);
+      // Full navigation after auth avoids stale RSC cache and feels faster than soft replace.
+      window.location.assign(data.redirect);
     } catch {
       toastError("حدث خطأ في الاتصال. حاول مرة أخرى.");
     } finally {

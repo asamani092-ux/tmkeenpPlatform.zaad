@@ -19,7 +19,8 @@ export default function AdminBulkExport({ sections }: Props) {
         تصدير CSV
       </button>
       <p className="max-w-xs text-end text-xs text-brand-gray">
-        ملف CSV بفاصل ; — افتحه في Excel عبر «استيراد بيانات» لعرض العربية بشكل صحيح
+        ملف UTF-8 بفاصل فاصلة منقوطة (;) وBOM — في Excel: بيانات ← من نص/CSV، أو افتحه مباشرة
+        في Google Sheets. إن ظهرت أعمدة ملتصقة استخدم «نص إلى أعمدة» مع الفاصل ;
       </p>
     </div>
   );
