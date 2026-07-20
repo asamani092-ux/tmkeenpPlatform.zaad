@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Stage } from "@/generated/prisma/client";
 import { adminUpdateBeneficiary } from "@/lib/platform-service";
 
 export async function PATCH(
@@ -10,6 +11,8 @@ export async function PATCH(
     const body = await request.json();
     const result = await adminUpdateBeneficiary(id, {
       phone: body.phone != null ? String(body.phone) : undefined,
+      email: body.email != null ? String(body.email) : undefined,
+      password: body.password ? String(body.password) : undefined,
       educationLevel:
         body.educationLevel != null ? String(body.educationLevel) : undefined,
       experience: body.experience != null ? String(body.experience) : undefined,
@@ -22,6 +25,7 @@ export async function PATCH(
           : body.guideId != null
             ? String(body.guideId)
             : undefined,
+      stage: body.stage != null ? (String(body.stage) as Stage) : undefined,
     });
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 400 });

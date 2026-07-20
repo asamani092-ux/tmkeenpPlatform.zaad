@@ -220,6 +220,55 @@ export async function sendSessionScheduledEmails(
 
 
 
+/** Follow-up form reminder — O(1) */
+export async function sendFollowUpFormReminderEmail(params: {
+  to: string;
+  name: string;
+  month: number;
+  dashboardUrl: string;
+  senderEmail: string;
+}): Promise<void> {
+  await dispatch(params.senderEmail, [
+    {
+      to: params.to,
+      subject: `نموذج متابعة الشهر ${params.month} — منصة تمكين`,
+      body: [
+        `مرحباً ${params.name}،`,
+        "",
+        `نموذج متابعة ما بعد التوظيف للشهر ${params.month} متاح الآن.`,
+        `يُرجى الدخول إلى المنصة وإكمال النموذج: ${params.dashboardUrl}`,
+        "",
+        "مع تحيات فريق منصة تمكين",
+      ].join("\n"),
+    },
+  ]);
+}
+
+/** Password reset link — O(1) */
+export async function sendPasswordResetEmail(params: {
+  to: string;
+  name: string;
+  resetUrl: string;
+  senderEmail: string;
+}): Promise<void> {
+  await dispatch(params.senderEmail, [
+    {
+      to: params.to,
+      subject: "إعادة تعيين كلمة المرور — منصة تمكين",
+      body: [
+        `مرحباً ${params.name}،`,
+        "",
+        "تلقّينا طلباً لإعادة تعيين كلمة المرور الخاصة بك.",
+        `اضغط على الرابط التالي خلال 30 دقيقة: ${params.resetUrl}`,
+        "",
+        "إذا لم تطلب ذلك، تجاهل هذه الرسالة.",
+        "",
+        "مع تحيات فريق منصة تمكين",
+      ].join("\n"),
+    },
+  ]);
+}
+
 /** Generic notification email — O(1) */
 
 export async function sendGenericEmail(params: GenericEmailParams): Promise<void> {

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import {
   updateTask,
   deleteTask,
-  toggleTaskCompletion,
+  setTaskCompletion,
 } from "@/lib/platform-service";
 
 export async function PATCH(
@@ -11,26 +11,37 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const body = await request.json();
+    let body: { isCompleted?: boolean; title?: string; description?: string } = {};
+    try {
+      const text = await request.text();
+      if (text.trim()) body = JSON.parse(text);
+    } catch {
+      return NextResponse.json({ error: "طلب غير صالح" }, { status: 400 });
+    }
 
     if (body.isCompleted !== undefined) {
-      const result = await toggleTaskCompletion(id);
+      const result = await setTaskCompletion(id, Boolean(body.isCompleted));
       if (!result.success) {
         return NextResponse.json({ error: result.error }, { status: 400 });
       }
       return NextResponse.json({ success: true });
     }
 
-    const result = await updateTask({
-      taskId: id,
-      title: body.title,
-      description: body.description,
-    });
-    if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
+    if (body.title !== undefined || body.description !== undefined) {
+      const result = await updateTask({
+        taskId: id,
+        title: body.title,
+        description: body.description,
+      });
+      if (!result.success) {
+        return NextResponse.json({ error: result.error }, { status: 400 });
+      }
+      return NextResponse.json({ success: true });
     }
-    return NextResponse.json({ success: true });
-  } catch {
+
+    return NextResponse.json({ error: "لا توجد بيانات للتحديث" }, { status: 400 });
+  } catch (err) {
+    console.error("[PATCH /api/tasks]", err);
     return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
   }
 }

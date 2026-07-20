@@ -18,7 +18,7 @@ export default function StageProgress({ currentStage, stageEnteredAt }: StagePro
     <div className="card">
       <div className="mb-4 flex items-center justify-between">
         <span className="text-sm font-semibold text-primary">{progress}%</span>
-        <div className="text-right">
+        <div className="text-start">
           <h2 className="text-lg font-bold text-primary">مسار التمكين</h2>
           {enteredLabel && (
             <p className="text-xs text-brand-gray">في المرحلة الحالية منذ {enteredLabel}</p>

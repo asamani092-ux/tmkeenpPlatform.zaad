@@ -3,6 +3,8 @@
 import { useState } from "react";
 import OpportunityApplyCard from "@/components/OpportunityApplyCard";
 import BeneficiaryProfileEdit from "@/components/beneficiary/BeneficiaryProfileEdit";
+import DetailRow from "@/components/ui/DetailRow";
+import FieldGrid from "@/components/ui/FieldGrid";
 import { APPLICATION_STATUS_LABELS } from "@/lib/labels";
 import { ApplicationStatus } from "@/generated/prisma/client";
 import { Briefcase, BookOpen, FileText, ClipboardList } from "lucide-react";
@@ -170,15 +172,12 @@ export default function BeneficiaryOpportunitiesProfile({
           <div className="flex justify-end">
             <BeneficiaryProfileEdit profile={profile} />
           </div>
-          <dl className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-lg bg-surface-muted p-3">
-              <dt className="text-xs font-semibold text-brand-gray">المستوى التعليمي</dt>
-              <dd className="text-primary">{userMeta.educationLevel || "—"}</dd>
-            </div>
-            <div className="rounded-lg bg-surface-muted p-3">
-              <dt className="text-xs font-semibold text-brand-gray">السيرة الذاتية</dt>
-              <dd className="text-primary">
-                {userMeta.cvUrl ? (
+          <FieldGrid>
+            <DetailRow label="المستوى التعليمي" value={userMeta.educationLevel || "—"} />
+            <DetailRow
+              label="السيرة الذاتية"
+              value={
+                userMeta.cvUrl ? (
                   <a
                     href={userMeta.cvUrl}
                     target="_blank"
@@ -189,38 +188,22 @@ export default function BeneficiaryOpportunitiesProfile({
                   </a>
                 ) : (
                   "—"
-                )}
-              </dd>
+                )
+              }
+            />
+            <DetailRow label="الشهادات" value={userMeta.certificatesUrls ? "مرفقة" : "—"} />
+            <DetailRow label="الجوال" value={userMeta.phone} ltr />
+            <DetailRow label="البريد" value={userMeta.email} ltr />
+            <div className="sm:col-span-2">
+              <DetailRow label="الخبرات" value={userMeta.experience || "—"} />
             </div>
-            <div className="rounded-lg bg-surface-muted p-3">
-              <dt className="text-xs font-semibold text-brand-gray">الشهادات</dt>
-              <dd className="text-primary">{userMeta.certificatesUrls ? "مرفقة" : "—"}</dd>
+            <div className="sm:col-span-2">
+              <DetailRow label="المهارات" value={userMeta.skills || "—"} />
             </div>
-            <div className="rounded-lg bg-surface-muted p-3">
-              <dt className="text-xs font-semibold text-brand-gray">الجوال</dt>
-              <dd dir="ltr" className="text-left text-brand-gray">
-                {userMeta.phone}
-              </dd>
+            <div className="sm:col-span-2">
+              <DetailRow label="الميول المهنية" value={userMeta.careerInterests || "—"} />
             </div>
-            <div className="rounded-lg bg-surface-muted p-3">
-              <dt className="text-xs font-semibold text-brand-gray">البريد</dt>
-              <dd dir="ltr" className="text-left text-brand-gray">
-                {userMeta.email}
-              </dd>
-            </div>
-            <div className="sm:col-span-2 rounded-lg bg-surface-muted p-3">
-              <dt className="text-xs font-semibold text-brand-gray">الخبرات</dt>
-              <dd className="text-brand-gray">{userMeta.experience || "—"}</dd>
-            </div>
-            <div className="sm:col-span-2 rounded-lg bg-surface-muted p-3">
-              <dt className="text-xs font-semibold text-brand-gray">المهارات</dt>
-              <dd className="text-brand-gray">{userMeta.skills || "—"}</dd>
-            </div>
-            <div className="sm:col-span-2 rounded-lg bg-surface-muted p-3">
-              <dt className="text-xs font-semibold text-brand-gray">الميول المهنية</dt>
-              <dd className="text-brand-gray">{userMeta.careerInterests || "—"}</dd>
-            </div>
-          </dl>
+          </FieldGrid>
         </div>
       )}
     </section>

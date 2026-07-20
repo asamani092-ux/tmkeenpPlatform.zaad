@@ -11,12 +11,20 @@ import { Stage, SessionStatus } from "@/generated/prisma/client";
 import { guideCopy } from "@/lib/copy/ar";
 import type { BeneficiaryTask } from "@/lib/copy/ar";
 import GuideEvaluationsTab from "@/components/guide/GuideEvaluationsTab";
+import GuideProfileSections from "@/components/guide/GuideProfileSections";
+import SessionJoinButton from "@/components/beneficiary/SessionJoinButton";
 import SlideOver from "@/components/SlideOver";
 import SubmitButton from "@/components/ui/SubmitButton";
 import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
+import DetailRow from "@/components/ui/DetailRow";
+import FieldGrid from "@/components/ui/FieldGrid";
+import FieldRow from "@/components/ui/FieldRow";
 import { STAGE_LABELS, getNextStage } from "@/lib/stages";
 import { SESSION_STATUS_LABELS } from "@/lib/labels";
 import { getUpcomingSession } from "@/lib/upcoming-session";
+import { formatCountdown } from "@/lib/follow-up-program";
+import ContactLinks from "@/components/ui/ContactLinks";
+import { useSyncFromProps } from "@/lib/use-sync-from-props";
 import { toastSuccess, toastError } from "@/lib/toast";
 
 import {
@@ -46,12 +54,6 @@ import {
   AlertCircle,
 
   MapPin,
-
-  Mail,
-
-  Phone,
-
-  MessageCircle,
 
 } from "lucide-react";
 
@@ -119,6 +121,7 @@ type Beneficiary = {
 type Props = {
   beneficiaries: Beneficiary[];
   trainingCourses: { id: string; title: string; provider: string }[];
+  readOnly?: boolean;
 };
 
 type TabId = "profile" | "sessions" | "tasks" | "evaluations";
@@ -126,11 +129,12 @@ type TabId = "profile" | "sessions" | "tasks" | "evaluations";
 export default function GuideBeneficiaryTable({
   beneficiaries: initial,
   trainingCourses,
+  readOnly = false,
 }: Props) {
 
   const router = useRouter();
 
-  const [beneficiaries, setBeneficiaries] = useState(initial);
+  const [beneficiaries, setBeneficiaries] = useSyncFromProps(initial);
 
   const [selected, setSelected] = useState<Beneficiary | null>(null);
 
@@ -177,16 +181,9 @@ export default function GuideBeneficiaryTable({
   const [sessionDrawerOpen, setSessionDrawerOpen] = useState(false);
 
   const [noteContent, setNoteContent] = useState("");
+  const [profileEditOpen, setProfileEditOpen] = useState(false);
 
   const [pending, startTransition] = useTransition();
-
-
-
-  useEffect(() => {
-
-    setBeneficiaries(initial);
-
-  }, [initial]);
 
 
 
@@ -205,6 +202,22 @@ export default function GuideBeneficiaryTable({
     return () => window.removeEventListener("keydown", onKey);
 
   }, [selected]);
+
+
+
+  const selectedId = selected?.id;
+
+
+
+  useEffect(() => {
+
+    if (!selectedId) return;
+
+    const fresh = beneficiaries.find((b) => b.id === selectedId);
+
+    if (fresh) setSelected(fresh);
+
+  }, [beneficiaries, selectedId]);
 
 
 
@@ -233,6 +246,7 @@ export default function GuideBeneficiaryTable({
     setSessionDrawerOpen(false);
 
     setNoteContent("");
+    setProfileEditOpen(false);
 
   }
 
@@ -316,6 +330,21 @@ export default function GuideBeneficiaryTable({
 
       toastSuccess("تم جدولة الجلسة بنجاح");
 
+      if (data.session && selected) {
+        const newSession: SessionItem = {
+          id: data.session.id,
+          date: data.session.date,
+          status: data.session.status,
+          notes: data.session.notes,
+          meetingLink: data.session.meetingLink,
+          location: data.session.location,
+          commitmentRating: data.session.commitmentRating,
+        };
+        syncBeneficiary(selected.id, {
+          sessions: [newSession, ...selected.sessions],
+        });
+      }
+
       setSessionDate("");
 
       setSessionNotes("");
@@ -395,6 +424,24 @@ export default function GuideBeneficiaryTable({
 
       toastSuccess("تم تحديث الجلسة");
 
+      if (selected) {
+        syncBeneficiary(selected.id, {
+          sessions: selected.sessions.map((s) =>
+            s.id === editingSessionId
+              ? {
+                  ...s,
+                  date: editSessionDate,
+                  notes: editSessionNotes,
+                  meetingLink: editSessionMeetingLink || null,
+                  location: editSessionLocation || null,
+                  status: editSessionStatus,
+                  commitmentRating: editSessionRating ? Number(editSessionRating) : null,
+                }
+              : s
+          ),
+        });
+      }
+
       router.refresh();
 
     });
@@ -438,6 +485,20 @@ export default function GuideBeneficiaryTable({
       setAttendRating("");
 
       toastSuccess("تم تسجيل حضور الجلسة");
+
+      if (selected) {
+        syncBeneficiary(selected.id, {
+          sessions: selected.sessions.map((s) =>
+            s.id === sessionId
+              ? {
+                  ...s,
+                  status: "ATTENDED",
+                  commitmentRating: rating,
+                }
+              : s
+          ),
+        });
+      }
 
       router.refresh();
 
@@ -610,6 +671,8 @@ export default function GuideBeneficiaryTable({
 
       toastSuccess("تم تحديث المهمة");
 
+      router.refresh();
+
     });
 
   }
@@ -681,17 +744,14 @@ export default function GuideBeneficiaryTable({
 
 
 
-  const tabs: { id: TabId; label: string; icon: typeof User }[] = [
-
+  const allTabs: { id: TabId; label: string; icon: typeof User }[] = [
     { id: "profile", label: guideCopy.profileTab, icon: User },
-
     { id: "sessions", label: guideCopy.sessionsTab, icon: Calendar },
-
     { id: "tasks", label: guideCopy.tasksTab, icon: ListTodo },
-
     { id: "evaluations", label: guideCopy.evaluationsTab, icon: Star },
-
   ];
+
+  const tabs = readOnly ? allTabs.filter((t) => t.id === "profile") : allTabs;
 
 
 
@@ -737,10 +797,23 @@ export default function GuideBeneficiaryTable({
         const upcoming = getUpcomingSession(b.sessions);
         if (!upcoming) return <span className="text-brand-gray">—</span>;
         return (
-          <span className="inline-flex items-center justify-end gap-1 text-xs text-primary">
-            <Calendar className="h-4 w-4" />
-            {new Date(upcoming.date).toLocaleDateString("ar-SA")}
-          </span>
+          <div
+            className="flex flex-col items-start gap-1 text-xs"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span className="inline-flex items-center gap-1 text-primary">
+              <Calendar className="h-4 w-4" />
+              {new Date(upcoming.date).toLocaleDateString("ar-SA")}
+            </span>
+            <span className="text-brand-gray">{formatCountdown(new Date(upcoming.date))}</span>
+            {upcoming.meetingLink && (
+              <SessionJoinButton
+                meetingLink={upcoming.meetingLink}
+                sessionDate={upcoming.date}
+                compact
+              />
+            )}
+          </div>
         );
       },
     },
@@ -748,31 +821,7 @@ export default function GuideBeneficiaryTable({
       key: "contact",
       header: "التواصل",
       render: (b) => (
-        <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-          <a
-            href={`tel:${b.phone}`}
-            className="rounded p-1 text-primary hover:bg-surface-muted"
-            title="اتصال"
-          >
-            <Phone className="h-4 w-4" />
-          </a>
-          <a
-            href={`mailto:${b.email}`}
-            className="rounded p-1 text-primary hover:bg-surface-muted"
-            title="بريد"
-          >
-            <Mail className="h-4 w-4" />
-          </a>
-          <a
-            href={`https://wa.me/${b.phone.replace(/\D/g, "").replace(/^0/, "966")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded p-1 text-primary hover:bg-surface-muted"
-            title="واتساب"
-          >
-            <MessageCircle className="h-4 w-4" />
-          </a>
-        </div>
+        <ContactLinks phone={b.phone} email={b.email} whatsapp={b.phone} size="sm" />
       ),
     },
   ];
@@ -832,7 +881,7 @@ export default function GuideBeneficiaryTable({
 
               </button>
 
-              <div className="text-right">
+              <div className="text-start">
 
                 <h3 className="text-xl font-bold text-primary">{selected.name}</h3>
 
@@ -872,7 +921,7 @@ export default function GuideBeneficiaryTable({
                       </span>
                     ) : null}
                   </div>
-                  <div className="text-right">
+                  <div className="text-start">
                     <p className="flex items-center justify-end gap-1 text-sm font-bold text-primary">
                       <AlertCircle className="h-4 w-4 text-secondary-dark" />
                       جلسة قادمة
@@ -929,121 +978,106 @@ export default function GuideBeneficiaryTable({
 
                 <div className="card-section space-y-3">
 
-                  <h4 className="font-bold text-primary">بيانات المستفيد</h4>
+                  <div className="mb-3 flex items-center justify-between gap-2">
+                    <h4 className="font-bold text-primary">بيانات المستفيد</h4>
+                    {!readOnly && (
+                      <button
+                        type="button"
+                        onClick={() => setProfileEditOpen((v) => !v)}
+                        className="btn-recommend shrink-0 !px-3 !py-1.5 text-xs"
+                      >
+                        <Pencil className="inline h-3 w-3" />
+                        {guideCopy.editProfile}
+                      </button>
+                    )}
+                  </div>
 
-                  <dl className="grid gap-3 text-sm sm:grid-cols-2">
+                  <FieldGrid className="text-sm">
 
-                    <div>
-
-                      <dt className="text-xs font-semibold text-brand-gray">الاسم</dt>
-
-                      <dd className="font-medium text-primary">{selected.name}</dd>
-
-                    </div>
-
-                    <div>
-
-                      <dt className="text-xs font-semibold text-brand-gray">البريد</dt>
-
-                      <dd dir="ltr" className="text-left text-primary">{selected.email}</dd>
-
-                    </div>
-
-                    <div>
-
-                      <dt className="text-xs font-semibold text-brand-gray">الجوال</dt>
-
-                      <dd dir="ltr" className="text-left text-primary">{selected.phone}</dd>
-
-                    </div>
-
-                    <div>
-
-                      <dt className="text-xs font-semibold text-brand-gray">المستوى التعليمي</dt>
-
-                      <dd className="text-primary">{selected.educationLevel || "—"}</dd>
-
-                    </div>
-
-                    <div>
-
-                      <dt className="text-xs font-semibold text-brand-gray">{guideCopy.commitmentScore}</dt>
-
-                      <dd className="text-lg font-bold text-primary">{selected.commitmentScore}</dd>
-
-                    </div>
+                    <DetailRow label="الاسم" value={<span className="font-medium">{selected.name}</span>} />
 
                     <div className="sm:col-span-2">
-
-                      <dt className="text-xs font-semibold text-brand-gray">الخبرات</dt>
-
-                      <dd className="text-brand-gray">{selected.experience || "—"}</dd>
-
-                    </div>
-
-                    <div className="sm:col-span-2">
-
-                      <dt className="text-xs font-semibold text-brand-gray">المهارات</dt>
-
-                      <dd className="text-brand-gray">{selected.skills || "—"}</dd>
-
-                    </div>
-
-                    <div className="sm:col-span-2">
-
-                      <dt className="text-xs font-semibold text-brand-gray">الميول المهنية</dt>
-
-                      <dd className="text-brand-gray">{selected.careerInterests || "—"}</dd>
-
-                    </div>
-
-                    <div className="sm:col-span-2">
-
-                      <dt className="mb-1 text-xs font-semibold text-brand-gray">السيرة الذاتية</dt>
-
-                      <dd>
-
-                        {selected.cvUrl ? (
-
-                          <a
-
-                            href={selected.cvUrl}
-
-                            target="_blank"
-
-                            rel="noopener noreferrer"
-
-                            className="btn-primary inline-flex !px-3 !py-1.5 text-xs"
-
-                          >
-
-                            <ExternalLink className="h-3 w-3" />
-
-                            عرض السيرة الذاتية المرفقة
-
-                          </a>
-
-                        ) : (
-
-                          <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-800">
-
-                            لا يوجد سيرة ذاتية - يرجى طلبها من المستفيد
-
+                      <DetailRow
+                        label="البريد"
+                        value={
+                          <span className="block w-full truncate text-end" dir="ltr">
+                            {selected.email}
                           </span>
+                        }
+                      />
+                    </div>
 
-                        )}
+                    <DetailRow label="الجوال" value={selected.phone} ltr />
 
-                      </dd>
+                    <DetailRow label="التواصل" value={<ContactLinks phone={selected.phone} email={selected.email} whatsapp={selected.phone} />} />
+
+                    <DetailRow label="المستوى التعليمي" value={selected.educationLevel || "—"} />
+
+                    <DetailRow
+                      label={guideCopy.commitmentScore}
+                      value={<span className="text-lg font-bold">{selected.commitmentScore}</span>}
+                    />
+
+                    <div className="sm:col-span-2">
+                      <DetailRow label="الخبرات" value={selected.experience || "—"} />
+                    </div>
+
+                    <div className="sm:col-span-2">
+
+                      <DetailRow label="المهارات" value={selected.skills || "—"} />
 
                     </div>
 
-                  </dl>
+                    <div className="sm:col-span-2">
+
+                      <DetailRow label="الميول المهنية" value={selected.careerInterests || "—"} />
+
+                    </div>
+
+                    <div className="sm:col-span-2">
+
+                      <DetailRow
+                        label="السيرة الذاتية"
+                        value={
+                          selected.cvUrl ? (
+                            <a
+                              href={selected.cvUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn-primary inline-flex !px-3 !py-1.5 text-xs"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              عرض السيرة الذاتية المرفقة
+                            </a>
+                          ) : (
+                            <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-800">
+                              لا يوجد سيرة ذاتية - يرجى طلبها من المستفيد
+                            </span>
+                          )
+                        }
+                      />
+
+                    </div>
+
+                  </FieldGrid>
 
                 </div>
 
+                {profileEditOpen && !readOnly && (
+                  <GuideProfileSections
+                    beneficiaryId={selected.id}
+                    cvContent={selected.cvContent}
+                    professionalRecommendations={selected.professionalRecommendations}
+                    selectedCourseIds={selected.selectedTrainingCourseIds}
+                    trainingCourses={trainingCourses}
+                    onSaved={() => {
+                      setProfileEditOpen(false);
+                      router.refresh();
+                    }}
+                  />
+                )}
 
-
-                {selected.stage !== "CLOSED" && !selected.pendingStage && getNextStage(selected.stage) && (
+                {!readOnly && selected.stage !== "CLOSED" && !selected.pendingStage && getNextStage(selected.stage) && (
                   <button
                     type="button"
                     onClick={handleRecommendStage}
@@ -1059,22 +1093,26 @@ export default function GuideBeneficiaryTable({
 
                 <div className="card-section space-y-3">
                   <h4 className="font-bold text-primary">ملاحظات المستفيد</h4>
-                  <textarea
-                    value={noteContent}
-                    onChange={(e) => setNoteContent(e.target.value)}
-                    rows={3}
-                    className="input-field resize-none"
-                    placeholder="أضف ملاحظة للمستفيد..."
-                  />
-                  <SubmitButton
-                    type="button"
-                    onClick={handleAddNote}
-                    loading={pending}
-                    disabled={!noteContent.trim()}
-                    className="btn-primary w-full !py-2 text-sm"
-                  >
-                    حفظ الملاحظة
-                  </SubmitButton>
+                  {!readOnly && (
+                    <>
+                      <textarea
+                        value={noteContent}
+                        onChange={(e) => setNoteContent(e.target.value)}
+                        rows={3}
+                        className="input-field resize-none"
+                        placeholder="أضف ملاحظة للمستفيد..."
+                      />
+                      <SubmitButton
+                        type="button"
+                        onClick={handleAddNote}
+                        loading={pending}
+                        disabled={!noteContent.trim()}
+                        className="btn-primary w-full !py-2 text-sm"
+                      >
+                        حفظ الملاحظة
+                      </SubmitButton>
+                    </>
+                  )}
                   {selected.notes.length > 0 ? (
                     <ul className="max-h-40 space-y-2 overflow-y-auto">
                       {selected.notes.map((n) => (
@@ -1097,7 +1135,7 @@ export default function GuideBeneficiaryTable({
 
 
 
-            {activeTab === "sessions" && (
+            {!readOnly && activeTab === "sessions" && (
 
               <div className="card-section space-y-4">
 
@@ -1149,41 +1187,35 @@ export default function GuideBeneficiaryTable({
 
                           <div className="space-y-2">
 
-                            <label className="label-field">{guideCopy.sessionDateLabel}</label>
+                            <FieldRow label={guideCopy.sessionDateLabel} ltr>
+                              <input type="datetime-local" value={editSessionDate} onChange={(e) => setEditSessionDate(e.target.value)} className="input-field" dir="ltr" />
+                            </FieldRow>
 
-                            <input type="datetime-local" value={editSessionDate} onChange={(e) => setEditSessionDate(e.target.value)} className="input-field" dir="ltr" />
+                            <FieldRow label={guideCopy.meetingLinkLabel} ltr>
+                              <input type="url" value={editSessionMeetingLink} onChange={(e) => setEditSessionMeetingLink(e.target.value)} className="input-field" dir="ltr" />
+                            </FieldRow>
 
-                            <label className="label-field">{guideCopy.meetingLinkLabel}</label>
+                            <FieldRow label={guideCopy.locationLabel}>
+                              <input type="text" value={editSessionLocation} onChange={(e) => setEditSessionLocation(e.target.value)} className="input-field" />
+                            </FieldRow>
 
-                            <input type="url" value={editSessionMeetingLink} onChange={(e) => setEditSessionMeetingLink(e.target.value)} className="input-field" dir="ltr" />
+                            <FieldRow label="حالة الجلسة">
+                              <select value={editSessionStatus} onChange={(e) => setEditSessionStatus(e.target.value as SessionStatus)} className="input-field">
+                                <option value="SCHEDULED">مجدولة</option>
+                                <option value="ATTENDED">حضر</option>
+                                <option value="MISSED">غاب</option>
+                                <option value="COMPLETED">مكتملة</option>
+                                <option value="CANCELED">ملغاة</option>
+                              </select>
+                            </FieldRow>
 
-                            <label className="label-field">{guideCopy.locationLabel}</label>
+                            <FieldRow label={guideCopy.commitmentRating} ltr>
+                              <input type="number" min={1} max={5} value={editSessionRating} onChange={(e) => setEditSessionRating(e.target.value)} className="input-field" dir="ltr" />
+                            </FieldRow>
 
-                            <input type="text" value={editSessionLocation} onChange={(e) => setEditSessionLocation(e.target.value)} className="input-field" />
-
-                            <label className="label-field">حالة الجلسة</label>
-
-                            <select value={editSessionStatus} onChange={(e) => setEditSessionStatus(e.target.value as SessionStatus)} className="input-field">
-
-                              <option value="SCHEDULED">مجدولة</option>
-
-                              <option value="ATTENDED">حضر</option>
-
-                              <option value="MISSED">غاب</option>
-
-                              <option value="COMPLETED">مكتملة</option>
-
-                              <option value="CANCELED">ملغاة</option>
-
-                            </select>
-
-                            <label className="label-field">{guideCopy.commitmentRating}</label>
-
-                            <input type="number" min={1} max={5} value={editSessionRating} onChange={(e) => setEditSessionRating(e.target.value)} className="input-field" dir="ltr" />
-
-                            <label className="label-field">{guideCopy.sessionNotesLabel}</label>
-
-                            <textarea value={editSessionNotes} onChange={(e) => setEditSessionNotes(e.target.value)} rows={2} className="input-field resize-none" />
+                            <FieldRow label={guideCopy.sessionNotesLabel} align="start">
+                              <textarea value={editSessionNotes} onChange={(e) => setEditSessionNotes(e.target.value)} rows={2} className="input-field resize-none" />
+                            </FieldRow>
 
                             <div className="flex gap-2">
 
@@ -1243,7 +1275,7 @@ export default function GuideBeneficiaryTable({
 
                             </div>
 
-                            <div className="text-right">
+                            <div className="text-start">
 
                               <span className="font-semibold text-primary">{SESSION_STATUS_LABELS[s.status as SessionStatus]}</span>
 
@@ -1291,7 +1323,7 @@ export default function GuideBeneficiaryTable({
 
             )}
 
-            {activeTab === "tasks" && selected && (() => {
+            {!readOnly && activeTab === "tasks" && selected && (() => {
               const currentTasks = selected.tasks.filter((t) => !t.isCompleted);
               const completedTasks = selected.tasks.filter((t) => t.isCompleted);
 
@@ -1300,10 +1332,12 @@ export default function GuideBeneficiaryTable({
                   <li key={t.id} className="rounded-lg border border-surface-border px-3 py-2">
                     {editingTaskId === t.id ? (
                       <div className="space-y-2">
-                        <label className="label-field">{guideCopy.taskTitleLabel}</label>
-                        <input value={editTaskTitle} onChange={(e) => setEditTaskTitle(e.target.value)} className="input-field" />
-                        <label className="label-field">{guideCopy.taskDescriptionLabel}</label>
-                        <textarea value={editTaskDescription} onChange={(e) => setEditTaskDescription(e.target.value)} rows={2} className="input-field resize-none" />
+                        <FieldRow label={guideCopy.taskTitleLabel}>
+                          <input value={editTaskTitle} onChange={(e) => setEditTaskTitle(e.target.value)} className="input-field" />
+                        </FieldRow>
+                        <FieldRow label={guideCopy.taskDescriptionLabel} align="start">
+                          <textarea value={editTaskDescription} onChange={(e) => setEditTaskDescription(e.target.value)} rows={2} className="input-field resize-none" />
+                        </FieldRow>
                         <div className="flex gap-2">
                           <button type="button" onClick={handleUpdateTask} disabled={pending} className="btn-primary flex-1 !py-2 text-sm">حفظ</button>
                           <button type="button" onClick={() => setEditingTaskId(null)} className="btn-secondary flex-1 !py-2 text-sm">إلغاء</button>
@@ -1315,7 +1349,7 @@ export default function GuideBeneficiaryTable({
                           <button type="button" onClick={() => startEditTask(t)} className="text-primary" title={guideCopy.editTask}><Pencil className="h-4 w-4" /></button>
                           <button type="button" onClick={() => handleDeleteTask(t.id)} className="text-red-600" title={guideCopy.deleteTask}><Trash2 className="h-4 w-4" /></button>
                         </div>
-                        <div className="text-right">
+                        <div className="text-start">
                           <span className={`text-sm font-medium ${t.isCompleted ? "line-through opacity-60" : "text-primary"}`}>{t.title}</span>
                           {t.description && <p className="mt-1 text-xs text-brand-gray">{t.description}</p>}
                         </div>
@@ -1364,7 +1398,7 @@ export default function GuideBeneficiaryTable({
 
 
 
-            {activeTab === "evaluations" && selected && (
+            {!readOnly && activeTab === "evaluations" && selected && (
 
               <GuideEvaluationsTab
 
@@ -1399,7 +1433,7 @@ export default function GuideBeneficiaryTable({
       );
       })()}
 
-      {selected && (
+      {selected && !readOnly && (
         <>
           <SlideOver
             open={taskDrawerOpen}
@@ -1407,20 +1441,22 @@ export default function GuideBeneficiaryTable({
             title={guideCopy.addNewTask}
           >
             <div className="space-y-3">
-              <label className="label-field">{guideCopy.taskTitleLabel}</label>
-              <input
-                value={newTaskTitle}
-                onChange={(e) => setNewTaskTitle(e.target.value)}
-                className="input-field"
-                placeholder="مهمة جديدة..."
-              />
-              <label className="label-field">{guideCopy.taskDescriptionLabel}</label>
-              <textarea
-                value={newTaskDescription}
-                onChange={(e) => setNewTaskDescription(e.target.value)}
-                rows={3}
-                className="input-field resize-none"
-              />
+              <FieldRow label={guideCopy.taskTitleLabel}>
+                <input
+                  value={newTaskTitle}
+                  onChange={(e) => setNewTaskTitle(e.target.value)}
+                  className="input-field"
+                  placeholder="مهمة جديدة..."
+                />
+              </FieldRow>
+              <FieldRow label={guideCopy.taskDescriptionLabel} align="start">
+                <textarea
+                  value={newTaskDescription}
+                  onChange={(e) => setNewTaskDescription(e.target.value)}
+                  rows={3}
+                  className="input-field resize-none"
+                />
+              </FieldRow>
               <SubmitButton
                 type="button"
                 onClick={handleCreateTask}
@@ -1440,43 +1476,47 @@ export default function GuideBeneficiaryTable({
             title={guideCopy.scheduleSessionDrawer}
           >
             <div className="space-y-3">
-              <label htmlFor="session-date-drawer" className="label-field">{guideCopy.sessionDateLabel}</label>
-              <input
-                id="session-date-drawer"
-                type="datetime-local"
-                value={sessionDate}
-                onChange={(e) => setSessionDate(e.target.value)}
-                className="input-field"
-                dir="ltr"
-              />
-              <label htmlFor="session-meeting-link-drawer" className="label-field">{guideCopy.meetingLinkLabel}</label>
-              <input
-                id="session-meeting-link-drawer"
-                type="url"
-                value={sessionMeetingLink}
-                onChange={(e) => setSessionMeetingLink(e.target.value)}
-                className="input-field"
-                dir="ltr"
-                placeholder="https://..."
-              />
-              <label htmlFor="session-location-drawer" className="label-field">{guideCopy.locationLabel}</label>
-              <input
-                id="session-location-drawer"
-                type="text"
-                value={sessionLocation}
-                onChange={(e) => setSessionLocation(e.target.value)}
-                className="input-field"
-                placeholder="مثال: مقر الجمعية — الطابق الثاني"
-              />
-              <label htmlFor="session-notes-drawer" className="label-field">{guideCopy.sessionNotesLabel}</label>
-              <textarea
-                id="session-notes-drawer"
-                value={sessionNotes}
-                onChange={(e) => setSessionNotes(e.target.value)}
-                rows={3}
-                className="input-field resize-none"
-                placeholder="اختياري"
-              />
+              <FieldRow label={guideCopy.sessionDateLabel} htmlFor="session-date-drawer" ltr>
+                <input
+                  id="session-date-drawer"
+                  type="datetime-local"
+                  value={sessionDate}
+                  onChange={(e) => setSessionDate(e.target.value)}
+                  className="input-field"
+                  dir="ltr"
+                />
+              </FieldRow>
+              <FieldRow label={guideCopy.meetingLinkLabel} htmlFor="session-meeting-link-drawer" ltr>
+                <input
+                  id="session-meeting-link-drawer"
+                  type="url"
+                  value={sessionMeetingLink}
+                  onChange={(e) => setSessionMeetingLink(e.target.value)}
+                  className="input-field"
+                  dir="ltr"
+                  placeholder="https://..."
+                />
+              </FieldRow>
+              <FieldRow label={guideCopy.locationLabel} htmlFor="session-location-drawer">
+                <input
+                  id="session-location-drawer"
+                  type="text"
+                  value={sessionLocation}
+                  onChange={(e) => setSessionLocation(e.target.value)}
+                  className="input-field"
+                  placeholder="مثال: مقر الجمعية — الطابق الثاني"
+                />
+              </FieldRow>
+              <FieldRow label={guideCopy.sessionNotesLabel} htmlFor="session-notes-drawer" align="start">
+                <textarea
+                  id="session-notes-drawer"
+                  value={sessionNotes}
+                  onChange={(e) => setSessionNotes(e.target.value)}
+                  rows={3}
+                  className="input-field resize-none"
+                  placeholder="اختياري"
+                />
+              </FieldRow>
               <SubmitButton
                 type="button"
                 onClick={handleScheduleSession}

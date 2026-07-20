@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import FieldRow from "@/components/ui/FieldRow";
 import { guideCopy } from "@/lib/copy/ar";
 import { Save } from "lucide-react";
 
@@ -65,26 +66,30 @@ export default function GuideProfileSections({
 
   return (
     <div className="space-y-4">
-      <div className="card-section space-y-2">
-        <h4 className="font-bold text-primary">{guideCopy.cvSection}</h4>
-        <textarea
-          value={cvContent}
-          onChange={(e) => setCvContent(e.target.value)}
-          rows={5}
-          className="input-field resize-none font-mono text-sm"
-          placeholder="اكتب أو عدّل محتوى السيرة الذاتية..."
-        />
+      <div className="card-section">
+        <FieldRow label={guideCopy.cvSection} htmlFor="cvContent" align="start">
+          <textarea
+            id="cvContent"
+            value={cvContent}
+            onChange={(e) => setCvContent(e.target.value)}
+            rows={5}
+            className="input-field resize-none font-mono text-sm"
+            placeholder="اكتب أو عدّل محتوى السيرة الذاتية..."
+          />
+        </FieldRow>
       </div>
 
-      <div className="card-section space-y-2">
-        <h4 className="font-bold text-primary">{guideCopy.recommendationsSection}</h4>
-        <textarea
-          value={recommendations}
-          onChange={(e) => setRecommendations(e.target.value)}
-          rows={4}
-          className="input-field resize-none"
-          placeholder="اكتب التوصيات المهنية للمستفيد..."
-        />
+      <div className="card-section">
+        <FieldRow label={guideCopy.recommendationsSection} htmlFor="recommendations" align="start">
+          <textarea
+            id="recommendations"
+            value={recommendations}
+            onChange={(e) => setRecommendations(e.target.value)}
+            rows={4}
+            className="input-field resize-none"
+            placeholder="اكتب التوصيات المهنية للمستفيد..."
+          />
+        </FieldRow>
       </div>
 
       <div className="card-section space-y-2">

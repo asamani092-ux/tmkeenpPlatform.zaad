@@ -1,18 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
-import FullPageLink from "@/components/FullPageLink";
+import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastError, toastSuccess } from "@/lib/toast";
 import { forgotPasswordCopy } from "@/lib/copy/ar";
+import { useFormFieldErrors } from "@/hooks/useFormFieldErrors";
 import { KeyRound } from "lucide-react";
 
 export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
+  const { validate, fieldError } = useFormFieldErrors();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!validate(e.currentTarget)) return;
     setLoading(true);
 
     const form = new FormData(e.currentTarget);
@@ -21,16 +25,11 @@ export default function ForgotPasswordPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          phone: form.get("phone"),
-          password: form.get("password"),
+          email: form.get("email"),
         }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        toastError(data.error || "فشل إعادة التعيين");
-        return;
-      }
-      toastSuccess("تم تعيين كلمة المرور بنجاح. يمكنك تسجيل الدخول الآن.");
+      toastSuccess(data.message || forgotPasswordCopy.successMessage);
     } catch {
       toastError("حدث خطأ في الاتصال");
     } finally {
@@ -53,43 +52,27 @@ export default function ForgotPasswordPage() {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="phone" className="label-field">
-                {forgotPasswordCopy.phoneLabel}
-              </label>
+          <form noValidate onSubmit={handleSubmit} className="space-y-4">
+            <FieldRow label={forgotPasswordCopy.emailLabel} htmlFor="email" ltr error={fieldError("email")}>
               <input
-                id="phone"
-                name="phone"
-                type="tel"
+                id="email"
+                name="email"
+                type="email"
                 required
                 className="input-field"
                 dir="ltr"
+                autoComplete="email"
               />
-            </div>
-            <div>
-              <label htmlFor="password" className="label-field">
-                {forgotPasswordCopy.passwordLabel}
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                minLength={6}
-                className="input-field"
-                dir="ltr"
-              />
-            </div>
+            </FieldRow>
             <SubmitButton loading={loading} className="btn-primary w-full">
               {forgotPasswordCopy.submitBtn}
             </SubmitButton>
           </form>
 
           <p className="mt-6 text-center text-sm text-brand-gray">
-            <FullPageLink href="/login" className="font-semibold text-primary hover:underline">
+            <Link href="/login" className="font-semibold text-primary hover:underline">
               {forgotPasswordCopy.backToLogin}
-            </FullPageLink>
+            </Link>
           </p>
         </div>
       </main>

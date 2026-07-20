@@ -6,7 +6,7 @@ import { Stage } from "@/generated/prisma/client";
 import { STAGE_LABELS, STAGE_ORDER } from "@/lib/stages";
 import FloatingModal from "@/components/admin/FloatingModal";
 import { toastSuccess, toastError } from "@/lib/toast";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, ExternalLink, UserRound } from "lucide-react";
 
 type PipelineBeneficiary = {
   id: string;
@@ -26,6 +26,7 @@ type Props = {
 export default function AdminPipelineBoard({ beneficiaries }: Props) {
   const router = useRouter();
   const [openView, setOpenView] = useState<OpenView | null>(null);
+  const [quickView, setQuickView] = useState<PipelineBeneficiary | null>(null);
   const [pending, startTransition] = useTransition();
 
   const byStage = STAGE_ORDER.reduce(
@@ -38,6 +39,12 @@ export default function AdminPipelineBoard({ beneficiaries }: Props) {
 
   const pendingRequests = beneficiaries.filter((b) => b.pendingStage);
   const pendingTotal = pendingRequests.length;
+
+  function goToRegistrationFlow(beneficiaryId: string) {
+    setOpenView(null);
+    setQuickView(null);
+    router.push(`/dashboard/admin?tab=management&beneficiary=${beneficiaryId}`);
+  }
 
   function approve(beneficiaryId: string, action: "registration" | "transition") {
     startTransition(async () => {
@@ -111,6 +118,12 @@ export default function AdminPipelineBoard({ beneficiaries }: Props) {
 
       {openView && (
         <FloatingModal title={modalTitle} onClose={() => setOpenView(null)} wide>
+          {openView === "PENDING_APPROVAL" && modalList.length > 0 && (
+            <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+              مستفيدون جدد بانتظار الاعتماد — انقر «إسناد مرشد واعتماد» لفتح ملف المستفيد،
+              اختر المرشد، ثم أكمل اعتماد التسجيل.
+            </p>
+          )}
           {modalList.length === 0 ? (
             <p className="text-center text-brand-gray">لا يوجد مستفيدون</p>
           ) : (
@@ -118,23 +131,29 @@ export default function AdminPipelineBoard({ beneficiaries }: Props) {
               {modalList.map((b) => (
                 <li
                   key={b.id}
-                  className="rounded-lg border border-surface-border bg-surface p-4 text-start text-sm"
+                  className="cursor-pointer rounded-lg border border-surface-border bg-surface p-4 text-start text-sm transition hover:border-primary"
+                  onClick={() => setQuickView(b)}
                 >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-bold text-primary">{b.name}</p>
-                      <p className="text-brand-gray" dir="ltr">{b.phone}</p>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1">
+                      <span>
+                        <span className="text-xs text-brand-gray">المستفيد: </span>
+                        <span className="font-bold text-primary">{b.name}</span>
+                      </span>
+                      <span>
+                        <span className="text-xs text-brand-gray">الجوال: </span>
+                        <span className="text-brand-gray" dir="ltr">{b.phone}</span>
+                      </span>
                     </div>
-                    <div className="flex shrink-0 flex-wrap gap-2">
+                    <div className="flex shrink-0 items-center gap-2" onClick={(e) => e.stopPropagation()}>
                       {b.stage === "PENDING_APPROVAL" && (
                         <button
                           type="button"
-                          disabled={pending}
-                          onClick={() => approve(b.id, "registration")}
+                          onClick={() => goToRegistrationFlow(b.id)}
                           className="btn-primary !px-3 !py-1.5 text-xs"
                         >
-                          <CheckCircle className="inline h-3 w-3" />
-                          اعتماد التسجيل
+                          <UserRound className="inline h-3 w-3" />
+                          إسناد مرشد واعتماد
                         </button>
                       )}
                       {b.pendingStage && (
@@ -150,8 +169,10 @@ export default function AdminPipelineBoard({ beneficiaries }: Props) {
                       )}
                     </div>
                   </div>
-                  {b.guideName && (
-                    <p className="mt-2 text-brand-gray">المرشد: {b.guideName}</p>
+                  {b.stage === "PENDING_APPROVAL" && (
+                    <p className="mt-2 text-xs text-brand-gray">
+                      الحالة: بانتظار إسناد مرشد واعتماد التسجيل
+                    </p>
                   )}
                   {b.pendingStage && (
                     <p className="mt-2 inline-block rounded bg-yellow-100 px-2 py-1 text-xs font-semibold text-red-900">
@@ -162,6 +183,66 @@ export default function AdminPipelineBoard({ beneficiaries }: Props) {
               ))}
             </ul>
           )}
+        </FloatingModal>
+      )}
+
+      {quickView && (
+        <FloatingModal
+          title={`عرض سريع — ${quickView.name}`}
+          onClose={() => setQuickView(null)}
+        >
+          <dl className="space-y-3 text-sm">
+            <div>
+              <dt className="text-xs text-brand-gray">الجوال</dt>
+              <dd dir="ltr">{quickView.phone}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-brand-gray">المرحلة</dt>
+              <dd className="font-semibold text-primary">{STAGE_LABELS[quickView.stage]}</dd>
+            </div>
+            {quickView.stage !== "PENDING_APPROVAL" && (
+              <div>
+                <dt className="text-xs text-brand-gray">المرشد</dt>
+                <dd>{quickView.guideName ?? "—"}</dd>
+              </div>
+            )}
+            {quickView.pendingStage && (
+              <div>
+                <dt className="text-xs text-brand-gray">طلب معلّق</dt>
+                <dd>{STAGE_LABELS[quickView.pendingStage]}</dd>
+              </div>
+            )}
+          </dl>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {quickView.stage === "PENDING_APPROVAL" && (
+              <button
+                type="button"
+                onClick={() => goToRegistrationFlow(quickView.id)}
+                className="btn-primary !px-3 !py-2 text-sm"
+              >
+                <UserRound className="inline h-4 w-4" />
+                إسناد مرشد واعتماد
+              </button>
+            )}
+            {quickView.pendingStage && (
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => approve(quickView.id, "transition")}
+                className="btn-primary !px-3 !py-2 text-sm"
+              >
+                <CheckCircle className="inline h-4 w-4" />
+                الانتقال للمرحلة التالية
+              </button>
+            )}
+            <a
+              href={`/dashboard/admin?tab=management&beneficiary=${quickView.id}`}
+              className="btn-secondary inline-flex !px-3 !py-2 text-sm"
+            >
+              <ExternalLink className="h-4 w-4" />
+              عرض الملف الكامل
+            </a>
+          </div>
         </FloatingModal>
       )}
     </>

@@ -20,7 +20,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      session: {
+        id: result.session.id,
+        date: result.session.date.toISOString(),
+        status: result.session.status,
+        notes: result.session.notes,
+        meetingLink: result.session.meetingLink,
+        location: result.session.location,
+        commitmentRating: result.session.commitmentRating,
+      },
+    });
   } catch {
     return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
   }

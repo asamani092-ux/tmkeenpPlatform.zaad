@@ -1,12 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { hashPassword } from "@/lib/auth";
-import { getNextStage, STAGE_LABELS } from "@/lib/stages";
+import { getNextStage, STAGE_LABELS, STAGE_ORDER } from "@/lib/stages";
 import {
   CareerPlanStatus,
   FollowUpStatus,
   OpportunityType,
   SessionStatus,
+  Stage,
 } from "@/generated/prisma/client";
 import { beneficiaryCanSeeOpportunity } from "@/lib/opportunity-visibility";
 import {
@@ -15,6 +16,7 @@ import {
 } from "@/lib/notifications";
 import { getSystemSettings } from "@/lib/system-settings";
 import { sendSessionScheduledEmails } from "@/lib/email-notify";
+import { safeSendEmail } from "@/lib/safe-email";
 import type { CareerPlanTask } from "@/lib/copy/ar";
 
 export type ActionResult = { success: true } | { success: false; error: string };
@@ -33,7 +35,12 @@ function parseTasks(raw: unknown): CareerPlanTask[] {
 
 async function assertGuideBeneficiary(guideId: string, beneficiaryId: string) {
   return prisma.user.findFirst({
-    where: { id: beneficiaryId, role: "BENEFICIARY", guideId },
+    where: {
+      id: beneficiaryId,
+      role: "BENEFICIARY",
+      guideId,
+      stage: "GUIDANCE",
+    },
   });
 }
 
@@ -91,31 +98,22 @@ export async function registerBeneficiary(data: {
     `طلب اعتماد للمستفيد ${created.name} — يرجى المراجعة والاعتماد.`
   );
 
-  return { success: true };
-}
-
-export async function resetPasswordByPhone(data: {
-  phone: string;
-  password: string;
-}): Promise<ActionResult> {
-  if (!data.phone?.trim() || !data.password) {
-    return { success: false, error: "رقم الجوال وكلمة المرور مطلوبان" };
-  }
-  if (data.password.length < 6) {
-    return { success: false, error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" };
-  }
-
-  const user = await prisma.user.findFirst({
-    where: { phone: data.phone.trim() },
+  const settings = await getSystemSettings();
+  const { sendGenericEmail } = await import("@/lib/email-notify");
+  const admins = await prisma.user.findMany({
+    where: { role: "ADMIN" },
+    select: { email: true },
   });
-  if (!user) {
-    return { success: false, error: "رقم الجوال غير مسجل" };
+  for (const admin of admins) {
+    await safeSendEmail("register notify admin", () =>
+      sendGenericEmail({
+        to: admin.email,
+        subject: "تسجيل مستفيد جديد — منصة تمكين",
+        body: `تم تسجيل مستفيد جديد: ${created.name} (${created.email}).\n\nيُرجى مراجعة الطلب واعتماده من لوحة المدير.`,
+        senderEmail: settings.senderEmail,
+      })
+    );
   }
-
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { password: await hashPassword(data.password) },
-  });
 
   return { success: true };
 }
@@ -191,7 +189,21 @@ export async function scheduleSession(data: {
   notes: string;
   meetingLink?: string;
   location?: string;
-}): Promise<ActionResult> {
+}): Promise<
+  | {
+      success: true;
+      session: {
+        id: string;
+        date: Date;
+        status: string;
+        notes: string;
+        meetingLink: string | null;
+        location: string | null;
+        commitmentRating: number | null;
+      };
+    }
+  | { success: false; error: string }
+> {
   const session = await getSession();
   if (!session || session.role !== "GUIDE") {
     return { success: false, error: "غير مصرح" };
@@ -221,7 +233,7 @@ export async function scheduleSession(data: {
   const meetingLink = data.meetingLink?.trim() || null;
   const location = data.location?.trim() || null;
 
-  await prisma.session.create({
+  const created = await prisma.session.create({
     data: {
       beneficiaryId: data.beneficiaryId,
       guideId: session.id,
@@ -241,18 +253,31 @@ export async function scheduleSession(data: {
   );
 
   const settings = await getSystemSettings();
-  await sendSessionScheduledEmails({
-    beneficiaryEmail: beneficiary.email,
-    beneficiaryName: beneficiary.name,
-    guideEmail: guide.email,
-    guideName: guide.name,
-    sessionDate: date,
-    meetingLink,
-    location,
-    senderEmail: settings.senderEmail,
-  });
+  await safeSendEmail("session scheduled", () =>
+    sendSessionScheduledEmails({
+      beneficiaryEmail: beneficiary.email,
+      beneficiaryName: beneficiary.name,
+      guideEmail: guide.email,
+      guideName: guide.name,
+      sessionDate: date,
+      meetingLink,
+      location,
+      senderEmail: settings.senderEmail,
+    })
+  );
 
-  return { success: true };
+  return {
+    success: true,
+    session: {
+      id: created.id,
+      date: created.date,
+      status: created.status,
+      notes: created.notes,
+      meetingLink: created.meetingLink,
+      location: created.location,
+      commitmentRating: created.commitmentRating,
+    },
+  };
 }
 
 export async function updateSession(data: {
@@ -671,11 +696,14 @@ export async function adminUpdateBeneficiary(
   beneficiaryId: string,
   data: {
     phone?: string;
+    email?: string;
+    password?: string;
     educationLevel?: string;
     experience?: string;
     skills?: string;
     careerInterests?: string;
     guideId?: string | null;
+    stage?: Stage;
   }
 ): Promise<ActionResult> {
   const session = await getSession();
@@ -690,6 +718,20 @@ export async function adminUpdateBeneficiary(
     return { success: false, error: "المستفيد غير موجود" };
   }
 
+  if (data.stage !== undefined && !STAGE_ORDER.includes(data.stage)) {
+    return { success: false, error: "مرحلة غير صالحة" };
+  }
+
+  if (data.email !== undefined) {
+    const email = data.email.toLowerCase().trim();
+    const existing = await prisma.user.findFirst({
+      where: { email, id: { not: beneficiaryId } },
+    });
+    if (existing) {
+      return { success: false, error: "البريد مسجل مسبقاً" };
+    }
+  }
+
   if (data.guideId) {
     const guide = await prisma.user.findFirst({
       where: { id: data.guideId, role: "GUIDE" },
@@ -697,10 +739,15 @@ export async function adminUpdateBeneficiary(
     if (!guide) return { success: false, error: "المرشد غير موجود" };
   }
 
+  const stageChanged =
+    data.stage !== undefined && data.stage !== beneficiary.stage;
+
   await prisma.user.update({
     where: { id: beneficiaryId },
     data: {
       ...(data.phone !== undefined ? { phone: data.phone.trim() } : {}),
+      ...(data.email !== undefined ? { email: data.email.toLowerCase().trim() } : {}),
+      ...(data.password ? { password: await hashPassword(data.password) } : {}),
       ...(data.educationLevel !== undefined
         ? { educationLevel: data.educationLevel.trim() }
         : {}),
@@ -710,8 +757,24 @@ export async function adminUpdateBeneficiary(
         ? { careerInterests: data.careerInterests.trim() }
         : {}),
       ...(data.guideId !== undefined ? { guideId: data.guideId } : {}),
+      ...(stageChanged
+        ? {
+            stage: data.stage,
+            pendingStage: null,
+            stageEnteredAt: new Date(),
+            ...(data.stage === "EMPLOYMENT" ? { isEmployed: true } : {}),
+          }
+        : {}),
     },
   });
+
+  if (stageChanged && data.stage === "FOLLOW_UP") {
+    const updated = await prisma.user.findUnique({ where: { id: beneficiaryId } });
+    if (updated && !updated.followUpProgramStartedAt) {
+      const { initializeFollowUpProgram } = await import("@/lib/follow-up-service");
+      await initializeFollowUpProgram(beneficiaryId);
+    }
+  }
 
   return { success: true };
 }
@@ -727,15 +790,19 @@ export async function createFollowUp(data: {
     return { success: false, error: "غير مصرح" };
   }
 
-  if (![1, 3, 6].includes(data.month)) {
-    return { success: false, error: "شهر المتابعة يجب أن يكون 1 أو 3 أو 6" };
+  if (![1, 2, 3, 4, 5, 6].includes(data.month)) {
+    return { success: false, error: "شهر المتابعة يجب أن يكون بين 1 و 6" };
   }
 
   const beneficiary = await prisma.user.findFirst({
-    where: { id: data.beneficiaryId, role: "BENEFICIARY", stage: "FOLLOW_UP" },
+    where: {
+      id: data.beneficiaryId,
+      role: "BENEFICIARY",
+      OR: [{ stage: "FOLLOW_UP" }, { stage: "EMPLOYMENT" }, { isEmployed: true }],
+    },
   });
   if (!beneficiary) {
-    return { success: false, error: "المستفيد غير موجود أو ليس في مرحلة المتابعة" };
+    return { success: false, error: "المستفيد غير موجود أو غير مؤهل للمتابعة" };
   }
 
   try {
@@ -820,6 +887,84 @@ export async function updateBeneficiaryProfile(data: {
       ...(data.certificatesUrls !== undefined
         ? { certificatesUrls: data.certificatesUrls || null }
         : {}),
+    },
+  });
+
+  return { success: true };
+}
+
+/** Beneficiary updates account email/password — O(1) */
+export async function updateBeneficiaryAccount(data: {
+  email?: string;
+  password?: string;
+}): Promise<ActionResult> {
+  const session = await getSession();
+  if (!session || session.role !== "BENEFICIARY") {
+    return { success: false, error: "غير مصرح" };
+  }
+
+  if (!data.email && !data.password) {
+    return { success: false, error: "لا توجد بيانات للتحديث" };
+  }
+
+  if (data.password && data.password.length < 6) {
+    return { success: false, error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" };
+  }
+
+  if (data.email) {
+    const email = data.email.toLowerCase().trim();
+    const existing = await prisma.user.findFirst({
+      where: { email, id: { not: session.id } },
+    });
+    if (existing) {
+      return { success: false, error: "البريد مسجل مسبقاً" };
+    }
+  }
+
+  await prisma.user.update({
+    where: { id: session.id },
+    data: {
+      ...(data.email ? { email: data.email.toLowerCase().trim() } : {}),
+      ...(data.password ? { password: await hashPassword(data.password) } : {}),
+    },
+  });
+
+  return { success: true };
+}
+
+/** Guide updates account email/password — O(1) */
+export async function updateGuideAccount(data: {
+  email?: string;
+  password?: string;
+}): Promise<ActionResult> {
+  const session = await getSession();
+  if (!session || session.role !== "GUIDE") {
+    return { success: false, error: "غير مصرح" };
+  }
+
+  if (!data.email && !data.password) {
+    return { success: false, error: "لا توجد بيانات للتحديث" };
+  }
+
+  if (data.password && data.password.length < 6) {
+    return { success: false, error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" };
+  }
+
+  if (data.email) {
+    const email = data.email.toLowerCase().trim();
+    const existing = await prisma.user.findFirst({
+      where: { email, id: { not: session.id } },
+    });
+    if (existing) {
+      return { success: false, error: "البريد مسجل مسبقاً" };
+    }
+  }
+
+  await prisma.user.update({
+    where: { id: session.id },
+    data: {
+      ...(data.email ? { email: data.email.toLowerCase().trim() } : {}),
+      ...(data.password ? { password: await hashPassword(data.password) } : {}),
     },
   });
 
@@ -993,6 +1138,31 @@ export async function toggleTaskCompletion(taskId: string): Promise<ActionResult
   return { success: true };
 }
 
+/** Beneficiary sets task completion explicitly — O(1) */
+export async function setTaskCompletion(
+  taskId: string,
+  isCompleted: boolean
+): Promise<ActionResult> {
+  const session = await getSession();
+  if (!session || session.role !== "BENEFICIARY") {
+    return { success: false, error: "غير مصرح" };
+  }
+
+  const existing = await prisma.task.findFirst({
+    where: { id: taskId, beneficiaryId: session.id },
+  });
+  if (!existing) {
+    return { success: false, error: "المهمة غير موجودة" };
+  }
+
+  await prisma.task.update({
+    where: { id: taskId },
+    data: { isCompleted },
+  });
+
+  return { success: true };
+}
+
 /** Admin approves PENDING_APPROVAL → GUIDANCE — O(1) */
 export async function approveRegistration(
   beneficiaryId: string
@@ -1007,6 +1177,9 @@ export async function approveRegistration(
   });
   if (!beneficiary) {
     return { success: false, error: "المستفيد غير موجود أو ليس بانتظار الاعتماد" };
+  }
+  if (!beneficiary.guideId) {
+    return { success: false, error: "يجب إسناد مرشد قبل اعتماد التسجيل" };
   }
 
   await prisma.user.update({
@@ -1026,12 +1199,14 @@ export async function approveRegistration(
 
   const settings = await getSystemSettings();
   const { sendGenericEmail } = await import("@/lib/email-notify");
-  await sendGenericEmail({
-    to: beneficiary.email,
-    subject: "تم اعتماد تسجيلك في منصة تمكين",
-    body: `مرحباً ${beneficiary.name}،\n\nتم اعتماد حسابك. يمكنك تسجيل الدخول والبدء بمرحلة الإرشاد.\n\nمع تحيات فريق منصة تمكين`,
-    senderEmail: settings.senderEmail,
-  });
+  await safeSendEmail("approve registration", () =>
+    sendGenericEmail({
+      to: beneficiary.email,
+      subject: "تم اعتماد تسجيلك في منصة تمكين",
+      body: `مرحباً ${beneficiary.name}،\n\nتم اعتماد حسابك. يمكنك تسجيل الدخول والبدء بمرحلة الإرشاد.\n\nمع تحيات فريق منصة تمكين`,
+      senderEmail: settings.senderEmail,
+    })
+  );
 
   return { success: true };
 }
@@ -1070,14 +1245,21 @@ export async function approveStageTransition(
     `تم اعتماد انتقالك إلى مرحلة: ${STAGE_LABELS[newStage]}.`
   );
 
+  if (newStage === "FOLLOW_UP") {
+    const { initializeFollowUpProgram } = await import("@/lib/follow-up-service");
+    await initializeFollowUpProgram(beneficiaryId);
+  }
+
   const settings = await getSystemSettings();
   const { sendGenericEmail } = await import("@/lib/email-notify");
-  await sendGenericEmail({
-    to: beneficiary.email,
-    subject: `انتقال إلى مرحلة ${STAGE_LABELS[newStage]}`,
-    body: `مرحباً ${beneficiary.name}،\n\nتم اعتماد انتقالك إلى مرحلة: ${STAGE_LABELS[newStage]}.\n\nمع تحيات فريق منصة تمكين`,
-    senderEmail: settings.senderEmail,
-  });
+  await safeSendEmail("approve stage transition", () =>
+    sendGenericEmail({
+      to: beneficiary.email,
+      subject: `انتقال إلى مرحلة ${STAGE_LABELS[newStage]}`,
+      body: `مرحباً ${beneficiary.name}،\n\nتم اعتماد انتقالك إلى مرحلة: ${STAGE_LABELS[newStage]}.\n\nمع تحيات فريق منصة تمكين`,
+      senderEmail: settings.senderEmail,
+    })
+  );
 
   return { success: true, stage: newStage };
 }
@@ -1171,12 +1353,14 @@ export async function reviewApplication(data: {
 
   const settings = await getSystemSettings();
   const { sendGenericEmail } = await import("@/lib/email-notify");
-  await sendGenericEmail({
-    to: app.beneficiary.email,
-    subject: `تحديث تقديمك — ${app.opportunity.title}`,
-    body: `مرحباً ${app.beneficiary.name}،\n\nتم ${statusLabel} تقديمك على "${app.opportunity.title}".${data.reviewNote ? `\n\nملاحظة: ${data.reviewNote}` : ""}\n\nمع تحيات فريق منصة تمكين`,
-    senderEmail: settings.senderEmail,
-  });
+  await safeSendEmail("review application", () =>
+    sendGenericEmail({
+      to: app.beneficiary.email,
+      subject: `تحديث تقديمك — ${app.opportunity.title}`,
+      body: `مرحباً ${app.beneficiary.name}،\n\nتم ${statusLabel} تقديمك على "${app.opportunity.title}".${data.reviewNote ? `\n\nملاحظة: ${data.reviewNote}` : ""}\n\nمع تحيات فريق منصة تمكين`,
+      senderEmail: settings.senderEmail,
+    })
+  );
 
   if (
     data.status === "ACCEPTED" &&

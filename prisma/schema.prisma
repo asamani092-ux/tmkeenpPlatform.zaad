@@ -53,6 +53,13 @@ enum FollowUpStatus {
   MISSED
 }
 
+enum FollowUpProgramStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  WITHDRAWN
+}
+
 model User {
   id               String   @id @default(cuid())
   name             String
@@ -72,6 +79,12 @@ model User {
   professionalRecommendations String @default("")
   selectedTrainingCourseIds   String @default("[]")
   isEmployed       Boolean  @default(false)
+  isActive         Boolean  @default(true)
+  followUpProgramStatus   FollowUpProgramStatus?
+  followUpProgramStartedAt DateTime?
+  followUpPauseReason     String?
+  followUpEndReason       String?
+  followUpStatusUpdatedAt DateTime?
   careerPlan       String   @default("")
   commitmentLevel  Int      @default(50)
   commitmentScore  Int      @default(0)
@@ -90,7 +103,20 @@ model User {
   followUps        FollowUp[]
   opportunityTargets OpportunityTarget[]
   notifications    InAppNotification[]
+  passwordResetTokens PasswordResetToken[]
   createdAt        DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
 }
 
 model InAppNotification {
@@ -151,15 +177,47 @@ model CareerPlan {
 }
 
 model FollowUp {
-  id            String         @id @default(cuid())
-  beneficiaryId String
-  beneficiary   User           @relation(fields: [beneficiaryId], references: [id], onDelete: Cascade)
-  month         Int
-  status        FollowUpStatus @default(PENDING)
-  notes         String         @default("")
-  createdAt     DateTime       @default(now())
+  id             String         @id @default(cuid())
+  beneficiaryId  String
+  beneficiary    User           @relation(fields: [beneficiaryId], references: [id], onDelete: Cascade)
+  month          Int
+  status         FollowUpStatus @default(PENDING)
+  notes          String         @default("")
+  answers        Json?
+  opensAt        DateTime?
+  dueAt          DateTime?
+  submittedAt    DateTime?
+  lastReminderAt DateTime?
+  createdAt      DateTime       @default(now())
 
   @@unique([beneficiaryId, month])
+}
+
+model FollowUpFormTemplate {
+  id        String   @id @default(cuid())
+  title     String
+  months    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  questions FollowUpFormQuestion[]
+}
+
+model FollowUpFormQuestion {
+  id         String   @id @default(cuid())
+  formId     String?
+  form       FollowUpFormTemplate? @relation(fields: [formId], references: [id], onDelete: Cascade)
+  month      Int
+  label      String
+  fieldType  String   @default("text")
+  options    Json     @default("[]")
+  sortOrder  Int      @default(0)
+  required   Boolean  @default(true)
+  helperText String   @default("")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([month, sortOrder])
+  @@index([formId, sortOrder])
 }
 
 model Opportunity {

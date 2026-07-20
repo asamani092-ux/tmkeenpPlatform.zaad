@@ -1,11 +1,15 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
+import { useSyncFromProps } from "@/lib/use-sync-from-props";
 import { useRouter } from "next/navigation";
 import { Stage } from "@/generated/prisma/client";
-import { STAGE_LABELS } from "@/lib/stages";
+import { STAGE_LABELS, STAGE_ORDER } from "@/lib/stages";
 import FloatingModal from "@/components/admin/FloatingModal";
 import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
+import DetailRow from "@/components/ui/DetailRow";
+import FieldGrid from "@/components/ui/FieldGrid";
+import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { CheckCircle, ExternalLink, FileText } from "lucide-react";
@@ -34,6 +38,8 @@ type GuideOption = { id: string; name: string };
 type Props = {
   beneficiaries: ManagedBeneficiary[];
   guides: GuideOption[];
+  initialOpenBeneficiaryId?: string | null;
+  onBeneficiaryOpened?: () => void;
 };
 
 function parseCertificateLinks(raw: string | null): string[] {
@@ -47,12 +53,26 @@ function parseCertificateLinks(raw: string | null): string[] {
   return raw.split(",").map((s) => s.trim()).filter(Boolean);
 }
 
-export default function AdminBeneficiaryManagement({ beneficiaries: initial, guides }: Props) {
+export default function AdminBeneficiaryManagement({
+  beneficiaries: initial,
+  guides,
+  initialOpenBeneficiaryId,
+  onBeneficiaryOpened,
+}: Props) {
   const router = useRouter();
-  const [rows, setRows] = useState(initial);
+  const [rows, setRows] = useSyncFromProps(initial);
   const [selected, setSelected] = useState<ManagedBeneficiary | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (!initialOpenBeneficiaryId) return;
+    const match = rows.find((b) => b.id === initialOpenBeneficiaryId);
+    if (match) {
+      setSelected(match);
+      onBeneficiaryOpened?.();
+    }
+  }, [initialOpenBeneficiaryId, rows, onBeneficiaryOpened]);
 
   function assign(beneficiaryId: string, guideId: string) {
     startTransition(async () => {
@@ -81,6 +101,13 @@ export default function AdminBeneficiaryManagement({ beneficiaries: initial, gui
   }
 
   function approve(beneficiaryId: string, action: "registration" | "transition") {
+    if (action === "registration") {
+      const beneficiary = rows.find((b) => b.id === beneficiaryId);
+      if (!beneficiary?.guideId) {
+        toastError("يجب إسناد مرشد قبل اعتماد التسجيل");
+        return;
+      }
+    }
     startTransition(async () => {
       const res = await fetch("/api/stage-approve", {
         method: "POST",
@@ -108,11 +135,14 @@ export default function AdminBeneficiaryManagement({ beneficiaries: initial, gui
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           phone: form.get("phone"),
+          email: form.get("email"),
+          password: form.get("password") || undefined,
           educationLevel: form.get("educationLevel"),
           experience: form.get("experience"),
           skills: form.get("skills"),
           careerInterests: form.get("careerInterests"),
           guideId: guideIdRaw || null,
+          stage: form.get("stage") || undefined,
         }),
       });
       const data = await res.json();
@@ -123,12 +153,14 @@ export default function AdminBeneficiaryManagement({ beneficiaries: initial, gui
       const guideName = guides.find((g) => g.id === guideIdRaw)?.name ?? null;
       const patch = {
         phone: String(form.get("phone") ?? ""),
+        email: String(form.get("email") ?? selected.email),
         educationLevel: String(form.get("educationLevel") ?? ""),
         experience: String(form.get("experience") ?? ""),
         skills: String(form.get("skills") ?? ""),
         careerInterests: String(form.get("careerInterests") ?? ""),
         guideId: guideIdRaw || null,
         guideName,
+        stage: (form.get("stage") as Stage) || selected.stage,
       };
       setRows((prev) => prev.map((b) => (b.id === selected.id ? { ...b, ...patch } : b)));
       setSelected((s) => (s ? { ...s, ...patch } : s));
@@ -141,14 +173,16 @@ export default function AdminBeneficiaryManagement({ beneficiaries: initial, gui
   const columns: DataTableColumn<ManagedBeneficiary>[] = [
     {
       key: "name",
-      header: "المستفيد",
+      header: "اسم المستفيد",
+      render: (b) => <span className="font-medium text-primary">{b.name}</span>,
+    },
+    {
+      key: "phone",
+      header: "رقم الجوال",
       render: (b) => (
-        <div className="flex flex-col gap-0.5">
-          <span className="font-medium text-primary">{b.name}</span>
-          <span className="text-xs text-brand-gray" dir="ltr">
-            {b.phone}
-          </span>
-        </div>
+        <span className="font-mono text-xs text-brand-gray" dir="ltr">
+          {b.phone}
+        </span>
       ),
     },
     {
@@ -167,12 +201,12 @@ export default function AdminBeneficiaryManagement({ beneficiaries: initial, gui
     },
     {
       key: "guide",
-      header: "إسناد مرشد",
+      header: "المرشد المسند",
       render: (b) => (
         <select
           defaultValue={b.guideId ?? ""}
           disabled={pending}
-          className="input-field !py-2 text-sm"
+          className="input-field min-w-[110px] max-w-[140px] !rounded-lg !bg-surface-muted !py-1 !text-xs"
           onClick={(e) => e.stopPropagation()}
           onChange={(e) => assign(b.id, e.target.value)}
         >
@@ -188,41 +222,51 @@ export default function AdminBeneficiaryManagement({ beneficiaries: initial, gui
     {
       key: "approve",
       header: "اعتماد",
-      render: (b) => (
-        <div className="flex flex-wrap justify-start gap-1" onClick={(e) => e.stopPropagation()}>
-          {b.stage === "PENDING_APPROVAL" && (
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => approve(b.id, "registration")}
-              className="btn-primary !px-3 !py-1.5 text-xs"
-            >
-              <CheckCircle className="inline h-3 w-3" />
-              اعتماد التسجيل
-            </button>
-          )}
-          {b.pendingStage === "TRAINING" && (
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => approve(b.id, "transition")}
-              className="btn-primary !px-3 !py-1.5 text-xs"
-            >
-              اعتماد التدريب
-            </button>
-          )}
-          {b.pendingStage && b.pendingStage !== "TRAINING" && (
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => approve(b.id, "transition")}
-              className="btn-primary !px-3 !py-1.5 text-xs"
-            >
-              اعتماد الانتقال
-            </button>
-          )}
-        </div>
-      ),
+      render: (b) => {
+        const showRegistration = b.stage === "PENDING_APPROVAL";
+        const showTraining = b.pendingStage === "TRAINING";
+        const showOtherTransition =
+          b.pendingStage && b.pendingStage !== "TRAINING";
+        if (!showRegistration && !showTraining && !showOtherTransition) {
+          return <span className="text-xs text-brand-gray">—</span>;
+        }
+        return (
+          <div className="flex flex-wrap justify-start gap-1" onClick={(e) => e.stopPropagation()}>
+            {showRegistration && (
+              <button
+                type="button"
+                disabled={pending || !b.guideId}
+                onClick={() => approve(b.id, "registration")}
+                className="btn-primary !px-3 !py-1.5 text-xs disabled:opacity-50"
+                title={!b.guideId ? "يجب إسناد مرشد أولاً" : undefined}
+              >
+                <CheckCircle className="inline h-3 w-3" />
+                اعتماد التسجيل
+              </button>
+            )}
+            {showTraining && (
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => approve(b.id, "transition")}
+                className="btn-primary !px-3 !py-1.5 text-xs"
+              >
+                اعتماد التدريب
+              </button>
+            )}
+            {showOtherTransition && (
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => approve(b.id, "transition")}
+                className="btn-primary !px-3 !py-1.5 text-xs"
+              >
+                اعتماد الانتقال
+              </button>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: "cv",
@@ -269,9 +313,6 @@ export default function AdminBeneficiaryManagement({ beneficiaries: initial, gui
         >
           <div className="space-y-4 text-start">
             <div className="flex flex-col gap-0.5 rounded-lg bg-surface-muted px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between">
-              <span dir="ltr" className="text-brand-gray">
-                {selected.phone}
-              </span>
               <div>
                 <span className="font-semibold text-primary">المرحلة: </span>
                 {STAGE_LABELS[selected.stage]}
@@ -284,29 +325,64 @@ export default function AdminBeneficiaryManagement({ beneficiaries: initial, gui
             </div>
 
             {editMode ? (
-              <form onSubmit={handleProfileSave} className="card-section space-y-3">
+              <form noValidate onSubmit={handleProfileSave} className="card-section space-y-3">
                 <h4 className="font-bold text-primary">تعديل بيانات المستفيد</h4>
-                <div>
-                  <label className="label-field">الجوال</label>
+                <FieldRow label="الجوال" htmlFor="beneficiary-phone" ltr>
                   <input
+                    id="beneficiary-phone"
                     name="phone"
                     defaultValue={selected.phone}
                     className="input-field"
                     dir="ltr"
                     required
                   />
-                </div>
-                <div>
-                  <label className="label-field">المستوى التعليمي</label>
+                </FieldRow>
+                <FieldRow label="البريد الإلكتروني" htmlFor="beneficiary-email" ltr>
                   <input
+                    id="beneficiary-email"
+                    name="email"
+                    type="email"
+                    defaultValue={selected.email}
+                    className="input-field"
+                    dir="ltr"
+                    required
+                  />
+                </FieldRow>
+                <FieldRow label="كلمة مرور جديدة (اختياري)" htmlFor="beneficiary-password" ltr>
+                  <input
+                    id="beneficiary-password"
+                    name="password"
+                    type="password"
+                    placeholder="اتركه فارغاً للإبقاء"
+                    className="input-field"
+                    dir="ltr"
+                  />
+                </FieldRow>
+                <FieldRow label="المستوى التعليمي" htmlFor="beneficiary-education">
+                  <input
+                    id="beneficiary-education"
                     name="educationLevel"
                     defaultValue={selected.educationLevel}
                     className="input-field"
                   />
-                </div>
-                <div>
-                  <label className="label-field">المرشد</label>
+                </FieldRow>
+                <FieldRow label="المرحلة" htmlFor="beneficiary-stage">
                   <select
+                    id="beneficiary-stage"
+                    name="stage"
+                    defaultValue={selected.stage}
+                    className="input-field"
+                  >
+                    {STAGE_ORDER.map((s) => (
+                      <option key={s} value={s}>
+                        {STAGE_LABELS[s]}
+                      </option>
+                    ))}
+                  </select>
+                </FieldRow>
+                <FieldRow label="المرشد" htmlFor="beneficiary-guide">
+                  <select
+                    id="beneficiary-guide"
                     name="guideId"
                     defaultValue={selected.guideId ?? ""}
                     className="input-field"
@@ -318,34 +394,34 @@ export default function AdminBeneficiaryManagement({ beneficiaries: initial, gui
                       </option>
                     ))}
                   </select>
-                </div>
-                <div>
-                  <label className="label-field">الخبرات</label>
+                </FieldRow>
+                <FieldRow label="الخبرات" htmlFor="beneficiary-experience" align="start">
                   <textarea
+                    id="beneficiary-experience"
                     name="experience"
                     defaultValue={selected.experience}
                     rows={2}
                     className="input-field resize-none"
                   />
-                </div>
-                <div>
-                  <label className="label-field">المهارات</label>
+                </FieldRow>
+                <FieldRow label="المهارات" htmlFor="beneficiary-skills" align="start">
                   <textarea
+                    id="beneficiary-skills"
                     name="skills"
                     defaultValue={selected.skills}
                     rows={2}
                     className="input-field resize-none"
                   />
-                </div>
-                <div>
-                  <label className="label-field">الميول المهنية</label>
+                </FieldRow>
+                <FieldRow label="الميول المهنية" htmlFor="beneficiary-career" align="start">
                   <textarea
+                    id="beneficiary-career"
                     name="careerInterests"
                     defaultValue={selected.careerInterests}
                     rows={2}
                     className="input-field resize-none"
                   />
-                </div>
+                </FieldRow>
                 <div className="flex gap-2">
                   <SubmitButton loading={pending} className="btn-primary flex-1 !py-2 text-sm">
                     حفظ التعديلات
@@ -371,38 +447,25 @@ export default function AdminBeneficiaryManagement({ beneficiaries: initial, gui
                     تعديل البيانات
                   </button>
                 </div>
-                <dl className="grid gap-3 sm:grid-cols-2">
-                  <div>
-                    <dt className="text-xs font-semibold text-brand-gray">البريد</dt>
-                    <dd dir="ltr" className="text-primary">
-                      {selected.email}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-semibold text-brand-gray">المرشد</dt>
-                    <dd className="text-primary">{selected.guideName ?? "—"}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-semibold text-brand-gray">مؤشر الالتزام</dt>
-                    <dd className="font-bold text-primary">{selected.commitmentScore}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-semibold text-brand-gray">المستوى التعليمي</dt>
-                    <dd className="text-primary">{selected.educationLevel || "—"}</dd>
+                <FieldGrid>
+                  <DetailRow label="رقم الجوال" value={selected.phone} ltr />
+                  <DetailRow label="البريد" value={selected.email} ltr />
+                  <DetailRow label="المرشد" value={selected.guideName} />
+                  <DetailRow
+                    label="مؤشر الالتزام"
+                    value={<span className="font-bold">{selected.commitmentScore}</span>}
+                  />
+                  <DetailRow label="المستوى التعليمي" value={selected.educationLevel || "—"} />
+                  <div className="sm:col-span-2">
+                    <DetailRow label="الخبرات" value={selected.experience || "—"} />
                   </div>
                   <div className="sm:col-span-2">
-                    <dt className="text-xs font-semibold text-brand-gray">الخبرات</dt>
-                    <dd className="text-brand-gray">{selected.experience || "—"}</dd>
+                    <DetailRow label="المهارات" value={selected.skills || "—"} />
                   </div>
                   <div className="sm:col-span-2">
-                    <dt className="text-xs font-semibold text-brand-gray">المهارات</dt>
-                    <dd className="text-brand-gray">{selected.skills || "—"}</dd>
+                    <DetailRow label="الميول المهنية" value={selected.careerInterests || "—"} />
                   </div>
-                  <div className="sm:col-span-2">
-                    <dt className="text-xs font-semibold text-brand-gray">الميول المهنية</dt>
-                    <dd className="text-brand-gray">{selected.careerInterests || "—"}</dd>
-                  </div>
-                </dl>
+                </FieldGrid>
               </div>
             )}
 
@@ -452,6 +515,47 @@ export default function AdminBeneficiaryManagement({ beneficiaries: initial, gui
                 <p className="whitespace-pre-wrap text-sm text-brand-gray">
                   {selected.professionalRecommendations}
                 </p>
+              </div>
+            )}
+
+            {selected.stage === "PENDING_APPROVAL" && (
+              <div className="card-section space-y-3 border-2 border-amber-200 bg-amber-50/40">
+                <h4 className="font-bold text-primary">اعتماد التسجيل</h4>
+                <p className="text-sm text-brand-gray">
+                  1. اختر المرشد المناسب للمستفيد
+                  <br />
+                  2. اضغط «اعتماد التسجيل» لإكمال العملية ونقله إلى مرحلة الإرشاد
+                </p>
+                <div>
+                  <label className="label-field">إسناد المرشد</label>
+                  <select
+                    value={selected.guideId ?? ""}
+                    disabled={pending}
+                    className="input-field"
+                    onChange={(e) => assign(selected.id, e.target.value)}
+                  >
+                    <option value="">— اختر مرشداً —</option>
+                    {guides.map((g) => (
+                      <option key={g.id} value={g.id}>
+                        {g.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {!selected.guideId && (
+                  <p className="text-xs font-semibold text-amber-900">
+                    يجب إسناد مرشد قبل اعتماد التسجيل
+                  </p>
+                )}
+                <button
+                  type="button"
+                  disabled={pending || !selected.guideId}
+                  onClick={() => approve(selected.id, "registration")}
+                  className="btn-primary !px-4 !py-2 text-sm disabled:opacity-50"
+                >
+                  <CheckCircle className="inline h-4 w-4" />
+                  اعتماد التسجيل
+                </button>
               </div>
             )}
           </div>

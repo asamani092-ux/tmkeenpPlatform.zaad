@@ -25,12 +25,25 @@ export async function POST(request: Request) {
 
     const user = await prisma.user.findUnique({
       where: { email: String(email).toLowerCase().trim() },
+      select: {
+        id: true,
+        password: true,
+        role: true,
+        isActive: true,
+      },
     });
 
     if (!user || !(await verifyPassword(String(password), user.password))) {
       return NextResponse.json(
         { error: "البريد الإلكتروني أو كلمة المرور غير صحيحة" },
         { status: 401 }
+      );
+    }
+
+    if (user.isActive === false) {
+      return NextResponse.json(
+        { error: "الحساب معلّق. تواصل مع الإدارة." },
+        { status: 403 }
       );
     }
 
