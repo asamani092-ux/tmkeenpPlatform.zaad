@@ -23,6 +23,72 @@ export default async function BeneficiaryDashboardPage() {
   if (!session) redirect("/login");
   if (session.role !== "BENEFICIARY") redirect(getDashboardPath(session.role));
 
+  // Fast path for PENDING_APPROVAL: profile + banner only (no guide/tasks/opps).
+  const pendingUser = await prisma.user.findUnique({
+    where: { id: session.id },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      stage: true,
+      stageEnteredAt: true,
+      educationLevel: true,
+      experience: true,
+      skills: true,
+      careerInterests: true,
+      cvUrl: true,
+      certificatesUrls: true,
+    },
+  });
+
+  if (!pendingUser) redirect("/login");
+
+  const unifiedProfile = {
+    name: pendingUser.name,
+    email: pendingUser.email,
+    phone: pendingUser.phone,
+    educationLevel: pendingUser.educationLevel,
+    experience: pendingUser.experience,
+    skills: pendingUser.skills,
+    careerInterests: pendingUser.careerInterests,
+    cvUrl: pendingUser.cvUrl,
+    certificatesUrls: pendingUser.certificatesUrls,
+  };
+
+  if (pendingUser.stage === "PENDING_APPROVAL") {
+    return (
+      <div className="flex min-h-screen flex-col bg-surface-muted">
+        <Navbar
+          userName={pendingUser.name}
+          userRole={session.role}
+          userId={session.id}
+          unifiedProfile={unifiedProfile}
+        />
+
+        <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 px-4 py-8">
+          <section className="card">
+            <ClipboardList className="mb-3 h-8 w-8 text-primary" />
+            <h2 className="mb-2 text-xl font-bold text-primary">بانتظار اعتماد التسجيل</h2>
+            <p className="text-brand-gray">
+              تم تسجيلك في المنصة. سيتم مراجعة طلبك من قبل الإدارة قريباً.
+            </p>
+          </section>
+
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <VerticalStageTimeline
+              currentStage={pendingUser.stage}
+              stageEnteredAt={pendingUser.stageEnteredAt}
+            />
+            <BeneficiaryProfileCard profile={unifiedProfile} />
+          </div>
+        </main>
+
+        <PlatformFooter showAuthLinks={false} />
+      </div>
+    );
+  }
+
   const user = await prisma.user.findUnique({
     where: { id: session.id },
     include: {
@@ -83,18 +149,6 @@ export default async function BeneficiaryDashboardPage() {
     meetingLink: s.meetingLink,
     location: s.location,
   }));
-
-  const unifiedProfile = {
-    name: user.name,
-    email: user.email,
-    phone: user.phone,
-    educationLevel: user.educationLevel,
-    experience: user.experience,
-    skills: user.skills,
-    careerInterests: user.careerInterests,
-    cvUrl: user.cvUrl,
-    certificatesUrls: user.certificatesUrls,
-  };
 
   const opportunitiesSection = (
     <section id="opportunities-section" className="space-y-6">
@@ -182,16 +236,6 @@ export default async function BeneficiaryDashboardPage() {
               dueAt: r.dueAt?.toISOString() ?? null,
             }))}
           />
-        )}
-
-        {user.stage === "PENDING_APPROVAL" && (
-          <section className="card">
-            <ClipboardList className="mb-3 h-8 w-8 text-primary" />
-            <h2 className="mb-2 text-xl font-bold text-primary">بانتظار اعتماد التسجيل</h2>
-            <p className="text-brand-gray">
-              تم تسجيلك في المنصة. سيتم مراجعة طلبك من قبل الإدارة قريباً.
-            </p>
-          </section>
         )}
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
