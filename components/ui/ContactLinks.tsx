@@ -1,4 +1,4 @@
-import { Mail, MessageCircle, Phone } from "lucide-react";
+import { Mail, MessageCircle } from "lucide-react";
 
 type Props = {
   phone?: string;
@@ -18,11 +18,6 @@ export default function ContactLinks({ phone, email, whatsapp, size = "md" }: Pr
 
   return (
     <div className="flex flex-wrap items-center gap-1">
-      {phone && (
-        <a href={`tel:${phone}`} className={btnClass} title="اتصال">
-          <Phone className={iconClass} />
-        </a>
-      )}
       {email && (
         <a href={`mailto:${email}`} className={btnClass} title="بريد">
           <Mail className={iconClass} />
