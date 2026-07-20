@@ -191,6 +191,10 @@ export default function GuideBeneficiaryTable({
 
     if (!selected) return;
 
+    const prevOverflow = document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+
     const onKey = (e: KeyboardEvent) => {
 
       if (e.key === "Escape") setSelected(null);
@@ -199,7 +203,13 @@ export default function GuideBeneficiaryTable({
 
     window.addEventListener("keydown", onKey);
 
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+
+      document.body.style.overflow = prevOverflow;
+
+      window.removeEventListener("keydown", onKey);
+
+    };
 
   }, [selected]);
 
@@ -852,12 +862,16 @@ export default function GuideBeneficiaryTable({
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4"
           onClick={() => setSelected(null)}
+          role="presentation"
         >
           <div
-            className="card flex max-h-[100dvh] w-full max-w-2xl flex-col overflow-hidden rounded-b-none !p-0 sm:max-h-[90vh] sm:rounded-xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="guide-beneficiary-modal-title"
+            className="card flex h-[100dvh] max-h-[100dvh] w-full max-w-2xl flex-col overflow-hidden rounded-none !p-0 pb-[env(safe-area-inset-bottom)] sm:h-auto sm:max-h-[90vh] sm:rounded-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="shrink-0 space-y-3 border-b border-surface-border px-4 py-3 sm:px-6 sm:py-4">
+            <div className="shrink-0 space-y-3 border-b border-surface-border px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-6 sm:py-4">
               <div className="flex items-start justify-between gap-3">
                 <button
                   type="button"
@@ -868,7 +882,10 @@ export default function GuideBeneficiaryTable({
                   <X className="h-5 w-5" />
                 </button>
                 <div className="min-w-0 flex-1 text-start">
-                  <h3 className="truncate text-lg font-bold text-primary sm:text-xl">
+                  <h3
+                    id="guide-beneficiary-modal-title"
+                    className="truncate text-lg font-bold text-primary sm:text-xl"
+                  >
                     {selected.name}
                   </h3>
                   <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-brand-gray">
@@ -935,7 +952,7 @@ export default function GuideBeneficiaryTable({
               </div>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 sm:px-6 sm:py-4 [&_.card-section]:p-3 sm:[&_.card-section]:p-5">
 
 
 

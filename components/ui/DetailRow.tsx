@@ -16,7 +16,9 @@ export default function DetailRow({
 }: Props) {
   return (
     <div className={`field-cell ${className}`.trim()}>
-      <div className={`field-cell-row ${singleLine ? "flex-nowrap" : ""}`.trim()}>
+      <div
+        className={`field-cell-row ${singleLine ? "field-cell-row--inline flex-nowrap" : ""}`.trim()}
+      >
         <span className={`field-cell-label ${singleLine ? "whitespace-nowrap" : ""}`.trim()}>
           {label}
         </span>

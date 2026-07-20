@@ -61,7 +61,7 @@ body {
   }
 
   .field-cell {
-    @apply rounded-lg border-2 border-primary/20 bg-surface px-4 py-3 text-start;
+    @apply rounded-lg border-2 border-primary/20 bg-surface px-3 py-2.5 text-start sm:px-4 sm:py-3;
   }
 
   .auth-field {
@@ -77,11 +77,15 @@ body {
   }
 
   .field-cell-row {
-    @apply flex items-center gap-3 text-start;
+    @apply flex flex-col items-stretch gap-1 text-start sm:flex-row sm:items-center sm:gap-3;
+  }
+
+  .field-cell-row.field-cell-row--inline {
+    @apply flex-row flex-nowrap items-center gap-3;
   }
 
   .field-cell-label {
-    @apply min-w-[7rem] shrink-0 text-sm font-semibold text-brand-gray sm:min-w-[9rem];
+    @apply shrink-0 text-sm font-semibold text-brand-gray sm:min-w-[9rem];
   }
 
   .field-cell-value {
