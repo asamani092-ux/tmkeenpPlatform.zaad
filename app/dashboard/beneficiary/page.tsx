@@ -152,12 +152,12 @@ export default async function BeneficiaryDashboardPage() {
 
   const opportunitiesSection = (
     <section id="opportunities-section" className="space-y-6">
-      <h2 className="text-lg font-bold text-primary">الفرص المتاحة</h2>
-
       {trainingOpportunities.length > 0 && (
         <div className="card">
-          <BookOpen className="mb-3 h-8 w-8 text-primary" />
-          <h3 className="mb-4 text-xl font-bold text-primary">فرص تدريبية</h3>
+          <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-primary">
+            <BookOpen className="h-6 w-6 shrink-0" />
+            فرص تدريبية
+          </h2>
           <ul className="space-y-4">
             {trainingOpportunities.map((opp) => (
               <OpportunityApplyCard
@@ -173,8 +173,10 @@ export default async function BeneficiaryDashboardPage() {
 
       {employmentOpportunities.length > 0 && (
         <div className="card">
-          <Briefcase className="mb-3 h-8 w-8 text-secondary-dark" />
-          <h3 className="mb-4 text-xl font-bold text-primary">فرص توظيف</h3>
+          <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-primary">
+            <Briefcase className="h-6 w-6 shrink-0 text-secondary-dark" />
+            فرص توظيف
+          </h2>
           <ul className="space-y-4">
             {employmentOpportunities.map((opp) => (
               <OpportunityApplyCard
@@ -190,7 +192,10 @@ export default async function BeneficiaryDashboardPage() {
 
       {user.applications.length > 0 && (
         <div className="card">
-          <h3 className="mb-4 text-xl font-bold text-primary">سجل التقديمات</h3>
+          <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-primary">
+            <ClipboardList className="h-6 w-6 shrink-0" />
+            سجل التقديمات
+          </h2>
           <ul className="space-y-2">
             {user.applications.map((app) => (
               <li
