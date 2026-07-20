@@ -69,7 +69,7 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-surface-muted">
       <Navbar showAuth={false} />
       <main className="mx-auto max-w-2xl px-4 py-12">
-        <div className="card">
+        <div className="card-auth">
           <div className="mb-6 flex items-center gap-3">
             <UserPlus className="h-8 w-8 text-primary" />
             <div>

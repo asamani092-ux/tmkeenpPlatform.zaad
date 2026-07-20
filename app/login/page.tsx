@@ -63,7 +63,7 @@ function LoginForm() {
   }
 
   return (
-    <div className="card">
+    <div className="card-auth">
       <div className="mb-6 flex items-center gap-3">
         <LogIn className="h-8 w-8 text-primary" />
         <h1 className="text-2xl font-bold text-primary">تسجيل الدخول</h1>

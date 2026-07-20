@@ -65,11 +65,15 @@ body {
   }
 
   .auth-field {
-    @apply rounded-lg border border-surface-border bg-surface px-4 py-3 text-start;
+    @apply rounded-lg border-0 bg-surface-muted/60 px-4 py-3 text-start;
   }
 
   .input-field-auth {
-    @apply w-full rounded-lg border border-surface-border bg-surface px-4 py-3 text-start text-brand-gray outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/10;
+    @apply w-full rounded-lg border-0 bg-surface px-4 py-3 text-start text-brand-gray outline-none transition focus:ring-2 focus:ring-primary/15;
+  }
+
+  .card-auth {
+    @apply rounded-xl border-0 bg-surface p-6 text-start shadow-sm;
   }
 
   .field-cell-row {
