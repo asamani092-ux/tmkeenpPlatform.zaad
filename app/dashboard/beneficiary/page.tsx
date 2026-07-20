@@ -75,7 +75,7 @@ export default async function BeneficiaryDashboardPage() {
             </p>
           </section>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,16.5rem)_minmax(0,1fr)]">
             <VerticalStageTimeline
               currentStage={pendingUser.stage}
               stageEnteredAt={pendingUser.stageEnteredAt}
