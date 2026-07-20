@@ -21,10 +21,16 @@ export default function DetailRow({
           {label}
         </span>
         <span
-          className={`field-cell-value ${ltr ? "text-start" : ""} ${
-            singleLine ? "truncate whitespace-nowrap break-normal" : ""
-          }`.trim()}
-          dir={ltr ? "ltr" : undefined}
+          className={[
+            "field-cell-value",
+            // Unify: values hug the label side (RTL start). LTR content uses text-end
+            // so email/phone sit on the same edge as Arabic values.
+            ltr ? "text-end" : "text-start",
+            singleLine ? "truncate whitespace-nowrap break-normal" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          dir={ltr ? "ltr" : "rtl"}
           title={typeof value === "string" ? value : undefined}
         >
           {value ?? "—"}

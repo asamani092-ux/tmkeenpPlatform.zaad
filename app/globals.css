@@ -85,7 +85,7 @@ body {
   }
 
   .field-cell-value {
-    @apply min-w-0 flex-1 break-words font-medium text-primary;
+    @apply min-w-0 flex-1 break-words text-start font-medium text-primary;
   }
 
   .field-cell-control {
