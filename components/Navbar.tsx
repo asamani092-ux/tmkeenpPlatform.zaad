@@ -59,15 +59,8 @@ export default function Navbar({
           ) : null}
         </div>
 
-        {/* RTL end (يسار الشاشة): اسم المنصة يمين الشعار (من جهة المستخدم) ومحاذاة أسفل */}
-        <Link
-          href="/"
-          className="flex shrink-0 items-end gap-1.5"
-          aria-label="التمكين المستدام — جمعية الزاد"
-        >
-          <span className="pb-0.5 text-[10px] font-semibold leading-none text-primary sm:text-xs">
-            التمكين المستدام
-          </span>
+        {/* RTL end (يسار الشاشة): الشعار فقط */}
+        <Link href="/" className="flex shrink-0 items-center" aria-label="جمعية الزاد">
           <Image
             src="/logo.png"
             alt="شعار جمعية الزاد"
