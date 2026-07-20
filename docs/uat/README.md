@@ -2,16 +2,20 @@
 
 ## Fillable form (recommended)
 
-Open while the app runs on **`master` / latest wave3** (not old RTL-only branches):
+Open in the browser while the dev server runs:
 
 **http://localhost:3000/uat-checklist**
 
 Progress is saved in `localStorage` (`tmkeen-uat-checklist-v1`).
 
-## Verified on this branch
+## Cursor Canvas (optional)
 
-- PENDING_APPROVAL: banner + profile + stage only — «من مرشدك» / tasks / opportunities hidden
-- CSV export: UTF-8 BOM + `sep=;` + expanded beneficiary columns
-- Login: hard redirect after auth; role dashboards have `loading.tsx`
+Interactive Canvas lives outside the git repo:
+
+`~/.cursor/projects/workspace/canvases/uat-tools-checklist.canvas.tsx`
+
+Open it from the **Canvas panel beside the agent chat**, not as a normal file in `docs/`.
+
+If Canvas fails to load, use `/uat-checklist` instead.
 
 Static reference: [uat-tools-checklist.md](./uat-tools-checklist.md)
