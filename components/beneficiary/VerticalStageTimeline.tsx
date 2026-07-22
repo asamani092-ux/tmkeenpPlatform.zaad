@@ -71,13 +71,13 @@ export default function VerticalStageTimeline({ currentStage, stageEnteredAt }: 
             >
               {!isLast && (
                 <span
-                  className={`absolute start-1/2 top-[11px] h-0.5 w-full ${
+                  className={`pointer-events-none absolute start-[calc(50%+0.9rem)] top-[0.85rem] z-0 h-0.5 w-[calc(100%-1.8rem)] ${
                     isComplete ? "bg-secondary" : "bg-primary/20"
                   }`}
                   aria-hidden
                 />
               )}
-              <div className="relative z-10 mb-1 scale-90 sm:mb-1.5 sm:scale-100">
+              <div className="relative z-10 mb-1 scale-90 bg-transparent sm:mb-1.5 sm:scale-100">
                 <StageDot index={index} isComplete={isComplete} isCurrent={isCurrent} />
               </div>
               <p
