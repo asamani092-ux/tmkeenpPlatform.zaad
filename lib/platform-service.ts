@@ -78,7 +78,6 @@ export async function registerBeneficiary(data: {
   }
 
   const email = data.email.toLowerCase().trim();
-  const { isValidEmailFormat } = await import("@/lib/email-format");
   if (!isValidEmailFormat(email)) {
     return { success: false, error: "البريد الإلكتروني غير صالح" };
   }
