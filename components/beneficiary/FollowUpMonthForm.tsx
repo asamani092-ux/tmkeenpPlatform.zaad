@@ -71,9 +71,6 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
     );
   }
 
-  const dueLabel =
-    current?.dueAt ? formatDaysRemaining(new Date(current.dueAt)) : "";
-
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     startTransition(async () => {
@@ -138,10 +135,6 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
           onClose={closeModal}
           wide
         >
-          {dueLabel && (
-            <p className="mb-4 text-sm text-brand-gray">{dueLabel}</p>
-          )}
-
           {questions.length === 0 ? (
             <p className="text-brand-gray">لم يُعدّ المدير أسئلة هذا الشهر بعد.</p>
           ) : (
