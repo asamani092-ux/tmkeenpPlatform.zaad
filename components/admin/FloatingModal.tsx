@@ -12,27 +12,31 @@ type Props = {
 export default function FloatingModal({ title, onClose, children, wide }: Props) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
       onClick={onClose}
     >
       <div
-        className={`card max-h-[90vh] w-full overflow-y-auto text-start shadow-xl mx-2 sm:mx-4 ${
-          wide ? "max-w-3xl" : "max-w-lg"
+        className={`flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-2xl border-0 bg-surface text-start shadow-xl sm:mx-4 sm:max-h-[90vh] sm:rounded-xl sm:border-2 sm:border-surface-border ${
+          wide ? "sm:max-w-2xl" : "sm:max-w-lg"
         }`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-4 flex items-start gap-4">
-          <h2 className="flex-1 text-xl font-bold text-primary">{title}</h2>
+        <div className="flex shrink-0 items-start gap-3 border-b border-surface-border px-4 py-3 sm:px-6 sm:py-4">
+          <h2 className="min-w-0 flex-1 text-base font-bold leading-snug text-primary sm:text-xl">
+            {title}
+          </h2>
           <button
             type="button"
             onClick={onClose}
-            className="ms-auto shrink-0 rounded-lg p-1 text-brand-gray hover:bg-surface-muted"
+            className="ms-auto shrink-0 rounded-lg p-1.5 text-brand-gray hover:bg-surface-muted"
             aria-label="إغلاق"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
-        {children}
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
+          {children}
+        </div>
       </div>
     </div>
   );

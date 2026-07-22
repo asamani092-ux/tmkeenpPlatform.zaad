@@ -78,6 +78,10 @@ body {
     @apply rounded-lg border-0 bg-transparent px-0 py-1 text-start;
   }
 
+  .field-plain {
+    @apply border-0 bg-transparent px-0 py-0 text-start;
+  }
+
   .input-field-auth {
     @apply w-full rounded-lg border border-surface-border bg-transparent px-4 py-3 text-start text-brand-gray outline-none transition focus:border-red-800 focus:ring-2 focus:ring-red-800/20;
   }

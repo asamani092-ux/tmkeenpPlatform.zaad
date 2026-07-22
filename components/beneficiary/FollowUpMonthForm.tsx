@@ -148,20 +148,22 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
           {questions.length === 0 ? (
             <p className="text-brand-gray">لم يُعدّ المدير أسئلة هذا الشهر بعد.</p>
           ) : (
-            <form noValidate onSubmit={handleSubmit} className="space-y-4">
-              {questions.map((q) => (
+            <form noValidate onSubmit={handleSubmit} className="space-y-5">
+              {questions.map((q, index) => (
                 <FieldRow
                   key={q.id}
-                  label={`${q.label}${q.required ? " *" : ""}`}
-                  align={q.fieldType === "textarea" ? "start" : "center"}
+                  label={`${index + 1}. ${q.label}${q.required ? " *" : ""}`}
+                  variant="plain"
+                  htmlFor={`fu-q-${q.id}`}
                 >
-                  <div>
+                  <div className="w-full">
                     {q.helperText && (
-                      <p className="mb-1 text-xs text-brand-gray">{q.helperText}</p>
+                      <p className="mb-1.5 text-xs text-brand-gray">{q.helperText}</p>
                     )}
                     {q.fieldType === "textarea" ? (
                       <textarea
-                        className="input-field resize-none"
+                        id={`fu-q-${q.id}`}
+                        className="input-field w-full resize-none"
                         rows={3}
                         required={q.required}
                         value={answers[q.id] ?? ""}
@@ -171,7 +173,8 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
                       />
                     ) : q.fieldType === "yes_no" ? (
                       <select
-                        className="input-field"
+                        id={`fu-q-${q.id}`}
+                        className="input-field w-full"
                         required={q.required}
                         value={answers[q.id] ?? ""}
                         onChange={(e) =>
@@ -184,7 +187,8 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
                       </select>
                     ) : q.fieldType === "select" ? (
                       <select
-                        className="input-field"
+                        id={`fu-q-${q.id}`}
+                        className="input-field w-full"
                         required={q.required}
                         value={answers[q.id] ?? ""}
                         onChange={(e) =>
@@ -199,9 +203,12 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
                         ))}
                       </select>
                     ) : q.fieldType === "radio" ? (
-                      <div className="flex flex-wrap gap-4">
+                      <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap">
                         {q.options.map((o) => (
-                          <label key={o} className="flex items-center gap-2 text-sm">
+                          <label
+                            key={o}
+                            className="flex items-center gap-2 rounded-lg border border-surface-border px-3 py-2 text-sm"
+                          >
                             <input
                               type="radio"
                               name={`q-${q.id}`}
@@ -218,7 +225,8 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
                       </div>
                     ) : (
                       <input
-                        className="input-field"
+                        id={`fu-q-${q.id}`}
+                        className="input-field w-full"
                         required={q.required}
                         value={answers[q.id] ?? ""}
                         onChange={(e) =>
@@ -229,7 +237,7 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
                   </div>
                 </FieldRow>
               ))}
-              <SubmitButton loading={pending} className="btn-primary w-full">
+              <SubmitButton loading={pending} className="btn-primary mt-2 w-full !py-3">
                 إرسال النموذج
               </SubmitButton>
             </form>
