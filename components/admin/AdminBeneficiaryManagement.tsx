@@ -374,11 +374,12 @@ export default function AdminBeneficiaryManagement({
           onClose={() => {
             setSelected(null);
             setEditMode(false);
+            setConfirmDeleteId(null);
           }}
           wide
         >
           <div className="space-y-4 text-start">
-            <div className="flex flex-col gap-0.5 rounded-lg bg-surface-muted px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-2 rounded-lg bg-surface-muted px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <span className="font-semibold text-primary">المرحلة: </span>
                 {STAGE_LABELS[selected.stage]}
@@ -388,6 +389,19 @@ export default function AdminBeneficiaryManagement({
                   </span>
                 )}
               </div>
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => handleDeleteClick(selected.id)}
+                className={`inline-flex shrink-0 items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                  confirmDeleteId === selected.id
+                    ? "bg-red-600 text-white"
+                    : "border border-red-200 text-red-700 hover:bg-red-50"
+                }`}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                {confirmDeleteId === selected.id ? "تأكيد الحذف؟" : "حذف المستفيد"}
+              </button>
             </div>
 
             {editMode ? (
