@@ -408,7 +408,6 @@ export default async function AdminDashboardPage() {
             </div>
             <div>
               <p className="text-sm font-bold text-primary">في التوظيف / متابعة</p>
-              <p className="text-xs text-brand-gray">EMPLOYMENT + FOLLOW_UP</p>
             </div>
           </div>
         </div>
