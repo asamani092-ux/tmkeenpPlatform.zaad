@@ -84,6 +84,7 @@ function LoginForm() {
             name="email"
             type="email"
             autoComplete="username"
+            required
             className="input-field-auth"
             placeholder="email@example.com"
             dir="ltr"
@@ -95,6 +96,7 @@ function LoginForm() {
             name="password"
             type="password"
             autoComplete="current-password"
+            required
             className="input-field-auth"
             placeholder="••••••••"
             dir="ltr"
