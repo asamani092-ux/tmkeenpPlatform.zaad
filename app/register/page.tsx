@@ -10,7 +10,6 @@ import { toastError, toastSuccess } from "@/lib/toast";
 import { useFormFieldErrors } from "@/hooks/useFormFieldErrors";
 import { uploadPdfFile } from "@/lib/upload-client";
 import { registerCopy } from "@/lib/copy/ar";
-import { getAllowedEmailDomains } from "@/lib/allowed-email-domains";
 import { UserPlus } from "lucide-react";
 
 type Step = "form" | "otp";
@@ -105,8 +104,6 @@ export default function RegisterPage() {
     });
   }
 
-  const allowedDomains = getAllowedEmailDomains().slice(0, 8).join("، ");
-
   return (
     <div className="min-h-screen bg-surface-muted">
       <Navbar showAuth={false} />
@@ -164,21 +161,16 @@ export default function RegisterPage() {
                   className="sm:col-span-2"
                   error={fieldError("email")}
                 >
-                  <div>
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                      required
-                      className="input-field-auth"
-                      placeholder="name@gmail.com"
-                      dir="ltr"
-                    />
-                    <p className="mt-1 text-xs text-brand-gray">
-                      النطاقات المقبولة فقط مثل: {allowedDomains}…
-                    </p>
-                  </div>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    className="input-field-auth"
+                    placeholder="email@example.com"
+                    dir="ltr"
+                  />
                 </FieldRow>
                 <FieldRow
                   label="كلمة المرور"

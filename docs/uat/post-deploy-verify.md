@@ -10,7 +10,7 @@
 
 ## register email OTP
 
-- المسار: `/register` → بعد تعبئة النموذج يُرسل رمز 6 أرقام إلى البريد (نطاقات معروفة فقط: Gmail/Outlook/Yahoo/Hotmail…)
+- المسار: `/register` → بعد تعبئة النموذج يُرسل رمز 6 أرقام إلى البريد (صيغة بريد عامة + تحقق OTP)
 - تحقق: POST `/api/auth/register` ثم POST `/api/auth/register/verify` مع الرمز
 - يتطلب `SMTP_*` في الإنتاج؛ بدون SMTP في التطوير يظهر `previewCode` في الواجهة
 

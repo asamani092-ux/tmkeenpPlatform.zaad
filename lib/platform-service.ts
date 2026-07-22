@@ -64,11 +64,7 @@ export async function registerBeneficiaryFromVerifiedPayload(
 ): Promise<ActionResult> {
   const email = data.email.toLowerCase().trim();
   if (!isValidEmailFormat(email)) {
-    return {
-      success: false,
-      error:
-        "البريد غير مقبول — استخدم Gmail أو Outlook أو Yahoo أو Hotmail أو مزوداً معروفاً مشابهًا",
-    };
+    return { success: false, error: "البريد الإلكتروني غير صالح" };
   }
 
   const existing = await prisma.user.findUnique({ where: { email } });

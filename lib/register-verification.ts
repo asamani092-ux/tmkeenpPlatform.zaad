@@ -59,11 +59,7 @@ export function validateRegisterPayload(
   }
   const email = data.email.toLowerCase().trim();
   if (!isValidEmailFormat(email)) {
-    return {
-      success: false,
-      error:
-        "البريد غير مقبول — استخدم Gmail أو Outlook أو Yahoo أو Hotmail أو مزوداً معروفاً مشابهًا",
-    };
+    return { success: false, error: "البريد الإلكتروني غير صالح" };
   }
   const phone = normalizePhone(data.phone);
   if (!/^(05\d{8}|\+9665\d{8}|9665\d{8})$/.test(phone)) {

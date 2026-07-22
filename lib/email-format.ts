@@ -1,8 +1,6 @@
-import { isAllowedEmailDomain } from "@/lib/allowed-email-domains";
-
 /**
- * General ASCII email shape — Time O(n), Space O(1).
- * Used for sender settings (any organizational domain).
+ * ASCII email shape check — Time O(n), Space O(1).
+ * Registration relies on email OTP for ownership, not a domain allowlist.
  */
 export function isValidAsciiEmail(email: string): boolean {
   const value = email.trim().toLowerCase();
@@ -28,12 +26,7 @@ export function isValidAsciiEmail(email: string): boolean {
   return true;
 }
 
-/**
- * Beneficiary registration email — known providers + local ≥ 3.
- */
+/** Alias used by registration / shared validators */
 export function isValidEmailFormat(email: string): boolean {
-  if (!isValidAsciiEmail(email)) return false;
-  const local = email.trim().toLowerCase().split("@")[0] ?? "";
-  if (local.length < 3) return false;
-  return isAllowedEmailDomain(email);
+  return isValidAsciiEmail(email);
 }
