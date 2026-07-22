@@ -305,3 +305,69 @@ export function createDefaultUatState(): UatChecklistState {
     notes: {},
   };
 }
+
+/** Build Markdown report for pasting into the agent chat (includes full notes). */
+export function buildUatAgentExport(state: UatChecklistState): string {
+  const categoryLabel = Object.fromEntries(
+    UAT_NOTE_CATEGORIES.map((c) => [c.value, c.label])
+  ) as Record<string, string>;
+
+  let approved = 0;
+  let needsWork = 0;
+  let untried = 0;
+
+  const rows = UAT_ALL_TOOLS.map((t) => {
+    const verdict = state.verdicts[t.id] ?? UAT_DEFAULT_VERDICT;
+    if (verdict === "يعتمد") approved += 1;
+    else if (verdict === "يحتاج تحسين") needsWork += 1;
+    else untried += 1;
+    const cat = state.noteCategories[t.id] ?? "";
+    const note = (state.notes[t.id] ?? "").trim();
+    return {
+      id: t.id,
+      tool: t.tool,
+      group: t.groupTitle,
+      path: t.path,
+      verdict,
+      category: cat ? categoryLabel[cat] ?? cat : "—",
+      note: note || "—",
+    };
+  });
+
+  const lines: string[] = [
+    "# تقرير تقييم أدوات UAT — من /uat-checklist",
+    "",
+    `الإجمالي: ${UAT_ALL_TOOLS.length} | يعتمد: ${approved} | يحتاج تحسين: ${needsWork} | غير مجرّب: ${untried}`,
+    "",
+    "## يحتاج تحسين (أولوية الإصلاح)",
+  ];
+
+  const needs = rows.filter((r) => r.verdict === "يحتاج تحسين");
+  if (needs.length === 0) lines.push("_لا يوجد_");
+  else {
+    for (const r of needs) {
+      lines.push(
+        `- \`${r.id}\` | ${r.tool} | ${r.group} | ${r.path} | تصنيف: ${r.category} | ملاحظة: ${r.note}`
+      );
+    }
+  }
+
+  lines.push("", "## يعتمد");
+  const ok = rows.filter((r) => r.verdict === "يعتمد");
+  if (ok.length === 0) lines.push("_لا يوجد_");
+  else for (const r of ok) lines.push(`- \`${r.id}\` | ${r.tool}`);
+
+  lines.push("", "## جميع البنود");
+  for (const r of rows) {
+    lines.push(
+      `| ${r.id} | ${r.tool} | ${r.group} | ${r.verdict} | ${r.category} | ${r.note.replace(/\|/g, "/")} |`
+    );
+  }
+
+  lines.push(
+    "",
+    "---",
+    "تعليمات للوكيل: نفّذ إصلاح كل بند تحت «يحتاج تحسين» مع الملاحظات؛ لا تمسح localStorage للتقييمات."
+  );
+  return lines.join("\n");
+}
