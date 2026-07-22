@@ -107,30 +107,10 @@ export default function UatChecklistForm() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-lg border border-surface-border bg-surface-muted p-4 text-sm text-brand-gray">
-        <p>http://localhost:3000 — كلمة المرور من prisma/seed.ts</p>
-        <p className="mt-1">
-          admin@alzaad.org · guide@alzaad.org · beneficiary1–4@alzaad.org
-        </p>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-4">
-        {[
-          { label: "الإجمالي", value: stats.total },
-          { label: "يعتمد", value: stats.approved, className: "text-success" },
-          { label: "يحتاج تحسين", value: stats.needsWork, className: "text-warning" },
-          { label: "غير مجرّب", value: stats.untried },
-        ].map((item) => (
-          <div key={item.label} className="card-section text-center">
-            <div className={`text-2xl font-bold ${item.className ?? "text-primary"}`}>
-              {item.value}
-            </div>
-            <div className="text-sm text-brand-gray">{item.label}</div>
-          </div>
-        ))}
-      </div>
-
-      <div className="card-section space-y-3 border-2 border-primary/30">
+      <div
+        id="uat-export"
+        className="card-section space-y-3 border-2 border-primary/40 bg-primary/5"
+      >
         <h2 className="text-lg font-bold text-primary">تصدير النتائج للوكيل</h2>
         <p className="text-sm text-brand-gray">
           التقرير يشمل الأداة والتقييم والتصنيف والملاحظة كاملة. تقييماتك في المتصفح لا تُحذف.
@@ -165,6 +145,29 @@ export default function UatChecklistForm() {
             onFocus={(e) => e.currentTarget.select()}
           />
         ) : null}
+      </div>
+
+      <div className="rounded-lg border border-surface-border bg-surface-muted p-4 text-sm text-brand-gray">
+        <p>http://localhost:3000 — كلمة المرور من prisma/seed.ts</p>
+        <p className="mt-1">
+          admin@alzaad.org · guide@alzaad.org · beneficiary1–4@alzaad.org
+        </p>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-4">
+        {[
+          { label: "الإجمالي", value: stats.total },
+          { label: "يعتمد", value: stats.approved, className: "text-success" },
+          { label: "يحتاج تحسين", value: stats.needsWork, className: "text-warning" },
+          { label: "غير مجرّب", value: stats.untried },
+        ].map((item) => (
+          <div key={item.label} className="card-section text-center">
+            <div className={`text-2xl font-bold ${item.className ?? "text-primary"}`}>
+              {item.value}
+            </div>
+            <div className="text-sm text-brand-gray">{item.label}</div>
+          </div>
+        ))}
       </div>
 
       <div className="card-section space-y-3">
