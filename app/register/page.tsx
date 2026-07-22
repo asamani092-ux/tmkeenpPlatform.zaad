@@ -349,9 +349,9 @@ export default function RegisterPage() {
 
           <p className="mt-6 text-center text-sm text-brand-gray">
             {registerCopy.hasAccount}{" "}
-            <Link href="/login" className="font-semibold text-primary hover:underline">
+            <FullPageLink href="/login" className="font-semibold text-primary hover:underline">
               {registerCopy.loginLink}
-            </Link>
+            </FullPageLink>
           </p>
         </div>
       </main>
