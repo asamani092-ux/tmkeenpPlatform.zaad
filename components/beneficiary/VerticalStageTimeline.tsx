@@ -1,5 +1,10 @@
 import { Stage } from "@/generated/prisma/client";
-import { STAGE_LABELS, STAGE_ORDER, getStageProgress } from "@/lib/stages";
+import {
+  STAGE_LABELS,
+  STAGE_LABELS_SHORT,
+  STAGE_ORDER,
+  getStageProgress,
+} from "@/lib/stages";
 import { Check } from "lucide-react";
 
 type Props = {
