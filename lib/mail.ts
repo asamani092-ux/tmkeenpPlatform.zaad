@@ -27,7 +27,11 @@ function getTransporter(): nodemailer.Transporter | null {
   return transporter;
 }
 
-/** Send email via SMTP — O(1) */
+/**
+ * Send email via SMTP — O(1).
+ * `from` must be the admin settings senderEmail (envelope From).
+ * SMTP_USER/PASS only authenticate the transport.
+ */
 export async function sendMail(params: SendMailParams): Promise<boolean> {
   const tx = getTransporter();
   if (!tx) {
@@ -35,13 +39,21 @@ export async function sendMail(params: SendMailParams): Promise<boolean> {
     return false;
   }
 
-  const from = params.from ?? process.env.SMTP_USER ?? "noreply@tmkeen.local";
+  const from = (params.from ?? "").trim();
+  if (!from) {
+    console.error("[EMAIL] missing From — pass settings.senderEmail");
+    return false;
+  }
 
   await tx.sendMail({
     from,
     to: params.to,
     subject: params.subject,
     text: params.text,
+    envelope: {
+      from,
+      to: params.to,
+    },
   });
 
   return true;

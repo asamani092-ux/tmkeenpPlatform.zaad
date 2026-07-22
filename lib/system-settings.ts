@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import { isValidEmailFormat } from "@/lib/email-format";
+import { isValidAsciiEmail } from "@/lib/email-format";
 
 export type SystemSettings = {
   senderEmail: string;
@@ -13,30 +13,29 @@ const DEFAULT_SETTINGS: SystemSettings = {
   senderEmail: "noreply@tmkeen.local",
 };
 
+/** Sender / admin email check — any valid domain, not registration allowlist */
 export function isValidEmail(email: string): boolean {
-  return isValidEmailFormat(email);
+  return isValidAsciiEmail(email);
 }
 
-/** Load system settings from file — O(1) */
+/** Load system settings from file — O(1). Prefer saved senderEmail always. */
 export async function getSystemSettings(): Promise<SystemSettings> {
   try {
     const raw = await fs.readFile(SETTINGS_PATH, "utf-8");
     const parsed = JSON.parse(raw) as Partial<SystemSettings>;
-    const smtpUser = process.env.SMTP_USER?.trim();
     const stored = parsed.senderEmail?.trim();
-    const fallback =
-      stored && stored !== DEFAULT_SETTINGS.senderEmail
-        ? stored
-        : smtpUser || DEFAULT_SETTINGS.senderEmail;
-    return {
-      senderEmail: fallback,
-    };
+    if (stored && isValidAsciiEmail(stored)) {
+      return { senderEmail: stored.toLowerCase() };
+    }
   } catch {
-    const smtpUser = process.env.SMTP_USER?.trim();
-    return {
-      senderEmail: smtpUser || DEFAULT_SETTINGS.senderEmail,
-    };
+    /* missing file → fallback */
   }
+
+  const smtpUser = process.env.SMTP_USER?.trim();
+  if (smtpUser && isValidAsciiEmail(smtpUser)) {
+    return { senderEmail: smtpUser.toLowerCase() };
+  }
+  return { ...DEFAULT_SETTINGS };
 }
 
 /** Persist system settings to file — O(1) */
@@ -47,7 +46,7 @@ export async function saveSystemSettings(
   await fs.writeFile(
     SETTINGS_PATH,
     JSON.stringify(
-      { senderEmail: settings.senderEmail.trim() },
+      { senderEmail: settings.senderEmail.trim().toLowerCase() },
       null,
       2
     ),

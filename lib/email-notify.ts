@@ -177,23 +177,28 @@ async function logEmails(from: string, emails: EmailPayload[]): Promise<void> {
 
 
 async function dispatch(from: string, emails: EmailPayload[]): Promise<void> {
-
-  for (const email of emails) {
-
-    if (isSmtpConfigured()) {
-
-      await sendMail({ from, to: email.to, subject: email.subject, text: email.body });
-
-    } else {
-
-      console.log("[EMAIL SIMULATION]", { from, ...email });
-
-    }
-
+  const sender = from.trim();
+  if (!sender) {
+    throw new Error("senderEmail مطلوب من إعدادات النظام");
   }
 
-  await logEmails(from, emails);
+  for (const email of emails) {
+    if (isSmtpConfigured()) {
+      const ok = await sendMail({
+        from: sender,
+        to: email.to,
+        subject: email.subject,
+        text: email.body,
+      });
+      if (!ok) {
+        throw new Error(`فشل إرسال البريد إلى ${email.to}`);
+      }
+    } else {
+      console.log("[EMAIL SIMULATION]", { from: sender, ...email });
+    }
+  }
 
+  await logEmails(sender, emails);
 }
 
 
