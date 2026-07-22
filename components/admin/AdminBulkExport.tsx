@@ -16,7 +16,7 @@ export default function AdminBulkExport({ sections }: Props) {
       title="ملف Excel بورقة لكل قسم"
     >
       <FileSpreadsheet className="h-4 w-4" />
-      تصدير Excel (أوراق متعددة)
+      تصدير Excel
     </button>
   );
 }
