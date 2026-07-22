@@ -11,6 +11,9 @@ export default function UatChecklistPage() {
           <p className="mt-2 text-sm text-brand-gray">
             املأ التقييم لكل أداة. يُحفظ تلقائياً في المتصفح.
           </p>
+          <p className="mt-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm font-semibold text-primary">
+            أعلى الصفحة: قسم «تصدير النتائج للوكيل» — زر «نسخ التقرير للحافظة»
+          </p>
         </div>
         <UatChecklistForm />
       </main>
