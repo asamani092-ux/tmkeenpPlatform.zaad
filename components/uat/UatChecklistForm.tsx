@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  buildUatAgentExport,
   createDefaultUatState,
   UAT_ALL_TOOLS,
   UAT_DEFAULT_VERDICT,
@@ -35,6 +36,8 @@ function loadState(): UatChecklistState {
 export default function UatChecklistForm() {
   const [state, setState] = useState<UatChecklistState>(createDefaultUatState);
   const [ready, setReady] = useState(false);
+  const [showExport, setShowExport] = useState(true);
+  const [copyStatus, setCopyStatus] = useState<"idle" | "ok" | "fail">("idle");
 
   useEffect(() => {
     setState(loadState());
@@ -67,7 +70,18 @@ export default function UatChecklistForm() {
     );
   }, [state.verdicts]);
 
+  const exportText = useMemo(() => buildUatAgentExport(state), [state]);
   const reviewedCount = stats.approved + stats.needsWork;
+
+  async function copyExport() {
+    try {
+      await navigator.clipboard.writeText(exportText);
+      setCopyStatus("ok");
+    } catch {
+      setCopyStatus("fail");
+    }
+    window.setTimeout(() => setCopyStatus("idle"), 2500);
+  }
 
   function goTo(index: number) {
     const next = UAT_ALL_TOOLS[index];
@@ -114,6 +128,43 @@ export default function UatChecklistForm() {
             <div className="text-sm text-brand-gray">{item.label}</div>
           </div>
         ))}
+      </div>
+
+      <div className="card-section space-y-3 border-2 border-primary/30">
+        <h2 className="text-lg font-bold text-primary">تصدير النتائج للوكيل</h2>
+        <p className="text-sm text-brand-gray">
+          التقرير يشمل الأداة والتقييم والتصنيف والملاحظة كاملة. تقييماتك في المتصفح لا تُحذف.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" className="btn-primary px-4 py-2" onClick={copyExport}>
+            نسخ التقرير للحافظة
+          </button>
+          <button
+            type="button"
+            className="btn-secondary px-4 py-2"
+            onClick={() => setShowExport((v) => !v)}
+          >
+            {showExport ? "إخفاء التقرير" : "عرض التقرير"}
+          </button>
+          {copyStatus === "ok" ? (
+            <span className="self-center text-sm text-success">تم النسخ — الصقه في شات Cursor</span>
+          ) : null}
+          {copyStatus === "fail" ? (
+            <span className="self-center text-sm text-warning">
+              فشل النسخ — حدّد النص يدوياً (Ctrl+A ثم Ctrl+C)
+            </span>
+          ) : null}
+        </div>
+        {showExport ? (
+          <textarea
+            className="input-field resize-y font-mono text-xs"
+            rows={14}
+            readOnly
+            dir="rtl"
+            value={exportText}
+            onFocus={(e) => e.currentTarget.select()}
+          />
+        ) : null}
       </div>
 
       <div className="card-section space-y-3">
