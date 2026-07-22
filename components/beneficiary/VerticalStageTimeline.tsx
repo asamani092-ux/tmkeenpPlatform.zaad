@@ -18,17 +18,17 @@ function StageDot({
 }) {
   if (isComplete) {
     return (
-      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-red-900">
+      <span className="relative z-10 flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-red-900">
         <Check className="h-3.5 w-3.5" />
       </span>
     );
   }
   return (
     <span
-      className={`flex h-7 w-7 items-center justify-center rounded-full border-2 text-[11px] font-bold ${
+      className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full border-2 text-[11px] font-bold ${
         isCurrent
           ? "border-primary bg-primary text-white"
-          : "border-primary/30 bg-transparent text-brand-gray"
+          : "border-primary/30 bg-surface text-brand-gray"
       }`}
     >
       {index + 1}
