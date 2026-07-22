@@ -21,7 +21,9 @@ export default function FieldRow({
 }: Props) {
   const cellClass = variant === "auth" ? "auth-field" : "field-cell";
   const invalidClass = error
-    ? "[&_.input-field]:border-red-800 [&_.input-field]:ring-2 [&_.input-field]:ring-red-800/25 [&_.input-field-auth]:border-red-800 [&_.input-field-auth]:ring-2 [&_.input-field-auth]:ring-red-800/25"
+    ? variant === "auth"
+      ? "[&_.input-field-auth]:ring-2 [&_.input-field-auth]:ring-red-800/30"
+      : "[&_.input-field]:border-red-800 [&_.input-field]:ring-2 [&_.input-field]:ring-red-800/25"
     : "";
   return (
     <div className={`${cellClass} ${className}`.trim()}>

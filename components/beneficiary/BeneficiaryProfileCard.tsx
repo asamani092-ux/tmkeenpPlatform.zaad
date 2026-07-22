@@ -42,9 +42,26 @@ export default function BeneficiaryProfileCard({ profile }: Props) {
       </h2>
 
       <FieldGrid className="gap-3">
-        <DetailRow label="الاسم" value={profile.name} />
-        <DetailRow label="البريد" value={profile.email} ltr />
-        <DetailRow label="الجوال" value={profile.phone} ltr />
+        <DetailRow
+          label="الاسم"
+          value={profile.name}
+          singleLine
+          className="sm:col-span-2"
+        />
+        <DetailRow
+          label="البريد"
+          value={profile.email}
+          ltr
+          singleLine
+          className="sm:col-span-2"
+        />
+        <DetailRow
+          label="الجوال"
+          value={profile.phone}
+          ltr
+          singleLine
+          className="sm:col-span-2"
+        />
         <DetailRow label="المستوى التعليمي" value={profile.educationLevel || "—"} />
         <DetailRow
           label="السيرة الذاتية"

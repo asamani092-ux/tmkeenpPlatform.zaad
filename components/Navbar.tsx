@@ -31,16 +31,18 @@ export default function Navbar({
 
   return (
     <header className="border-b border-surface-border bg-surface shadow-sm">
+      {/* RTL: أول عنصر = يمين الشاشة (الإجراءات)، ثاني عنصر = يسار (الشعار) */}
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
-        {/* RTL start (يمين): اسم المستخدم + تعديل + إشعارات + لوحة التحكم + خروج */}
-        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden sm:gap-3">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           {showAuth && userName && isBeneficiary && unifiedProfile ? (
             <BeneficiaryNavbarActions userName={userName} profile={unifiedProfile} />
           ) : showAuth && userName && isGuide && userEmail ? (
             <GuideNavbarActions userName={userName} email={userEmail} />
           ) : showAuth && userName ? (
             <>
-              <span className="truncate text-sm font-semibold text-primary">{userName}</span>
+              <span className="max-w-[160px] truncate text-sm font-semibold text-primary sm:max-w-[220px]">
+                {userName}
+              </span>
               {userId && <NotificationBell />}
               <form action={logoutHref} method="POST" noValidate className="shrink-0">
                 <button
@@ -59,8 +61,7 @@ export default function Navbar({
           ) : null}
         </div>
 
-        {/* RTL end (يسار): الشعار + اسم المنصة */}
-        <Link href="/" className="flex shrink-0 items-center gap-2">
+        <Link href="/" className="flex shrink-0 items-center" aria-label="جمعية الزاد">
           <Image
             src="/logo.png"
             alt="شعار جمعية الزاد"
@@ -70,9 +71,6 @@ export default function Navbar({
             priority
             unoptimized
           />
-          <span className="hidden text-base font-bold text-primary sm:inline md:text-lg">
-            منصة تمكين
-          </span>
         </Link>
       </div>
     </header>

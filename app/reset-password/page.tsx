@@ -58,7 +58,7 @@ function ResetPasswordForm() {
 
   if (!token) {
     return (
-      <div className="card text-center">
+      <div className="card-auth text-center">
         <p className="text-brand-gray">{resetPasswordCopy.invalidToken}</p>
         <Link href="/forgot-password" className="mt-4 inline-block text-primary hover:underline">
           طلب رابط جديد
@@ -68,7 +68,7 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="card">
+    <div className="card-auth">
       <div className="mb-6 flex items-center gap-3">
         <KeyRound className="h-8 w-8 text-primary" />
         <div>
@@ -78,26 +78,26 @@ function ResetPasswordForm() {
       </div>
 
       <form noValidate onSubmit={handleSubmit} className="space-y-4">
-        <FieldRow label={resetPasswordCopy.passwordLabel} htmlFor="password" ltr error={fieldError("password")}>
+        <FieldRow label={resetPasswordCopy.passwordLabel} htmlFor="password" ltr variant="auth" error={fieldError("password")}>
           <input
             id="password"
             name="password"
             type="password"
             required
             minLength={6}
-            className="input-field"
+            className="input-field-auth"
             dir="ltr"
             autoComplete="new-password"
           />
         </FieldRow>
-        <FieldRow label={resetPasswordCopy.confirmLabel} htmlFor="confirm" ltr error={fieldError("confirm")}>
+        <FieldRow label={resetPasswordCopy.confirmLabel} htmlFor="confirm" ltr variant="auth" error={fieldError("confirm")}>
           <input
             id="confirm"
             name="confirm"
             type="password"
             required
             minLength={6}
-            className="input-field"
+            className="input-field-auth"
             dir="ltr"
             autoComplete="new-password"
           />

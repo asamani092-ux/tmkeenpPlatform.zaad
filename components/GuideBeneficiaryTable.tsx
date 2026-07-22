@@ -191,6 +191,10 @@ export default function GuideBeneficiaryTable({
 
     if (!selected) return;
 
+    const prevOverflow = document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+
     const onKey = (e: KeyboardEvent) => {
 
       if (e.key === "Escape") setSelected(null);
@@ -199,7 +203,13 @@ export default function GuideBeneficiaryTable({
 
     window.addEventListener("keydown", onKey);
 
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+
+      document.body.style.overflow = prevOverflow;
+
+      window.removeEventListener("keydown", onKey);
+
+    };
 
   }, [selected]);
 
@@ -850,125 +860,99 @@ export default function GuideBeneficiaryTable({
 
         return (
         <div
-
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4"
           onClick={() => setSelected(null)}
-
+          role="presentation"
         >
-
           <div
-
-            className="card max-h-[90vh] w-full max-w-2xl overflow-y-auto"
-
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="guide-beneficiary-modal-title"
+            className="card flex h-[100dvh] max-h-[100dvh] w-full max-w-2xl flex-col overflow-hidden rounded-none !p-0 pb-[env(safe-area-inset-bottom)] sm:h-auto sm:max-h-[90vh] sm:rounded-xl"
             onClick={(e) => e.stopPropagation()}
-
           >
-
-            <div className="mb-4 flex items-start justify-between">
-
-              <button
-
-                type="button"
-
-                onClick={() => setSelected(null)}
-
-                className="rounded-lg p-1 text-brand-gray hover:bg-surface-muted"
-
-              >
-
-                <X className="h-5 w-5" />
-
-              </button>
-
-              <div className="text-start">
-
-                <h3 className="text-xl font-bold text-primary">{selected.name}</h3>
-
-                <p className="text-sm text-brand-gray">
-                  المرحلة: {STAGE_LABELS[selected.stage]}
-                  {selected.pendingStage && (
-                    <span className="mr-2 rounded bg-yellow-100 px-2 py-0.5 text-xs font-semibold text-red-900">
-                      طلب معلّق: {STAGE_LABELS[selected.pendingStage]}
-                    </span>
-                  )}
-                </p>
-
-              </div>
-
-            </div>
-
-
-
-            {upcomingSession && (
-              <div className="mb-4 rounded-lg border border-secondary/40 bg-secondary/15 px-4 py-3">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex flex-wrap gap-2">
-                    {upcomingSession.meetingLink ? (
-                      <a
-                        href={upcomingSession.meetingLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn-primary inline-flex !px-3 !py-1.5 text-xs"
-                      >
-                        <Video className="h-3 w-3" />
-                        الدخول للجلسة
-                      </a>
-                    ) : upcomingSession.location ? (
-                      <span className="inline-flex items-center gap-1 text-xs text-brand-gray">
-                        <MapPin className="h-3 w-3" />
-                        {upcomingSession.location}
+            <div className="shrink-0 space-y-3 border-b border-surface-border px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-6 sm:py-4">
+              <div className="flex items-start justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => setSelected(null)}
+                  className="shrink-0 rounded-lg p-1 text-brand-gray hover:bg-surface-muted"
+                  aria-label="إغلاق"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+                <div className="min-w-0 flex-1 text-start">
+                  <h3
+                    id="guide-beneficiary-modal-title"
+                    className="truncate text-lg font-bold text-primary sm:text-xl"
+                  >
+                    {selected.name}
+                  </h3>
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-brand-gray">
+                    <span>المرحلة: {STAGE_LABELS[selected.stage]}</span>
+                    {selected.pendingStage && (
+                      <span className="rounded bg-yellow-100 px-2 py-0.5 text-xs font-semibold text-red-900">
+                        طلب معلّق: {STAGE_LABELS[selected.pendingStage]}
                       </span>
-                    ) : null}
-                  </div>
-                  <div className="text-start">
-                    <p className="flex items-center justify-end gap-1 text-sm font-bold text-primary">
-                      <AlertCircle className="h-4 w-4 text-secondary-dark" />
-                      جلسة قادمة
-                    </p>
-                    <p className="text-xs text-brand-gray">
-                      {new Date(upcomingSession.date).toLocaleString("ar-SA")}
-                    </p>
+                    )}
                   </div>
                 </div>
               </div>
-            )}
 
+              {upcomingSession && (
+                <div className="rounded-lg border border-secondary/40 bg-secondary/15 px-3 py-2.5 sm:px-4 sm:py-3">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-3">
+                    <div className="text-start">
+                      <p className="flex items-center gap-1 text-sm font-bold text-primary">
+                        <AlertCircle className="h-4 w-4 shrink-0 text-secondary-dark" />
+                        جلسة قادمة
+                      </p>
+                      <p className="text-xs text-brand-gray">
+                        {new Date(upcomingSession.date).toLocaleString("ar-SA")}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {upcomingSession.meetingLink ? (
+                        <a
+                          href={upcomingSession.meetingLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-primary inline-flex w-full justify-center !px-3 !py-1.5 text-xs sm:w-auto"
+                        >
+                          <Video className="h-3 w-3" />
+                          الدخول للجلسة
+                        </a>
+                      ) : upcomingSession.location ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-brand-gray">
+                          <MapPin className="h-3 w-3" />
+                          {upcomingSession.location}
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              )}
 
-
-            <div className="mb-6 flex gap-2 border-b border-surface-border pb-2">
-
-              {tabs.map(({ id, label, icon: Icon }) => (
-
-                <button
-
-                  key={id}
-
-                  type="button"
-
-                  onClick={() => setActiveTab(id)}
-
-                  className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition ${
-
-                    activeTab === id
-
-                      ? "bg-primary text-white"
-
-                      : "bg-surface-muted text-brand-gray hover:bg-primary/10"
-
-                  }`}
-
-                >
-
-                  <Icon className="h-4 w-4" />
-
-                  {label}
-
-                </button>
-
-              ))}
-
+              <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {tabs.map(({ id, label, icon: Icon }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setActiveTab(id)}
+                    className={`flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-semibold transition sm:flex-1 sm:gap-2 sm:px-3 sm:text-sm ${
+                      activeTab === id
+                        ? "bg-primary text-white"
+                        : "bg-surface-muted text-brand-gray hover:bg-primary/10"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="whitespace-nowrap">{label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 sm:px-6 sm:py-4 [&_.card-section]:p-3 sm:[&_.card-section]:p-5">
 
 
 
@@ -978,7 +962,7 @@ export default function GuideBeneficiaryTable({
 
                 <div className="card-section space-y-3">
 
-                  <div className="mb-3 flex items-center justify-between gap-2">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                     <h4 className="font-bold text-primary">بيانات المستفيد</h4>
                     {!readOnly && (
                       <button
@@ -992,22 +976,20 @@ export default function GuideBeneficiaryTable({
                     )}
                   </div>
 
-                  <FieldGrid className="text-sm">
+                  <FieldGrid cols={1} className="text-sm sm:!grid-cols-2">
 
-                    <DetailRow label="الاسم" value={<span className="font-medium">{selected.name}</span>} />
+                    <DetailRow label="الاسم" value={<span className="font-medium">{selected.name}</span>} singleLine />
 
                     <div className="sm:col-span-2">
                       <DetailRow
                         label="البريد"
-                        value={
-                          <span className="block w-full truncate text-end" dir="ltr">
-                            {selected.email}
-                          </span>
-                        }
+                        value={selected.email}
+                        ltr
+                        singleLine
                       />
                     </div>
 
-                    <DetailRow label="الجوال" value={selected.phone} ltr />
+                    <DetailRow label="الجوال" value={selected.phone} ltr singleLine />
 
                     <DetailRow label="التواصل" value={<ContactLinks phone={selected.phone} email={selected.email} whatsapp={selected.phone} />} />
 
@@ -1426,8 +1408,8 @@ export default function GuideBeneficiaryTable({
 
             )}
 
+            </div>
           </div>
-
         </div>
 
       );
