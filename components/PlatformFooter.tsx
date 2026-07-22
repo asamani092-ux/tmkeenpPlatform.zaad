@@ -1,4 +1,4 @@
-import Link from "next/link";
+import FullPageLink from "@/components/FullPageLink";
 import { landingCopy } from "@/lib/copy/ar";
 
 type Props = {
@@ -11,25 +11,25 @@ export default function PlatformFooter({ dashboardHref, showAuthLinks = true }: 
     <footer className="border-t border-surface-border py-6 text-center text-sm text-brand-gray">
       <nav className="mb-3 flex flex-wrap items-center justify-center gap-4">
         {dashboardHref ? (
-          <Link href={dashboardHref} className="hover:text-primary">
+          <FullPageLink href={dashboardHref} className="hover:text-primary">
             لوحة التحكم
-          </Link>
+          </FullPageLink>
         ) : showAuthLinks ? (
           <>
-            <Link href="/login" className="hover:text-primary">
+            <FullPageLink href="/login" className="hover:text-primary">
               {landingCopy.loginBtn}
-            </Link>
-            <Link href="/register" className="hover:text-primary">
+            </FullPageLink>
+            <FullPageLink href="/register" className="hover:text-primary">
               {landingCopy.registerBtn}
-            </Link>
+            </FullPageLink>
           </>
         ) : null}
-        <Link href="/#about" className="hover:text-primary">
+        <FullPageLink href="/#about" className="hover:text-primary">
           {landingCopy.aboutTitle}
-        </Link>
-        <Link href="/#partners" className="hover:text-primary">
+        </FullPageLink>
+        <FullPageLink href="/#partners" className="hover:text-primary">
           {landingCopy.partnersTitle}
-        </Link>
+        </FullPageLink>
       </nav>
       © {new Date().getFullYear()} {landingCopy.footer}
     </footer>

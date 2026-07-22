@@ -1,4 +1,4 @@
-import Link from "next/link";
+import FullPageLink from "@/components/FullPageLink";
 import Navbar from "@/components/Navbar";
 import PlatformFooter from "@/components/PlatformFooter";
 import { getSession } from "@/lib/session";
@@ -25,19 +25,19 @@ export default async function HomePage() {
 
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row-reverse">
             {session && dashboardHref ? (
-              <Link href={dashboardHref} className="btn-primary min-w-[220px]">
+              <FullPageLink href={dashboardHref} className="btn-primary min-w-[220px]">
                 {landingCopy.dashboardBtn}
                 <ArrowLeft className="h-5 w-5" />
-              </Link>
+              </FullPageLink>
             ) : (
               <>
-                <Link href="/register" className="btn-register min-w-[220px]">
+                <FullPageLink href="/register" className="btn-register min-w-[220px]">
                   {landingCopy.registerBtn}
                   <ArrowLeft className="h-5 w-5" />
-                </Link>
-                <Link href="/login" className="btn-primary min-w-[220px]">
+                </FullPageLink>
+                <FullPageLink href="/login" className="btn-primary min-w-[220px]">
                   {landingCopy.loginBtn}
-                </Link>
+                </FullPageLink>
               </>
             )}
           </div>

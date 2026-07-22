@@ -1,6 +1,9 @@
+import LoadingStuckRecover from "@/components/LoadingStuckRecover";
+
 export default function GuideDashboardLoading() {
   return (
     <div className="min-h-screen bg-surface-muted">
+      <LoadingStuckRecover />
       <div className="border-b border-surface-border bg-surface px-4 py-3">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
           <div className="h-5 w-40 animate-pulse rounded bg-surface-muted" />

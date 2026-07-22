@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
+import FullPageLink from "@/components/FullPageLink";
 import Navbar from "@/components/Navbar";
 import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
@@ -107,16 +107,16 @@ function LoginForm() {
       </form>
 
       <p className="mt-4 text-center text-sm">
-        <Link href="/forgot-password" className="text-primary hover:underline">
+        <FullPageLink href="/forgot-password" className="text-primary hover:underline">
           نسيت كلمة المرور؟
-        </Link>
+        </FullPageLink>
       </p>
 
       <p className="mt-4 text-center text-sm text-brand-gray">
         مستفيد جديد؟{" "}
-        <Link href="/register" className="font-semibold text-primary hover:underline">
+        <FullPageLink href="/register" className="font-semibold text-primary hover:underline">
           سجّل هنا
-        </Link>
+        </FullPageLink>
       </p>
     </div>
   );

@@ -1,6 +1,6 @@
 import Image from "next/image";
-import Link from "next/link";
 import { LogOut } from "lucide-react";
+import FullPageLink from "@/components/FullPageLink";
 import NotificationBell from "@/components/NotificationBell";
 import BeneficiaryNavbarActions from "@/components/beneficiary/BeneficiaryNavbarActions";
 import GuideNavbarActions from "@/components/guide/GuideNavbarActions";
@@ -55,13 +55,13 @@ export default function Navbar({
               </form>
             </>
           ) : showAuth && !userName ? (
-            <Link href="/login" className="btn-primary !px-4 !py-2 text-sm">
+            <FullPageLink href="/login" className="btn-primary !px-4 !py-2 text-sm">
               تسجيل الدخول
-            </Link>
+            </FullPageLink>
           ) : null}
         </div>
 
-        <Link href="/" className="flex shrink-0 items-center" aria-label="جمعية الزاد">
+        <FullPageLink href="/" className="flex shrink-0 items-center" aria-label="جمعية الزاد">
           <Image
             src="/logo.png"
             alt="شعار جمعية الزاد"
@@ -71,7 +71,7 @@ export default function Navbar({
             priority
             unoptimized
           />
-        </Link>
+        </FullPageLink>
       </div>
     </header>
   );
