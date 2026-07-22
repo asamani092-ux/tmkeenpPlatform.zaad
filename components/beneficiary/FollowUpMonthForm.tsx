@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
+import FloatingModal from "@/components/admin/FloatingModal";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { formatDaysRemaining } from "@/lib/follow-up-program";
 import { ClipboardList } from "lucide-react";
@@ -32,8 +33,21 @@ type Props = {
 
 export default function FollowUpMonthForm({ activeMonth, questions, records }: Props) {
   const router = useRouter();
+  const [open, setOpen] = useState(false);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (!activeMonth) return;
+    const openFromHash = () => {
+      if (window.location.hash === `#follow-up-month-${activeMonth}`) {
+        setOpen(true);
+      }
+    };
+    openFromHash();
+    window.addEventListener("hashchange", openFromHash);
+    return () => window.removeEventListener("hashchange", openFromHash);
+  }, [activeMonth]);
 
   if (!activeMonth) {
     return (
@@ -74,107 +88,154 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
         return;
       }
       toastSuccess("تم إرسال النموذج بنجاح");
+      setOpen(false);
       router.refresh();
     });
   }
 
-  return (
-    <section id={`follow-up-month-${activeMonth}`} className="card border-2 border-primary/20">
-      <h2 className="mb-1 flex items-center gap-2 text-xl font-bold text-primary">
-        <ClipboardList className="h-6 w-6" />
-        متابعة ما بعد التوظيف — الشهر {activeMonth}
-      </h2>
-      {dueLabel && <p className="mb-4 text-sm text-brand-gray">{dueLabel}</p>}
+  function openModal() {
+    setOpen(true);
+    if (typeof window !== "undefined") {
+      window.history.replaceState(
+        null,
+        "",
+        `#follow-up-month-${activeMonth}`
+      );
+    }
+  }
 
-      {questions.length === 0 ? (
-        <p className="text-brand-gray">لم يُعدّ المدير أسئلة هذا الشهر بعد.</p>
-      ) : (
-        <form noValidate onSubmit={handleSubmit} className="space-y-4">
-          {questions.map((q) => (
-            <FieldRow
-              key={q.id}
-              label={`${q.label}${q.required ? " *" : ""}`}
-              align={q.fieldType === "textarea" ? "start" : "center"}
+  function closeModal() {
+    setOpen(false);
+    if (typeof window !== "undefined" && window.location.hash) {
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+  }
+
+  return (
+    <>
+      <section
+        id={`follow-up-month-${activeMonth}`}
+        className="card border-2 border-primary/20"
+      >
+        <div className="flex items-start gap-3">
+          <ClipboardList className="mt-0.5 h-6 w-6 shrink-0 text-primary" />
+          <div className="min-w-0 flex-1 text-start">
+            <h2 className="text-lg font-bold text-primary">متابعة ما بعد التوظيف</h2>
+            {dueLabel && (
+              <p className="mt-1 text-sm text-brand-gray">{dueLabel}</p>
+            )}
+            <button
+              type="button"
+              onClick={openModal}
+              className="mt-3 text-start text-sm font-semibold text-primary underline decoration-primary/40 underline-offset-4 hover:decoration-primary"
             >
-              <div>
-                {q.helperText && (
-                  <p className="mb-1 text-xs text-brand-gray">{q.helperText}</p>
-                )}
-              {q.fieldType === "textarea" ? (
-                <textarea
-                  className="input-field resize-none"
-                  rows={3}
-                  required={q.required}
-                  value={answers[q.id] ?? ""}
-                  onChange={(e) =>
-                    setAnswers((a) => ({ ...a, [q.id]: e.target.value }))
-                  }
-                />
-              ) : q.fieldType === "yes_no" ? (
-                <select
-                  className="input-field"
-                  required={q.required}
-                  value={answers[q.id] ?? ""}
-                  onChange={(e) =>
-                    setAnswers((a) => ({ ...a, [q.id]: e.target.value }))
-                  }
+              نموذج متابعة لشهر {activeMonth} مطلوب الآن — انقر هنا لتعبئته
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {open && (
+        <FloatingModal
+          title={`متابعة ما بعد التوظيف — الشهر ${activeMonth}`}
+          onClose={closeModal}
+          wide
+        >
+          {dueLabel && (
+            <p className="mb-4 text-sm text-brand-gray">{dueLabel}</p>
+          )}
+
+          {questions.length === 0 ? (
+            <p className="text-brand-gray">لم يُعدّ المدير أسئلة هذا الشهر بعد.</p>
+          ) : (
+            <form noValidate onSubmit={handleSubmit} className="space-y-4">
+              {questions.map((q) => (
+                <FieldRow
+                  key={q.id}
+                  label={`${q.label}${q.required ? " *" : ""}`}
+                  align={q.fieldType === "textarea" ? "start" : "center"}
                 >
-                  <option value="">اختر...</option>
-                  <option value="نعم">نعم</option>
-                  <option value="لا">لا</option>
-                </select>
-              ) : q.fieldType === "select" ? (
-                <select
-                  className="input-field"
-                  required={q.required}
-                  value={answers[q.id] ?? ""}
-                  onChange={(e) =>
-                    setAnswers((a) => ({ ...a, [q.id]: e.target.value }))
-                  }
-                >
-                  <option value="">اختر...</option>
-                  {q.options.map((o) => (
-                    <option key={o} value={o}>
-                      {o}
-                    </option>
-                  ))}
-                </select>
-              ) : q.fieldType === "radio" ? (
-                <div className="flex flex-wrap gap-4">
-                  {q.options.map((o) => (
-                    <label key={o} className="flex items-center gap-2 text-sm">
-                      <input
-                        type="radio"
-                        name={`q-${q.id}`}
-                        value={o}
+                  <div>
+                    {q.helperText && (
+                      <p className="mb-1 text-xs text-brand-gray">{q.helperText}</p>
+                    )}
+                    {q.fieldType === "textarea" ? (
+                      <textarea
+                        className="input-field resize-none"
+                        rows={3}
                         required={q.required}
-                        checked={answers[q.id] === o}
-                        onChange={() =>
-                          setAnswers((a) => ({ ...a, [q.id]: o }))
+                        value={answers[q.id] ?? ""}
+                        onChange={(e) =>
+                          setAnswers((a) => ({ ...a, [q.id]: e.target.value }))
                         }
                       />
-                      {o}
-                    </label>
-                  ))}
-                </div>
-              ) : (
-                <input
-                  className="input-field"
-                  required={q.required}
-                  value={answers[q.id] ?? ""}
-                  onChange={(e) =>
-                    setAnswers((a) => ({ ...a, [q.id]: e.target.value }))
-                  }
-                />
-              )}
-              </div>
-            </FieldRow>
-          ))}
-          <SubmitButton loading={pending} className="btn-primary w-full">
-            إرسال النموذج
-          </SubmitButton>
-        </form>
+                    ) : q.fieldType === "yes_no" ? (
+                      <select
+                        className="input-field"
+                        required={q.required}
+                        value={answers[q.id] ?? ""}
+                        onChange={(e) =>
+                          setAnswers((a) => ({ ...a, [q.id]: e.target.value }))
+                        }
+                      >
+                        <option value="">اختر...</option>
+                        <option value="نعم">نعم</option>
+                        <option value="لا">لا</option>
+                      </select>
+                    ) : q.fieldType === "select" ? (
+                      <select
+                        className="input-field"
+                        required={q.required}
+                        value={answers[q.id] ?? ""}
+                        onChange={(e) =>
+                          setAnswers((a) => ({ ...a, [q.id]: e.target.value }))
+                        }
+                      >
+                        <option value="">اختر...</option>
+                        {q.options.map((o) => (
+                          <option key={o} value={o}>
+                            {o}
+                          </option>
+                        ))}
+                      </select>
+                    ) : q.fieldType === "radio" ? (
+                      <div className="flex flex-wrap gap-4">
+                        {q.options.map((o) => (
+                          <label key={o} className="flex items-center gap-2 text-sm">
+                            <input
+                              type="radio"
+                              name={`q-${q.id}`}
+                              value={o}
+                              required={q.required}
+                              checked={answers[q.id] === o}
+                              onChange={() =>
+                                setAnswers((a) => ({ ...a, [q.id]: o }))
+                              }
+                            />
+                            {o}
+                          </label>
+                        ))}
+                      </div>
+                    ) : (
+                      <input
+                        className="input-field"
+                        required={q.required}
+                        value={answers[q.id] ?? ""}
+                        onChange={(e) =>
+                          setAnswers((a) => ({ ...a, [q.id]: e.target.value }))
+                        }
+                      />
+                    )}
+                  </div>
+                </FieldRow>
+              ))}
+              <SubmitButton loading={pending} className="btn-primary w-full">
+                إرسال النموذج
+              </SubmitButton>
+            </form>
+          )}
+        </FloatingModal>
       )}
-    </section>
+    </>
   );
 }
