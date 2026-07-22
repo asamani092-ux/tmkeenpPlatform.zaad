@@ -59,6 +59,7 @@ function LoginForm() {
       router.refresh();
     } catch {
       toastError("حدث خطأ في الاتصال. حاول مرة أخرى.");
+    } finally {
       setLoading(false);
     }
   }
