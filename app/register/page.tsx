@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import FieldRow from "@/components/ui/FieldRow";
@@ -15,8 +14,8 @@ import { UserPlus } from "lucide-react";
 type Step = "form" | "otp";
 
 export default function RegisterPage() {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  /** O(1) pending — clears in finally so button never sticks spinning */
+  const [pending, setPending] = useState(false);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [certFile, setCertFile] = useState<File | null>(null);
   const [step, setStep] = useState<Step>("form");
@@ -26,82 +25,85 @@ export default function RegisterPage() {
   const [previewCode, setPreviewCode] = useState<string | null>(null);
   const { validate, fieldError } = useFormFieldErrors();
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!validate(e.currentTarget)) return;
     const form = new FormData(e.currentTarget);
 
-    startTransition(async () => {
-      try {
-        if (!cvFile || !certFile) {
-          toastError("رفع السيرة الذاتية والشهادات مطلوب");
-          return;
-        }
-
-        const cvUrl = await uploadPdfFile(cvFile, "cv", "register");
-        const certUrl = await uploadPdfFile(certFile, "certificate", "register");
-        const certificatesUrls = JSON.stringify([certUrl]);
-        const email = String(form.get("email") ?? "");
-
-        const res = await fetch("/api/auth/register", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: String(form.get("name") ?? ""),
-            phone: String(form.get("phone") ?? ""),
-            email,
-            password: String(form.get("password") ?? ""),
-            educationLevel: String(form.get("educationLevel") ?? ""),
-            experience: String(form.get("experience") ?? ""),
-            skills: String(form.get("skills") ?? ""),
-            careerInterests: String(form.get("careerInterests") ?? ""),
-            cvUrl,
-            certificatesUrls,
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          toastError(data.error || "فشل بدء التسجيل");
-          return;
-        }
-
-        setChallengeId(String(data.challengeId ?? ""));
-        setOtpEmail(email.trim().toLowerCase());
-        setPreviewCode(data.previewCode ? String(data.previewCode) : null);
-        setOtpCode("");
-        setStep("otp");
-        toastSuccess("تم إرسال رمز التحقق إلى بريدك");
-      } catch {
-        toastError("حدث خطأ في الاتصال. حاول مرة أخرى.");
+    setPending(true);
+    try {
+      if (!cvFile || !certFile) {
+        toastError("رفع السيرة الذاتية والشهادات مطلوب");
+        return;
       }
-    });
+
+      const cvUrl = await uploadPdfFile(cvFile, "cv", "register");
+      const certUrl = await uploadPdfFile(certFile, "certificate", "register");
+      const certificatesUrls = JSON.stringify([certUrl]);
+      const email = String(form.get("email") ?? "");
+
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: String(form.get("name") ?? ""),
+          phone: String(form.get("phone") ?? ""),
+          email,
+          password: String(form.get("password") ?? ""),
+          educationLevel: String(form.get("educationLevel") ?? ""),
+          experience: String(form.get("experience") ?? ""),
+          skills: String(form.get("skills") ?? ""),
+          careerInterests: String(form.get("careerInterests") ?? ""),
+          cvUrl,
+          certificatesUrls,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toastError(data.error || "فشل بدء التسجيل");
+        return;
+      }
+
+      setChallengeId(String(data.challengeId ?? ""));
+      setOtpEmail(email.trim().toLowerCase());
+      setPreviewCode(data.previewCode ? String(data.previewCode) : null);
+      setOtpCode("");
+      setStep("otp");
+      toastSuccess("تم إرسال رمز التحقق إلى بريدك");
+    } catch {
+      toastError("حدث خطأ في الاتصال. حاول مرة أخرى.");
+    } finally {
+      setPending(false);
+    }
   }
 
-  function handleVerify(e: React.FormEvent<HTMLFormElement>) {
+  async function handleVerify(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!/^\d{6}$/.test(otpCode.trim())) {
       toastError("أدخل رمز التحقق المكوّن من 6 أرقام");
       return;
     }
 
-    startTransition(async () => {
-      try {
-        const res = await fetch("/api/auth/register/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ challengeId, code: otpCode.trim() }),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          toastError(data.error || "فشل التحقق");
-          return;
-        }
-        toastSuccess("تم التحقق وإنشاء الحساب");
-        router.push("/login?registered=1");
-      } catch {
-        toastError("حدث خطأ في الاتصال. حاول مرة أخرى.");
+    setPending(true);
+    try {
+      const res = await fetch("/api/auth/register/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ challengeId, code: otpCode.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toastError(data.error || "فشل التحقق");
+        return;
       }
-    });
+      toastSuccess("تم التحقق وإنشاء الحساب");
+      window.location.assign("/login?registered=1");
+      return;
+    } catch {
+      toastError("حدث خطأ في الاتصال. حاول مرة أخرى.");
+    } finally {
+      setPending(false);
+    }
   }
 
   return (

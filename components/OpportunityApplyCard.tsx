@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { APPLICATION_STATUS_LABELS } from "@/lib/labels";
 import { ApplicationStatus } from "@/generated/prisma/client";
@@ -35,28 +35,30 @@ export default function OpportunityApplyCard({
 }: Props) {
   const router = useRouter();
   const [message, setMessage] = useState("");
-  const [pending, startTransition] = useTransition();
+  /** O(1) — explicit loading so refresh cannot leave spinner stuck */
+  const [pending, setPending] = useState(false);
 
-  function handleApply() {
+  async function handleApply() {
     setMessage("");
-    startTransition(async () => {
-      try {
-        const res = await fetch("/api/applications", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ opportunityId: opportunity.id }),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          setMessage(data.error || "فشل الإرسال");
-          return;
-        }
-        setMessage("تم إرسال طلبك بنجاح");
-        router.refresh();
-      } catch {
-        setMessage("حدث خطأ في الاتصال");
+    setPending(true);
+    try {
+      const res = await fetch("/api/applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ opportunityId: opportunity.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMessage(data.error || "فشل الإرسال");
+        return;
       }
-    });
+      setMessage("تم إرسال طلبك بنجاح");
+      router.refresh();
+    } catch {
+      setMessage("حدث خطأ في الاتصال");
+    } finally {
+      setPending(false);
+    }
   }
 
   const applyLabel =

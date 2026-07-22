@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
@@ -34,7 +34,8 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [pending, startTransition] = useTransition();
+  /** O(1) loading flag — avoid useTransition+refresh sticking pending forever */
+  const [pending, setPending] = useState(false);
 
   useEffect(() => {
     if (!activeMonth) return;
@@ -70,9 +71,10 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
     );
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    startTransition(async () => {
+    setPending(true);
+    try {
       const res = await fetch("/api/follow-up-program/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -85,8 +87,15 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
       }
       toastSuccess("تم إرسال النموذج بنجاح");
       setOpen(false);
+      if (typeof window !== "undefined" && window.location.hash) {
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
       router.refresh();
-    });
+    } catch {
+      toastError("حدث خطأ في الاتصال. حاول مرة أخرى.");
+    } finally {
+      setPending(false);
+    }
   }
 
   function openModal() {

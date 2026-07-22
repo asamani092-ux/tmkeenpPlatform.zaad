@@ -22,6 +22,10 @@ function getTransporter(): nodemailer.Transporter | null {
     port: Number(process.env.SMTP_PORT ?? 465),
     secure: process.env.SMTP_SECURE !== "false",
     auth: { user, pass },
+    // Prevent hung SMTP sockets from blocking request handlers indefinitely.
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 15_000,
   });
 
   return transporter;
