@@ -121,9 +121,6 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
           <ClipboardList className="mt-0.5 h-6 w-6 shrink-0 text-primary" />
           <div className="min-w-0 flex-1 text-start">
             <h2 className="text-lg font-bold text-primary">متابعة ما بعد التوظيف</h2>
-            {dueLabel && (
-              <p className="mt-1 text-sm text-brand-gray">{dueLabel}</p>
-            )}
             <button
               type="button"
               onClick={openModal}
