@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { isValidEmailFormat } from "@/lib/email-format";
 
 export type SystemSettings = {
   senderEmail: string;
@@ -13,7 +14,7 @@ const DEFAULT_SETTINGS: SystemSettings = {
 };
 
 export function isValidEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  return isValidEmailFormat(email);
 }
 
 /** Load system settings from file — O(1) */

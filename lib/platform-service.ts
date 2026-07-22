@@ -15,6 +15,7 @@ import {
   notifyAdmins,
 } from "@/lib/notifications";
 import { getSystemSettings } from "@/lib/system-settings";
+import { isValidEmailFormat } from "@/lib/email-format";
 import { sendSessionScheduledEmails } from "@/lib/email-notify";
 import { safeSendEmail } from "@/lib/safe-email";
 import type { CareerPlanTask } from "@/lib/copy/ar";
@@ -77,7 +78,8 @@ export async function registerBeneficiary(data: {
   }
 
   const email = data.email.toLowerCase().trim();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  const { isValidEmailFormat } = await import("@/lib/email-format");
+  if (!isValidEmailFormat(email)) {
     return { success: false, error: "البريد الإلكتروني غير صالح" };
   }
 

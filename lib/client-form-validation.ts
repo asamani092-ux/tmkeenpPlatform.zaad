@@ -1,6 +1,7 @@
 /** Collect required-field errors after submit — Time O(n) fields, Space O(n) errors */
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { isValidEmailFormat } from "@/lib/email-format";
+
 /** Saudi mobile: 05xxxxxxxx / +9665xxxxxxxx / 9665xxxxxxxx */
 const PHONE_RE = /^(05\d{8}|\+9665\d{8}|9665\d{8})$/;
 
@@ -13,7 +14,7 @@ export function isValidRegisterPhone(value: string): boolean {
 }
 
 export function isValidRegisterEmail(value: string): boolean {
-  return EMAIL_RE.test(value.trim());
+  return isValidEmailFormat(value);
 }
 
 export function getFormFieldErrors(form: HTMLFormElement): Record<string, string> {
