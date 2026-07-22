@@ -4,7 +4,7 @@ import AdminDashboardTabs from "@/components/AdminDashboardTabs";
 import AdminBulkExport from "@/components/admin/AdminBulkExport";
 import { getDashboardPath } from "@/lib/auth";
 import { getSession } from "@/lib/session";
-import { prisma } from "@/lib/prisma";
+import { withPrismaRetry } from "@/lib/prisma";
 import { STAGE_LABELS, STAGE_ORDER } from "@/lib/stages";
 import { APPLICATION_STATUS_LABELS, FOLLOW_UP_STATUS_LABELS } from "@/lib/labels";
 import type { BulkExportSection } from "@/lib/export-table";
@@ -33,101 +33,103 @@ export default async function AdminDashboardPage() {
     attendedSessionCount,
     followUpStats,
     applicationStats,
-  ] = await Promise.all([
-    prisma.user.count({ where: { role: "BENEFICIARY" } }),
-    prisma.user.count({ where: { role: "GUIDE" } }),
-    prisma.opportunity.count(),
-    prisma.user.groupBy({
-      by: ["stage"],
-      where: { role: "BENEFICIARY" },
-      _count: { stage: true },
-    }),
-    prisma.opportunity.findMany({ orderBy: { createdAt: "desc" } }),
-    prisma.user.findMany({
-      where: { role: "GUIDE" },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        _count: { select: { beneficiaries: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.user.findMany({
-      where: { role: "BENEFICIARY" },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        stage: true,
-        pendingStage: true,
-        guideId: true,
-        followUpProgramStatus: true,
-        educationLevel: true,
-        experience: true,
-        skills: true,
-        careerInterests: true,
-        cvUrl: true,
-        certificatesUrls: true,
-        professionalRecommendations: true,
-        commitmentScore: true,
-        stageEnteredAt: true,
-        guide: { select: { name: true } },
-      },
-      orderBy: { name: "asc" },
-    }),
-    prisma.followUp.findMany({
-      include: {
-        beneficiary: { select: { id: true, name: true, phone: true } },
-      },
-      orderBy: [{ beneficiaryId: "asc" }, { month: "asc" }],
-    }),
-    prisma.user.findMany({
-      where: {
-        role: "BENEFICIARY",
-        OR: [{ isEmployed: true }, { stage: "FOLLOW_UP" }, { stage: "EMPLOYMENT" }],
-      },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        name: true,
-        phone: true,
-        followUpProgramStatus: true,
-        followUpPauseReason: true,
-        followUpEndReason: true,
-        followUpStatusUpdatedAt: true,
-      },
-    }),
-    prisma.application.findMany({
-      include: {
-        beneficiary: { select: { id: true, name: true, phone: true, stage: true } },
-        opportunity: { select: { id: true, title: true, type: true, provider: true } },
-      },
-      orderBy: { appliedAt: "desc" },
-    }),
-    prisma.session.aggregate({
-      where: { createdAt: { gte: sixMonthsAgo } },
-      _count: { id: true },
-      _avg: { commitmentRating: true },
-    }),
-    prisma.session.count({
-      where: {
-        createdAt: { gte: sixMonthsAgo },
-        status: { in: ["ATTENDED", "COMPLETED"] },
-      },
-    }),
-    prisma.followUp.groupBy({
-      by: ["status"],
-      where: { createdAt: { gte: sixMonthsAgo } },
-      _count: { status: true },
-    }),
-    prisma.application.groupBy({
-      by: ["status"],
-      _count: { status: true },
-    }),
-  ]);
+  ] = await withPrismaRetry((db) =>
+    Promise.all([
+      db.user.count({ where: { role: "BENEFICIARY" } }),
+      db.user.count({ where: { role: "GUIDE" } }),
+      db.opportunity.count(),
+      db.user.groupBy({
+        by: ["stage"],
+        where: { role: "BENEFICIARY" },
+        _count: { stage: true },
+      }),
+      db.opportunity.findMany({ orderBy: { createdAt: "desc" } }),
+      db.user.findMany({
+        where: { role: "GUIDE" },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          _count: { select: { beneficiaries: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      db.user.findMany({
+        where: { role: "BENEFICIARY" },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          stage: true,
+          pendingStage: true,
+          guideId: true,
+          followUpProgramStatus: true,
+          educationLevel: true,
+          experience: true,
+          skills: true,
+          careerInterests: true,
+          cvUrl: true,
+          certificatesUrls: true,
+          professionalRecommendations: true,
+          commitmentScore: true,
+          stageEnteredAt: true,
+          guide: { select: { name: true } },
+        },
+        orderBy: { name: "asc" },
+      }),
+      db.followUp.findMany({
+        include: {
+          beneficiary: { select: { id: true, name: true, phone: true } },
+        },
+        orderBy: [{ beneficiaryId: "asc" }, { month: "asc" }],
+      }),
+      db.user.findMany({
+        where: {
+          role: "BENEFICIARY",
+          OR: [{ isEmployed: true }, { stage: "FOLLOW_UP" }, { stage: "EMPLOYMENT" }],
+        },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+          followUpProgramStatus: true,
+          followUpPauseReason: true,
+          followUpEndReason: true,
+          followUpStatusUpdatedAt: true,
+        },
+      }),
+      db.application.findMany({
+        include: {
+          beneficiary: { select: { id: true, name: true, phone: true, stage: true } },
+          opportunity: { select: { id: true, title: true, type: true, provider: true } },
+        },
+        orderBy: { appliedAt: "desc" },
+      }),
+      db.session.aggregate({
+        where: { createdAt: { gte: sixMonthsAgo } },
+        _count: { id: true },
+        _avg: { commitmentRating: true },
+      }),
+      db.session.count({
+        where: {
+          createdAt: { gte: sixMonthsAgo },
+          status: { in: ["ATTENDED", "COMPLETED"] },
+        },
+      }),
+      db.followUp.groupBy({
+        by: ["status"],
+        where: { createdAt: { gte: sixMonthsAgo } },
+        _count: { status: true },
+      }),
+      db.application.groupBy({
+        by: ["status"],
+        _count: { status: true },
+      }),
+    ])
+  );
 
   const stageDistribution = STAGE_ORDER.map((stage) => ({
     stage,
