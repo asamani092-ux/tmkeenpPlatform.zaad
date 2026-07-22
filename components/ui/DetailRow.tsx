@@ -2,7 +2,7 @@ type Props = {
   label: string;
   value: React.ReactNode;
   ltr?: boolean;
-  /** Keep label + value on one horizontal line (truncate overflow). */
+  /** Keep label + value on one horizontal line (no mid-word wrap; show full text). */
   singleLine?: boolean;
   className?: string;
 };
@@ -28,7 +28,8 @@ export default function DetailRow({
             // Unify: values hug the label side (RTL start). LTR content uses text-end
             // so email/phone sit on the same edge as Arabic values.
             ltr ? "text-end" : "text-start",
-            singleLine ? "truncate whitespace-nowrap break-normal" : "",
+            // One line without ellipsis — full email/phone stays visible.
+            singleLine ? "whitespace-nowrap break-normal" : "",
           ]
             .filter(Boolean)
             .join(" ")}
