@@ -37,7 +37,8 @@ export async function POST(request: Request) {
       requiresVerification: true,
       ...(result.previewCode ? { previewCode: result.previewCode } : {}),
     });
-  } catch {
+  } catch (err) {
+    console.error("[api/auth/register]", err);
     return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
   }
 }

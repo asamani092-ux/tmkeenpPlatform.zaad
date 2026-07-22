@@ -5,8 +5,8 @@ import { isValidEmailFormat } from "@/lib/email-format";
 import { getSystemSettings } from "@/lib/system-settings";
 import { sendRegistrationOtpEmail } from "@/lib/email-notify";
 import { isSmtpConfigured } from "@/lib/mail";
-import { registerBeneficiaryFromVerifiedPayload } from "@/lib/platform-service";
-import type { ActionResult } from "@/lib/platform-service";
+
+type ActionResult = { success: true } | { success: false; error: string };
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
@@ -197,6 +197,9 @@ export async function verifyRegistrationChallenge(
     return { success: false, error: "بيانات التسجيل تالفة. أعد المحاولة." };
   }
 
+  const { registerBeneficiaryFromVerifiedPayload } = await import(
+    "@/lib/platform-service"
+  );
   const result = await registerBeneficiaryFromVerifiedPayload(payload);
   if (result.success) {
     await prisma.registrationChallenge.delete({ where: { id } }).catch(() => {});
