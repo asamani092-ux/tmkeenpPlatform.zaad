@@ -81,7 +81,7 @@ export default function VerticalStageTimeline({ currentStage, stageEnteredAt }: 
                 <StageDot index={index} isComplete={isComplete} isCurrent={isCurrent} />
               </div>
               <p
-                className={`w-full truncate text-[9px] leading-tight sm:text-[11px] ${
+                className={`w-full text-[10px] leading-snug sm:text-[11px] ${
                   isCurrent
                     ? "font-bold text-primary"
                     : isComplete
@@ -90,7 +90,7 @@ export default function VerticalStageTimeline({ currentStage, stageEnteredAt }: 
                 }`}
                 title={STAGE_LABELS[stage]}
               >
-                {STAGE_LABELS[stage]}
+                {STAGE_LABELS_SHORT[stage]}
               </p>
               {isCurrent && (
                 <p className="mt-0.5 text-[9px] font-semibold text-secondary-dark sm:text-[10px]">

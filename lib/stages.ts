@@ -18,6 +18,16 @@ export const STAGE_LABELS: Record<Stage, string> = {
   CLOSED: "حالة مغلقة",
 };
 
+/** Compact labels for mobile horizontal stage rail — O(1) lookup */
+export const STAGE_LABELS_SHORT: Record<Stage, string> = {
+  PENDING_APPROVAL: "تسجيل",
+  GUIDANCE: "إرشاد",
+  TRAINING: "تدريب",
+  EMPLOYMENT: "توظيف",
+  FOLLOW_UP: "متابعة",
+  CLOSED: "مغلقة",
+};
+
 export function getNextStage(current: Stage): Stage | null {
   const index = STAGE_ORDER.indexOf(current);
   if (index === -1 || index >= STAGE_ORDER.length - 1) return null;
