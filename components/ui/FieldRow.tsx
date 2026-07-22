@@ -25,12 +25,12 @@ export default function FieldRow({
       ? "" // auth: text error only — no red ring/border
       : "[&_.input-field]:border-red-800 [&_.input-field]:ring-2 [&_.input-field]:ring-red-800/25"
     : "";
-  /* Auth: stretch on small screens so labels stay RTL-start (right), not centered */
+  /* Auth mobile: stretch so label is full-width RTL-start; desktop keeps side-by-side */
   const rowAlign =
     variant === "auth"
       ? align === "start"
-        ? "items-stretch sm:items-start"
-        : "items-stretch sm:items-center"
+        ? "max-sm:items-stretch sm:items-start"
+        : "max-sm:items-stretch sm:items-center"
       : align === "start"
         ? "items-start"
         : "items-center";
@@ -39,7 +39,9 @@ export default function FieldRow({
       <div className={`field-cell-row ${rowAlign}`}>
         <label
           htmlFor={htmlFor}
-          className={`field-cell-label${variant === "auth" ? " w-full text-start" : ""}`}
+          className={`field-cell-label${
+            variant === "auth" ? " w-full text-start sm:w-auto" : ""
+          }`}
         >
           {label}
         </label>
