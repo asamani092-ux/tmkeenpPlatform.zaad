@@ -6,7 +6,6 @@ import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import FloatingModal from "@/components/admin/FloatingModal";
 import { toastSuccess, toastError } from "@/lib/toast";
-import { formatDaysRemaining } from "@/lib/follow-up-program";
 import { ClipboardList } from "lucide-react";
 
 type Question = {
