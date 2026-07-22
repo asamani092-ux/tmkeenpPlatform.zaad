@@ -26,16 +26,14 @@ export default function RegisterPage() {
 
     startTransition(async () => {
       try {
-        let cvUrl: string | undefined;
-        let certificatesUrls: string | undefined;
+        if (!cvFile || !certFile) {
+          toastError("رفع السيرة الذاتية والشهادات مطلوب");
+          return;
+        }
 
-        if (cvFile) {
-          cvUrl = await uploadPdfFile(cvFile, "cv", "register");
-        }
-        if (certFile) {
-          const certUrl = await uploadPdfFile(certFile, "certificate", "register");
-          certificatesUrls = JSON.stringify([certUrl]);
-        }
+        const cvUrl = await uploadPdfFile(cvFile, "cv", "register");
+        const certUrl = await uploadPdfFile(certFile, "certificate", "register");
+        const certificatesUrls = JSON.stringify([certUrl]);
 
         const res = await fetch("/api/auth/register", {
           method: "POST",
@@ -80,8 +78,14 @@ export default function RegisterPage() {
 
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <FieldRow label="الاسم الكامل" htmlFor="name" className="sm:col-span-2" variant="auth" error={fieldError("name")}>
-                <input id="name" name="name" className="input-field-auth" />
+              <FieldRow
+                label="الاسم الكامل"
+                htmlFor="name"
+                className="sm:col-span-2"
+                variant="auth"
+                error={fieldError("name")}
+              >
+                <input id="name" name="name" required className="input-field-auth" />
               </FieldRow>
               <FieldRow
                 label="رقم الجوال"
@@ -97,6 +101,7 @@ export default function RegisterPage() {
                   type="tel"
                   inputMode="tel"
                   autoComplete="tel"
+                  required
                   className="input-field-auth"
                   placeholder="05xxxxxxxx"
                   dir="ltr"
@@ -115,6 +120,7 @@ export default function RegisterPage() {
                   name="email"
                   type="email"
                   autoComplete="email"
+                  required
                   className="input-field-auth"
                   placeholder="email@example.com"
                   dir="ltr"
@@ -133,6 +139,8 @@ export default function RegisterPage() {
                   name="password"
                   type="password"
                   autoComplete="new-password"
+                  required
+                  minLength={6}
                   className="input-field-auth"
                   placeholder="••••••••"
                   dir="ltr"
@@ -143,39 +151,94 @@ export default function RegisterPage() {
             <hr className="border-surface-border" />
             <p className="text-sm font-semibold text-primary">الملف الرقمي</p>
 
-            <FieldRow label="المستوى التعليمي" htmlFor="educationLevel" variant="auth">
-              <input id="educationLevel" name="educationLevel" className="input-field-auth" />
+            <FieldRow
+              label="المستوى التعليمي"
+              htmlFor="educationLevel"
+              variant="auth"
+              error={fieldError("educationLevel")}
+            >
+              <input
+                id="educationLevel"
+                name="educationLevel"
+                required
+                className="input-field-auth"
+              />
             </FieldRow>
-            <FieldRow label="الخبرات" htmlFor="experience" align="start" variant="auth">
-              <textarea id="experience" name="experience" rows={2} className="input-field-auth resize-none" />
+            <FieldRow
+              label="الخبرات"
+              htmlFor="experience"
+              align="start"
+              variant="auth"
+              error={fieldError("experience")}
+            >
+              <textarea
+                id="experience"
+                name="experience"
+                rows={2}
+                required
+                className="input-field-auth resize-none"
+              />
             </FieldRow>
-            <FieldRow label="المهارات" htmlFor="skills" align="start" variant="auth">
-              <textarea id="skills" name="skills" rows={2} className="input-field-auth resize-none" />
+            <FieldRow
+              label="المهارات"
+              htmlFor="skills"
+              align="start"
+              variant="auth"
+              error={fieldError("skills")}
+            >
+              <textarea
+                id="skills"
+                name="skills"
+                rows={2}
+                required
+                className="input-field-auth resize-none"
+              />
             </FieldRow>
-            <FieldRow label="الميول المهنية" htmlFor="careerInterests" align="start" variant="auth">
+            <FieldRow
+              label="الميول المهنية"
+              htmlFor="careerInterests"
+              align="start"
+              variant="auth"
+              error={fieldError("careerInterests")}
+            >
               <textarea
                 id="careerInterests"
                 name="careerInterests"
                 rows={2}
+                required
                 className="input-field-auth resize-none"
               />
             </FieldRow>
 
-            <FieldRow label={registerCopy.cvLabel} htmlFor="cv" variant="auth">
+            <FieldRow
+              label={registerCopy.cvLabel}
+              htmlFor="cv"
+              variant="auth"
+              error={fieldError("cv")}
+            >
               <input
                 id="cv"
+                name="cv"
                 type="file"
-                accept=".pdf"
+                accept=".pdf,application/pdf"
+                required
                 className="input-field-auth"
                 onChange={(e) => setCvFile(e.target.files?.[0] ?? null)}
               />
               <p className="mt-1 text-xs text-brand-gray">{registerCopy.cvHint}</p>
             </FieldRow>
-            <FieldRow label={registerCopy.certificatesLabel} htmlFor="certificates" variant="auth">
+            <FieldRow
+              label={registerCopy.certificatesLabel}
+              htmlFor="certificates"
+              variant="auth"
+              error={fieldError("certificates")}
+            >
               <input
                 id="certificates"
+                name="certificates"
                 type="file"
-                accept=".pdf"
+                accept=".pdf,application/pdf"
+                required
                 className="input-field-auth"
                 onChange={(e) => setCertFile(e.target.files?.[0] ?? null)}
               />

@@ -56,14 +56,36 @@ export async function registerBeneficiary(data: {
   cvUrl?: string;
   certificatesUrls?: string;
 }): Promise<ActionResult> {
-  if (!data.name || !data.phone || !data.email || !data.password) {
-    return { success: false, error: "جميع الحقول الأساسية مطلوبة" };
+  /** Time O(1) checks; Space O(1) */
+  if (
+    !data.name.trim() ||
+    !data.phone.trim() ||
+    !data.email.trim() ||
+    !data.password ||
+    !data.educationLevel.trim() ||
+    !data.experience.trim() ||
+    !data.skills.trim() ||
+    !data.careerInterests.trim()
+  ) {
+    return { success: false, error: "جميع الحقول مطلوبة" };
+  }
+  if (!data.cvUrl?.trim() || !data.certificatesUrls?.trim()) {
+    return { success: false, error: "رفع السيرة الذاتية والشهادات مطلوب" };
   }
   if (data.password.length < 6) {
     return { success: false, error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" };
   }
 
   const email = data.email.toLowerCase().trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { success: false, error: "البريد الإلكتروني غير صالح" };
+  }
+
+  const phone = data.phone.replace(/[\s\-()]/g, "");
+  if (!/^(05\d{8}|\+9665\d{8}|9665\d{8})$/.test(phone)) {
+    return { success: false, error: "رقم الجوال غير صالح" };
+  }
+
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
     return { success: false, error: "البريد الإلكتروني مسجل مسبقاً" };
@@ -77,7 +99,7 @@ export async function registerBeneficiary(data: {
   const created = await prisma.user.create({
     data: {
       name: data.name.trim(),
-      phone: data.phone.trim(),
+      phone,
       email,
       password: await hashPassword(data.password),
       role: "BENEFICIARY",
@@ -88,8 +110,8 @@ export async function registerBeneficiary(data: {
       experience: data.experience.trim(),
       skills: data.skills.trim(),
       careerInterests: data.careerInterests.trim(),
-      cvUrl: data.cvUrl ?? null,
-      certificatesUrls: data.certificatesUrls ?? null,
+      cvUrl: data.cvUrl.trim(),
+      certificatesUrls: data.certificatesUrls.trim(),
     },
   });
 
