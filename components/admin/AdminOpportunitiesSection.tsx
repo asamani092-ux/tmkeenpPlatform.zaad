@@ -17,24 +17,14 @@ type Opportunity = {
   requirements: string;
   salary: string | null;
   jobType: string | null;
-};
-
-type BeneficiaryOption = {
-  id: string;
-  name: string;
-  phone: string;
-  stage: string;
+  showToAll: boolean;
 };
 
 type Props = {
   opportunities: Opportunity[];
-  beneficiaries: BeneficiaryOption[];
 };
 
-export default function AdminOpportunitiesSection({
-  opportunities,
-  beneficiaries,
-}: Props) {
+export default function AdminOpportunitiesSection({ opportunities }: Props) {
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -57,7 +47,7 @@ export default function AdminOpportunitiesSection({
             إضافة فرصة جديدة
           </button>
         </div>
-        <AdminOpportunityList opportunities={opportunities} beneficiaries={beneficiaries} />
+        <AdminOpportunityList opportunities={opportunities} />
       </div>
 
       <SlideOver

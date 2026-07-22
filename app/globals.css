@@ -24,6 +24,16 @@ body {
   textarea:invalid,
   select:invalid {
     box-shadow: none;
+    outline: none;
+  }
+
+  .input-field-auth:invalid,
+  .auth-field input:invalid,
+  .auth-field textarea:invalid,
+  .auth-field select:invalid {
+    border-color: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
   }
 }
 

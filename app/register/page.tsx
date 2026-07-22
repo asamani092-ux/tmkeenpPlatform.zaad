@@ -81,14 +81,13 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <FieldRow label="الاسم الكامل" htmlFor="name" className="sm:col-span-2" variant="auth" error={fieldError("name")}>
-                <input id="name" name="name" required className="input-field-auth" />
+                <input id="name" name="name" className="input-field-auth" />
               </FieldRow>
               <FieldRow label="رقم الجوال" htmlFor="phone" ltr variant="auth" error={fieldError("phone")}>
                 <input
                   id="phone"
                   name="phone"
                   type="tel"
-                  required
                   className="input-field-auth"
                   dir="ltr"
                 />
@@ -98,7 +97,6 @@ export default function RegisterPage() {
                   id="email"
                   name="email"
                   type="email"
-                  required
                   className="input-field-auth"
                   dir="ltr"
                 />
@@ -108,7 +106,6 @@ export default function RegisterPage() {
                   id="password"
                   name="password"
                   type="password"
-                  required
                   minLength={6}
                   className="input-field-auth"
                   dir="ltr"

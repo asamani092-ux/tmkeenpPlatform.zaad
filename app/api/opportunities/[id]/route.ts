@@ -18,6 +18,8 @@ export async function PATCH(
       requirements: body.requirements,
       salary: body.salary,
       jobType: body.jobType,
+      showToAll:
+        typeof body.showToAll === "boolean" ? body.showToAll : undefined,
     });
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 400 });

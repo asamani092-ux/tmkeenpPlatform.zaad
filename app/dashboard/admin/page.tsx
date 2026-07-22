@@ -349,6 +349,7 @@ export default async function AdminDashboardPage() {
     notes: f.notes,
     answers: f.answers,
     submittedAt: f.submittedAt?.toISOString() ?? null,
+    opensAt: f.opensAt?.toISOString() ?? null,
     dueAt: f.dueAt?.toISOString() ?? null,
     beneficiary: f.beneficiary,
   }));

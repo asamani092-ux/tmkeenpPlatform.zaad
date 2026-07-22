@@ -25,6 +25,7 @@ type Opportunity = {
   requirements: string;
   salary: string | null;
   jobType: string | null;
+  showToAll: boolean;
 };
 
 type Guide = {
@@ -61,6 +62,7 @@ type FollowUp = {
   notes: string;
   answers?: unknown;
   submittedAt?: string | null;
+  opensAt?: string | null;
   dueAt?: string | null;
   beneficiary: { id: string; name: string; phone: string };
 };
@@ -164,10 +166,7 @@ export default function AdminDashboardTabs({
       {tab === "pipeline" && <AdminPipelineBoard beneficiaries={beneficiaries} />}
 
       {tab === "opportunities" && (
-        <AdminOpportunitiesSection
-          opportunities={opportunities}
-          beneficiaries={beneficiaries}
-        />
+        <AdminOpportunitiesSection opportunities={opportunities} />
       )}
 
       {tab === "guides" && (
@@ -192,6 +191,7 @@ export default function AdminDashboardTabs({
           followUps={followUps.map((f) => ({
             ...f,
             submittedAt: f.submittedAt ?? null,
+            opensAt: f.opensAt ?? null,
             dueAt: f.dueAt ?? null,
             answers:
               f.answers && typeof f.answers === "object" && !Array.isArray(f.answers)

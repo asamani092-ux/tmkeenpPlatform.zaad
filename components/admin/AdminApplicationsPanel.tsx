@@ -39,9 +39,7 @@ export default function AdminApplicationsPanel({ applications: initial }: Props)
         toastError(data.error || "فشل المراجعة");
         return;
       }
-      setRows((prev) =>
-        prev.map((r) => (r.id === id ? { ...r, status, reviewNote: reviewNote[id] ?? null } : r))
-      );
+      setRows((prev) => prev.filter((r) => r.id !== id));
       toastSuccess(status === "ACCEPTED" ? "تم قبول التقديم" : "تم رفض التقديم");
       router.refresh();
     });
@@ -141,10 +139,10 @@ export default function AdminApplicationsPanel({ applications: initial }: Props)
 
       <DataTable
         columns={columns}
-        rows={rows}
+        rows={pendingRows}
         rowKey={(a) => a.id}
         minWidth="800px"
-        emptyMessage="لا توجد تقديمات"
+        emptyMessage="لا توجد تقديمات بانتظار المراجعة"
       />
     </div>
   );

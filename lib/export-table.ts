@@ -1,4 +1,6 @@
-/** Client-side CSV export — O(n) rows, O(n) space for lines */
+/** Client-side CSV / Excel export — O(n) rows */
+import * as XLSX from "xlsx";
+
 const CSV_DELIMITER = ";";
 
 function escapeCell(cell: string) {
@@ -40,26 +42,25 @@ export type BulkExportSection = {
   rows: string[][];
 };
 
-/** Multi-section CSV — O(S + R) time, O(S + R) space */
-export function exportBulkCsv(filename: string, sections: BulkExportSection[]) {
-  const parts: string[] = [`sep=${CSV_DELIMITER}`];
-  for (const section of sections) {
-    parts.push("");
-    parts.push(escapeCell(section.title));
-    parts.push(section.headers.map(escapeCell).join(CSV_DELIMITER));
-    for (const row of section.rows) {
-      parts.push(row.map(escapeCell).join(CSV_DELIMITER));
-    }
-  }
-  const blob = new Blob(["\uFEFF" + parts.join("\r\n")], {
-    type: "text/csv;charset=utf-8;",
+function sheetName(title: string, index: number) {
+  const base = title.replace(/[\\/?*\[\]:]/g, " ").trim().slice(0, 28);
+  return base || `ورقة ${index + 1}`;
+}
+
+/** One workbook with a sheet per section — O(n) cells */
+export function exportBulkExcel(filename: string, sections: BulkExportSection[]) {
+  const wb = XLSX.utils.book_new();
+  sections.forEach((section, index) => {
+    const aoa = [section.headers, ...section.rows];
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    XLSX.utils.book_append_sheet(wb, ws, sheetName(section.title, index));
   });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${filename}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  XLSX.writeFile(wb, `${filename}.xlsx`);
+}
+
+/** @deprecated prefer exportBulkExcel — kept for callers that still want CSV */
+export function exportBulkCsv(filename: string, sections: BulkExportSection[]) {
+  exportBulkExcel(filename, sections);
 }
 
 export function printTablePdf(title: string, headers: string[], rows: string[][]) {

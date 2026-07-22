@@ -119,6 +119,21 @@ export default function AdminBeneficiaryManagement({
         toastError(data.error || "فشل الاعتماد");
         return;
       }
+      const beneficiary = rows.find((b) => b.id === beneficiaryId);
+      const nextStage =
+        action === "registration"
+          ? ("GUIDANCE" as Stage)
+          : ((data.stage as Stage | undefined) ??
+            beneficiary?.pendingStage ??
+            beneficiary?.stage);
+      const patch = {
+        stage: nextStage ?? ("GUIDANCE" as Stage),
+        pendingStage: null as Stage | null,
+      };
+      setRows((prev) =>
+        prev.map((b) => (b.id === beneficiaryId ? { ...b, ...patch } : b))
+      );
+      setSelected((s) => (s?.id === beneficiaryId ? { ...s, ...patch } : s));
       toastSuccess("تم الاعتماد بنجاح");
       router.refresh();
     });
@@ -151,6 +166,7 @@ export default function AdminBeneficiaryManagement({
         return;
       }
       const guideName = guides.find((g) => g.id === guideIdRaw)?.name ?? null;
+      const nextStage = (form.get("stage") as Stage) || selected.stage;
       const patch = {
         phone: String(form.get("phone") ?? ""),
         email: String(form.get("email") ?? selected.email),
@@ -160,7 +176,8 @@ export default function AdminBeneficiaryManagement({
         careerInterests: String(form.get("careerInterests") ?? ""),
         guideId: guideIdRaw || null,
         guideName,
-        stage: (form.get("stage") as Stage) || selected.stage,
+        stage: nextStage,
+        pendingStage: nextStage !== selected.stage ? null : selected.pendingStage,
       };
       setRows((prev) => prev.map((b) => (b.id === selected.id ? { ...b, ...patch } : b)));
       setSelected((s) => (s ? { ...s, ...patch } : s));

@@ -459,6 +459,78 @@ export async function backfillFollowUpProgram(): Promise<{ updated: number }> {
   return { updated: users.length };
 }
 
+/**
+ * Admin manual reminder for the active follow-up month.
+ * Time O(1) lookups + O(1) notify; Space O(1).
+ */
+export async function sendManualFollowUpReminder(
+  beneficiaryId: string
+): Promise<ActionResult> {
+  const session = await getSession();
+  if (!session || session.role !== "ADMIN") {
+    return { success: false, error: "غير مصرح" };
+  }
+
+  const beneficiary = await prisma.user.findFirst({
+    where: {
+      id: beneficiaryId,
+      role: "BENEFICIARY",
+      stage: "FOLLOW_UP",
+      followUpProgramStatus: "ACTIVE",
+      followUpProgramStartedAt: { not: null },
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      followUpProgramStartedAt: true,
+    },
+  });
+  if (!beneficiary?.followUpProgramStartedAt) {
+    return { success: false, error: "برنامج المتابعة غير نشط" };
+  }
+
+  const month = getActiveFollowUpMonth(beneficiary.followUpProgramStartedAt);
+  if (!month) {
+    return { success: false, error: "لا يوجد شهر متابعة نشط حالياً" };
+  }
+
+  const record = await prisma.followUp.findUnique({
+    where: { beneficiaryId_month: { beneficiaryId, month } },
+  });
+  if (!record) {
+    return { success: false, error: "سجل الشهر غير موجود" };
+  }
+  if (record.status === "COMPLETED") {
+    return { success: false, error: "نموذج هذا الشهر مكتمل بالفعل" };
+  }
+
+  const now = new Date();
+  const settings = await getSystemSettings();
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+
+  await createNotification(
+    beneficiaryId,
+    `تذكير متابعة — الشهر ${month}`,
+    "تذكير يدوي من الإدارة: يُرجى إكمال نموذج المتابعة الشهري من لوحتك."
+  );
+  await safeSendEmail("manual follow-up reminder", () =>
+    sendFollowUpFormReminderEmail({
+      to: beneficiary.email,
+      name: beneficiary.name,
+      month,
+      dashboardUrl: `${appUrl}/dashboard/beneficiary#follow-up-month-${month}`,
+      senderEmail: settings.senderEmail,
+    })
+  );
+  await prisma.followUp.update({
+    where: { id: record.id },
+    data: { lastReminderAt: now },
+  });
+
+  return { success: true };
+}
+
 export async function getFollowUpSubmission(beneficiaryId: string, month: number) {
   const session = await getSession();
   if (!session || session.role !== "ADMIN") {

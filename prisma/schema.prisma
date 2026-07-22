@@ -230,6 +230,8 @@ model Opportunity {
   requirements String          @default("")
   salary       String?
   jobType      String?
+  /** When true, any approved beneficiary can see the opportunity (replaces per-user targeting). */
+  showToAll    Boolean         @default(true)
   applications Application[]
   targets      OpportunityTarget[]
   createdAt    DateTime        @default(now())

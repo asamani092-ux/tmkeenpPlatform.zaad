@@ -33,6 +33,7 @@ export default function AdminOpportunityForm({ onSuccess }: Props) {
             requirements: form.get("requirements"),
             salary: form.get("salary"),
             jobType: form.get("jobType"),
+            showToAll: form.get("showToAll") === "on",
           }),
         });
         const data = await res.json();
@@ -100,6 +101,10 @@ export default function AdminOpportunityForm({ onSuccess }: Props) {
           <option value="مغلقة">مغلقة</option>
         </select>
       </FieldRow>
+      <label className="flex cursor-pointer items-center gap-2 text-sm text-brand-gray">
+        <input type="checkbox" name="showToAll" defaultChecked className="shrink-0" />
+        عرض لجميع المستفيدين المعتمدين (بدل الاستهداف الفردي)
+      </label>
       <SubmitButton loading={pending} className="btn-primary w-full">
         إضافة الفرصة
       </SubmitButton>

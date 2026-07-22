@@ -6,7 +6,7 @@ import { Stage } from "@/generated/prisma/client";
 import { STAGE_LABELS, STAGE_ORDER } from "@/lib/stages";
 import FloatingModal from "@/components/admin/FloatingModal";
 import { toastSuccess, toastError } from "@/lib/toast";
-import { CheckCircle, ExternalLink, UserRound } from "lucide-react";
+import { CheckCircle, ExternalLink, Loader2, UserRound } from "lucide-react";
 
 type PipelineBeneficiary = {
   id: string;
@@ -27,6 +27,7 @@ export default function AdminPipelineBoard({ beneficiaries }: Props) {
   const router = useRouter();
   const [openView, setOpenView] = useState<OpenView | null>(null);
   const [quickView, setQuickView] = useState<PipelineBeneficiary | null>(null);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const byStage = STAGE_ORDER.reduce(
@@ -43,23 +44,30 @@ export default function AdminPipelineBoard({ beneficiaries }: Props) {
   function goToRegistrationFlow(beneficiaryId: string) {
     setOpenView(null);
     setQuickView(null);
+    toastSuccess("جاري فتح ملف المستفيد…");
     router.push(`/dashboard/admin?tab=management&beneficiary=${beneficiaryId}`);
   }
 
   function approve(beneficiaryId: string, action: "registration" | "transition") {
+    setApprovingId(beneficiaryId);
     startTransition(async () => {
-      const res = await fetch("/api/stage-approve", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ beneficiaryId, action }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        toastError(data.error || "فشل الاعتماد");
-        return;
+      try {
+        const res = await fetch("/api/stage-approve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ beneficiaryId, action }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          toastError(data.error || "فشل الاعتماد");
+          return;
+        }
+        toastSuccess("تم الاعتماد بنجاح — جاري تحديث اللوحة…");
+        setQuickView(null);
+        router.refresh();
+      } finally {
+        setApprovingId(null);
       }
-      toastSuccess("تم الاعتماد بنجاح");
-      router.refresh();
     });
   }
 
@@ -159,12 +167,18 @@ export default function AdminPipelineBoard({ beneficiaries }: Props) {
                       {b.pendingStage && (
                         <button
                           type="button"
-                          disabled={pending}
+                          disabled={pending && approvingId === b.id}
                           onClick={() => approve(b.id, "transition")}
                           className="btn-primary !px-3 !py-1.5 text-xs"
                         >
-                          <CheckCircle className="inline h-3 w-3" />
-                          اعتماد {STAGE_LABELS[b.pendingStage]}
+                          {pending && approvingId === b.id ? (
+                            <Loader2 className="inline h-3 w-3 animate-spin" />
+                          ) : (
+                            <CheckCircle className="inline h-3 w-3" />
+                          )}
+                          {pending && approvingId === b.id
+                            ? "جاري الاعتماد…"
+                            : `اعتماد ${STAGE_LABELS[b.pendingStage]}`}
                         </button>
                       )}
                     </div>
@@ -227,12 +241,18 @@ export default function AdminPipelineBoard({ beneficiaries }: Props) {
             {quickView.pendingStage && (
               <button
                 type="button"
-                disabled={pending}
+                disabled={pending && approvingId === quickView.id}
                 onClick={() => approve(quickView.id, "transition")}
                 className="btn-primary !px-3 !py-2 text-sm"
               >
-                <CheckCircle className="inline h-4 w-4" />
-                الانتقال للمرحلة التالية
+                {pending && approvingId === quickView.id ? (
+                  <Loader2 className="inline h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCircle className="inline h-4 w-4" />
+                )}
+                {pending && approvingId === quickView.id
+                  ? "جاري الاعتماد…"
+                  : "الانتقال للمرحلة التالية"}
               </button>
             )}
             <a

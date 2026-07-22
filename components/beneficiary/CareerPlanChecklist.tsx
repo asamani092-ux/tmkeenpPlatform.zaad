@@ -5,7 +5,7 @@ import { useSyncFromProps } from "@/lib/use-sync-from-props";
 import { beneficiaryCopy } from "@/lib/copy/ar";
 import type { BeneficiaryTask } from "@/lib/copy/ar";
 import { toastSuccess, toastError } from "@/lib/toast";
-import { CircleCheck } from "lucide-react";
+import { CircleCheck, RotateCcw } from "lucide-react";
 
 type Props = {
   tasks: BeneficiaryTask[];
@@ -15,10 +15,10 @@ export default function CareerPlanChecklist({ tasks: initial }: Props) {
   const [tasks, setTasks] = useSyncFromProps(initial);
   const [pending, startTransition] = useTransition();
 
-  function handleToggle(taskId: string) {
+  function handleToggle(taskId: string, nextCompleted: boolean) {
     const task = tasks.find((t) => t.id === taskId);
-    if (!task || task.isCompleted) return;
-    const nextCompleted = true;
+    if (!task || task.isCompleted === nextCompleted) return;
+
     setTasks((prev) =>
       prev.map((t) => (t.id === taskId ? { ...t, isCompleted: nextCompleted } : t))
     );
@@ -31,13 +31,15 @@ export default function CareerPlanChecklist({ tasks: initial }: Props) {
       });
       if (!res.ok) {
         setTasks((prev) =>
-          prev.map((t) => (t.id === taskId ? { ...t, isCompleted: false } : t))
+          prev.map((t) =>
+            t.id === taskId ? { ...t, isCompleted: !nextCompleted } : t
+          )
         );
         const data = await res.json().catch(() => ({}));
         toastError(data.error || "فشل تحديث المهمة");
         return;
       }
-      toastSuccess("تم إكمال المهمة");
+      toastSuccess(nextCompleted ? "تم إكمال المهمة" : "تم التراجع عن إتمام المهمة");
     });
   }
 
@@ -80,20 +82,28 @@ export default function CareerPlanChecklist({ tasks: initial }: Props) {
                   <span className="mt-1 block text-xs text-brand-gray">{task.description}</span>
                 )}
               </div>
-              <button
-                type="button"
-                disabled={pending || task.isCompleted}
-                onClick={() => handleToggle(task.id)}
-                aria-pressed={task.isCompleted}
-                className={`flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition ${
-                  task.isCompleted
-                    ? "bg-red-800 text-white shadow-sm"
-                    : "bg-red-800 text-white shadow-sm hover:bg-red-900"
-                } disabled:cursor-default disabled:opacity-100`}
-              >
-                <CircleCheck className="h-4 w-4" aria-hidden />
-                أتممت المهمة
-              </button>
+              {task.isCompleted ? (
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={() => handleToggle(task.id, false)}
+                  className="btn-secondary flex shrink-0 items-center gap-2 !px-4 !py-2 text-xs font-bold"
+                >
+                  <RotateCcw className="h-4 w-4" aria-hidden />
+                  تراجع عن الإتمام
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={() => handleToggle(task.id, true)}
+                  aria-pressed={false}
+                  className="flex shrink-0 items-center gap-2 rounded-full bg-red-800 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-red-900"
+                >
+                  <CircleCheck className="h-4 w-4" aria-hidden />
+                  أتممت المهمة
+                </button>
+              )}
             </div>
           </li>
         ))}

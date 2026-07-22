@@ -19,7 +19,7 @@
 | الصفحة الرئيسية | `/` | CTAs للضيف/المسجّل؛ أقسام المميزات والشركاء؛ شعار وخروج | غير مجرّب | |
 | تسجيل الدخول | `/login` | POST ناجح → لوحة الدور؛ رسالة خطأ؛ رابط نسيت كلمة المرور | غير مجرّب | |
 | تسجيل مستفيد | `/register` | رفع PDF اختياري؛ POST `/api/auth/register`؛ تحويل لـ `/login?registered=1` | غير مجرّب | |
-| استعادة كلمة المرور | `/forgot-password` | POST `/api/auth/forgot-password`؛ **غير موجود في Navbar** — من صفحة الدخول فقط | غير مجرّب | |
+| استعادة كلمة المرور | `/forgot-password` | POST `/api/auth/forgot-password`؛ **غير موجود في Navbar** — من صفحة الدخول فقط | غير مجرّب | Post-deploy: انظر `post-deploy-verify.md` |
 | خروج | POST `/api/auth/logout` | إنهاء الجلسة؛ منع `/dashboard/*` | غير مجرّب | |
 | توجيه اللوحة | `/dashboard` | ADMIN/GUIDE/BENEFICIARY → المسار الصحيح؛ middleware يمنع تبادل الأدوار | غير مجرّب | |
 
@@ -61,15 +61,15 @@
 | الأداة | المسار | ما يُتحقق منه | التقييم | ملاحظة |
 |--------|--------|----------------|---------|--------|
 | لوحة المدير | `/dashboard/admin` | بطاقات ملخص + تصدير | غير مجرّب | `admin@alzaad.org` |
-| تصدير CSV | رأس الصفحة | AdminBulkExport — 6 أقسام | غير مجرّب | |
-| لوحة التتبع | tab pipeline | اعتماد تسجيل/انتقال؛ POST `/api/stage-approve` | غير مجرّب | |
-| إدارة الفرص | tab opportunities | CRUD + استهداف `/api/opportunities/[id]/targets` | غير مجرّب | |
+| تصدير Excel | رأس الصفحة | AdminBulkExport — ملف واحد، ورقة لكل قسم | غير مجرّب | إصلاح UAT: أوراق متعددة |
+| لوحة التتبع | tab pipeline | اعتماد تسجيل/انتقال؛ POST `/api/stage-approve` | غير مجرّب | مؤشر تحميل أثناء الاعتماد |
+| إدارة الفرص | tab opportunities | CRUD + `showToAll` للجميع | غير مجرّب | أُلغي الاستهداف الفردي من الواجهة |
 | إدارة المرشدين | tab guides | POST/PATCH/DELETE `/api/guides` | غير مجرّب | |
 | إدارة المستفيدين | tab management | إسناد مرشد؛ تعديل؛ اعتماد | غير مجرّب | |
 | مراجعة التقديمات | tab applications | قبول/رفض PATCH `/api/applications/[id]` | غير مجرّب | |
-| متابعة ما بعد التوظيف | tab followup | POST/DELETE `/api/follow-ups` أشهر 1/3/6 | غير مجرّب | |
+| متابعة ما بعد التوظيف | tab followup | أشهر 1–6؛ تذكير يدوي؛ فجوات الأشهر | غير مجرّب | POST `/api/follow-ups/remind` |
 | قياس الأثر | tab impact | read-only آخر 6 أشهر | غير مجرّب | |
-| إعدادات النظام | tab settings | GET/PUT `/api/system-settings` | غير مجرّب | |
+| إعدادات النظام | tab settings | GET/PUT `/api/system-settings` | غير مجرّب | Post-deploy: انظر `post-deploy-verify.md` |
 
 ---
 

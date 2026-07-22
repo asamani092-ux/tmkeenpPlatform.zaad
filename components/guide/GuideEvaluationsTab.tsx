@@ -15,6 +15,7 @@ type Props = {
   professionalRecommendations: string;
   selectedCourseIds: string[];
   trainingCourses: TrainingCourse[];
+  readOnly?: boolean;
   onSaved?: (recommendations: string, courseIds: string[]) => void;
 };
 
@@ -23,6 +24,7 @@ export default function GuideEvaluationsTab({
   professionalRecommendations: initialRecs,
   selectedCourseIds: initialCourses,
   trainingCourses,
+  readOnly = false,
   onSaved,
 }: Props) {
   const router = useRouter();
@@ -31,6 +33,7 @@ export default function GuideEvaluationsTab({
   const [pending, startTransition] = useTransition();
 
   function toggleCourse(id: string) {
+    if (readOnly) return;
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -63,6 +66,12 @@ export default function GuideEvaluationsTab({
 
   return (
     <div className="space-y-4">
+      <p className="rounded-lg bg-surface-muted px-3 py-2 text-sm text-brand-gray">
+        <span className="font-semibold text-primary">التوصيات المهنية:</span> توجيه عام يظهر للمستفيد في
+        «من مرشدك».{" "}
+        <span className="font-semibold text-primary">المهام:</span> خطوات قابلة للتنفيذ يتابعها المستفيد
+        من «مهام المسار» ويمكنه تعليمها كمكتملة.
+      </p>
       <div className="card-section">
         <FieldRow label={guideCopy.recommendationsSection} htmlFor="recommendations" align="start">
           <textarea
@@ -72,6 +81,8 @@ export default function GuideEvaluationsTab({
             rows={5}
             className="input-field resize-none"
             placeholder="اكتب التوصيات المهنية للمستفيد..."
+            readOnly={readOnly}
+            disabled={readOnly}
           />
         </FieldRow>
       </div>
@@ -84,7 +95,11 @@ export default function GuideEvaluationsTab({
           <ul className="max-h-48 space-y-1 overflow-y-auto">
             {trainingCourses.map((c) => (
               <li key={c.id}>
-                <label className="flex cursor-pointer items-center justify-end gap-2 rounded px-2 py-1.5 text-sm hover:bg-surface-muted">
+                <label
+                  className={`flex items-center justify-end gap-2 rounded px-2 py-1.5 text-sm ${
+                    readOnly ? "" : "cursor-pointer hover:bg-surface-muted"
+                  }`}
+                >
                   <span>
                     {c.title} — {c.provider}
                   </span>
@@ -92,6 +107,7 @@ export default function GuideEvaluationsTab({
                     type="checkbox"
                     checked={selected.has(c.id)}
                     onChange={() => toggleCourse(c.id)}
+                    disabled={readOnly}
                   />
                 </label>
               </li>
@@ -100,15 +116,17 @@ export default function GuideEvaluationsTab({
         )}
       </div>
 
-      <SubmitButton
-        type="button"
-        onClick={handleSave}
-        loading={pending}
-        className="btn-primary flex w-full !py-2 text-sm"
-      >
-        <Save className="h-4 w-4" />
-        {guideCopy.saveProfileSections}
-      </SubmitButton>
+      {!readOnly && (
+        <SubmitButton
+          type="button"
+          onClick={handleSave}
+          loading={pending}
+          className="btn-primary flex w-full !py-2 text-sm"
+        >
+          <Save className="h-4 w-4" />
+          {guideCopy.saveProfileSections}
+        </SubmitButton>
+      )}
     </div>
   );
 }

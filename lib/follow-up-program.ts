@@ -42,7 +42,10 @@ export function formatCountdown(targetDate: Date, now = new Date()): string {
   return `متبقي ${days} يوماً`;
 }
 
+/** Open from 15 minutes before start until 2 hours after start. */
 export function canJoinSession(sessionDate: Date, now = new Date()): boolean {
   const opensAt = sessionDate.getTime() - 15 * 60 * 1000;
-  return now.getTime() >= opensAt;
+  const closesAt = sessionDate.getTime() + 2 * 60 * 60 * 1000;
+  const t = now.getTime();
+  return t >= opensAt && t <= closesAt;
 }

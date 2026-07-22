@@ -231,7 +231,7 @@ export const UAT_GROUPS: UatToolGroup[] = [
         id: "admin-opportunities",
         tool: "إدارة الفرص",
         path: "tab opportunities",
-        checks: "CRUD /api/opportunities؛ استهداف /targets",
+        checks: "CRUD /api/opportunities؛ showToAll للجميع",
       },
       {
         id: "admin-guides",
@@ -255,7 +255,7 @@ export const UAT_GROUPS: UatToolGroup[] = [
         id: "admin-followup",
         tool: "متابعة ما بعد التوظيف",
         path: "tab followup",
-        checks: "POST/DELETE /api/follow-ups أشهر 1/3/6",
+        checks: "أشهر 1–6؛ تذكير يدوي /api/follow-ups/remind؛ فجوات الأشهر",
       },
       {
         id: "admin-impact",

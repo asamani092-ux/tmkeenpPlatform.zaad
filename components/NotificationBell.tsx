@@ -15,13 +15,22 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [unread, setUnread] = useState(0);
+  const [loadError, setLoadError] = useState(false);
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/notifications");
-    if (!res.ok) return;
-    const data = await res.json();
-    setItems(data.notifications ?? []);
-    setUnread(data.unreadCount ?? 0);
+    try {
+      const res = await fetch("/api/notifications");
+      if (!res.ok) {
+        setLoadError(true);
+        return;
+      }
+      const data = await res.json();
+      setItems(data.notifications ?? []);
+      setUnread(data.unreadCount ?? 0);
+      setLoadError(false);
+    } catch {
+      setLoadError(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -29,6 +38,10 @@ export default function NotificationBell() {
     const interval = setInterval(load, 60000);
     return () => clearInterval(interval);
   }, [load]);
+
+  useEffect(() => {
+    if (open) load();
+  }, [open, load]);
 
   async function markRead(id: string) {
     await fetch("/api/notifications", {
@@ -79,7 +92,18 @@ export default function NotificationBell() {
               <h3 className="font-bold text-primary">الإشعارات</h3>
             </div>
             <ul className="max-h-72 space-y-2 overflow-y-auto">
-              {items.length === 0 ? (
+              {loadError ? (
+                <li className="py-4 text-center text-sm text-brand-gray">
+                  تعذر تحميل الإشعارات
+                  <button
+                    type="button"
+                    className="mt-2 block w-full text-xs font-semibold text-primary"
+                    onClick={load}
+                  >
+                    إعادة المحاولة
+                  </button>
+                </li>
+              ) : items.length === 0 ? (
                 <li className="py-4 text-center text-sm text-brand-gray">لا توجد إشعارات</li>
               ) : (
                 items.map((n) => (

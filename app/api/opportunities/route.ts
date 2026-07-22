@@ -5,8 +5,17 @@ import { OpportunityType } from "@/generated/prisma/client";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { type, title, provider, duration, status, requirements, salary, jobType } =
-      body;
+    const {
+      type,
+      title,
+      provider,
+      duration,
+      status,
+      requirements,
+      salary,
+      jobType,
+      showToAll,
+    } = body;
 
     if (!type || !title || !provider || !duration || !status) {
       return NextResponse.json({ error: "جميع الحقول مطلوبة" }, { status: 400 });
@@ -25,6 +34,7 @@ export async function POST(request: Request) {
       requirements: String(requirements ?? ""),
       salary: String(salary ?? ""),
       jobType: String(jobType ?? ""),
+      showToAll: showToAll !== false,
     });
 
     if (!result.success) {

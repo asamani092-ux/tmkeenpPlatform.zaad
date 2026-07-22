@@ -42,6 +42,12 @@ export default function GuideBeneficiaryTabs({
         </button>
       </div>
 
+      <p className="text-sm text-brand-gray">
+        {tab === "active"
+          ? "المستفيدون في مرحلة الإرشاد — يمكنك التعديل وجدولة الجلسات والمهام."
+          : "عرض فقط للمستفيدين بعد مرحلة الإرشاد — لا يمكن التعديل من هذه القائمة."}
+      </p>
+
       {tab === "active" ? (
         <GuideBeneficiaryTable
           beneficiaries={activeBeneficiaries}

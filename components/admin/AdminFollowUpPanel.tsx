@@ -13,7 +13,7 @@ import {
   FOLLOW_UP_STATUS_LABELS,
 } from "@/lib/labels";
 import type { FollowUpProgramStatus } from "@/generated/prisma/client";
-import { Eye, ExternalLink, Pause, Play, StopCircle } from "lucide-react";
+import { Bell, Eye, ExternalLink, Pause, Play, StopCircle } from "lucide-react";
 
 type FollowUp = {
   id: string;
@@ -22,6 +22,7 @@ type FollowUp = {
   notes: string;
   answers?: Record<string, string> | null;
   submittedAt?: string | null;
+  opensAt?: string | null;
   dueAt?: string | null;
   beneficiary: { id: string; name: string; phone: string };
 };
@@ -124,6 +125,38 @@ function latestStatusLabel(g: GroupedBeneficiary) {
 
 function statusLabel(status: string) {
   return FOLLOW_UP_STATUS_LABELS[status as keyof typeof FOLLOW_UP_STATUS_LABELS] ?? status;
+}
+
+function formatShortDate(value?: string | null) {
+  if (!value) return "—";
+  return new Date(value).toLocaleDateString("ar-SA");
+}
+
+/** Later month completed/pending while earlier month empty or missed gap */
+function monthGapMessage(records: FollowUp[]): string | null {
+  for (let earlier = 1; earlier <= 5; earlier++) {
+    const early = records.find((r) => r.month === earlier);
+    const earlyEmpty =
+      !early ||
+      early.status === "PENDING" ||
+      early.status === "MISSED";
+    if (!earlyEmpty) continue;
+    for (let later = earlier + 1; later <= 6; later++) {
+      const late = records.find((r) => r.month === later);
+      if (late && (late.status === "COMPLETED" || late.status === "PENDING")) {
+        if (!early) {
+          return `فجوة: الشهر ${earlier} بلا سجل بينما الشهر ${later} له حالة ${statusLabel(late.status)}.`;
+        }
+        if (early.status === "MISSED" && late.status === "COMPLETED") {
+          return `تنبيه: الشهر ${earlier} فائت بينما الشهر ${later} مكتمل.`;
+        }
+        if (early.status === "PENDING" && late.status === "COMPLETED") {
+          return `فجوة: الشهر ${earlier} ما زال معلّقاً بينما الشهر ${later} مكتمل.`;
+        }
+      }
+    }
+  }
+  return null;
 }
 
 export default function AdminFollowUpPanel({
@@ -273,6 +306,22 @@ export default function AdminFollowUpPanel({
     });
   }
 
+  function sendReminder(beneficiaryId: string) {
+    startTransition(async () => {
+      const res = await fetch("/api/follow-ups/remind", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ beneficiaryId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toastError(data.error || "فشل إرسال التذكير");
+        return;
+      }
+      toastSuccess("تم إرسال تذكير المتابعة للمستفيد");
+    });
+  }
+
   const canPause = selected?.programStatus === "ACTIVE";
   const canResume =
     selected?.programStatus === "PAUSED" || selected?.programStatus === "COMPLETED";
@@ -363,12 +412,20 @@ export default function AdminFollowUpPanel({
               </div>
             )}
 
+            {monthGapMessage(selected.records) && (
+              <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                {monthGapMessage(selected.records)}
+              </div>
+            )}
+
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[600px] text-sm">
+              <table className="w-full min-w-[720px] text-sm">
                 <thead className="bg-primary/5 text-primary">
                   <tr>
                     <th className="px-3 py-2 text-start">الشهر</th>
                     <th className="px-3 py-2 text-start">الحالة</th>
+                    <th className="px-3 py-2 text-start">يفتح</th>
+                    <th className="px-3 py-2 text-start">الاستحقاق</th>
                     <th className="px-3 py-2 text-start">عرض الإجابات</th>
                     <th className="px-3 py-2 text-start">ملاحظات الشهر</th>
                   </tr>
@@ -380,7 +437,27 @@ export default function AdminFollowUpPanel({
                       <tr key={month} className="border-t border-surface-border">
                         <td className="px-3 py-2 font-medium">شهر {month}</td>
                         <td className="px-3 py-2">
-                          {record ? statusLabel(record.status) : "—"}
+                          {record ? (
+                            <span
+                              className={
+                                record.status === "MISSED"
+                                  ? "font-semibold text-red-600"
+                                  : record.status === "COMPLETED"
+                                    ? "font-semibold text-green-700"
+                                    : undefined
+                              }
+                            >
+                              {statusLabel(record.status)}
+                            </span>
+                          ) : (
+                            <span className="text-brand-gray">بلا سجل</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 text-xs text-brand-gray">
+                          {formatShortDate(record?.opensAt)}
+                        </td>
+                        <td className="px-3 py-2 text-xs text-brand-gray">
+                          {formatShortDate(record?.dueAt)}
                         </td>
                         <td className="px-3 py-2">
                           {record?.status === "COMPLETED" && record.answers ? (
@@ -430,6 +507,17 @@ export default function AdminFollowUpPanel({
             </div>
 
             <div className="flex flex-wrap gap-2 border-t border-surface-border pt-4">
+              {canPause && (
+                <button
+                  type="button"
+                  onClick={() => sendReminder(selected.id)}
+                  disabled={pending}
+                  className="btn-primary inline-flex !px-4 !py-2 text-sm"
+                >
+                  <Bell className="h-4 w-4" />
+                  إعادة إرسال تذكير
+                </button>
+              )}
               {canPause && (
                 <button
                   type="button"

@@ -23,6 +23,7 @@ import { STAGE_LABELS, getNextStage } from "@/lib/stages";
 import { SESSION_STATUS_LABELS } from "@/lib/labels";
 import { getUpcomingSession } from "@/lib/upcoming-session";
 import { formatCountdown } from "@/lib/follow-up-program";
+import { fromDatetimeLocalValue, toDatetimeLocalValue } from "@/lib/datetime-local";
 import ContactLinks from "@/components/ui/ContactLinks";
 import { useSyncFromProps } from "@/lib/use-sync-from-props";
 import { toastSuccess, toastError } from "@/lib/toast";
@@ -307,6 +308,14 @@ export default function GuideBeneficiaryTable({
 
     if (!selected || !sessionDate) return;
 
+    let dateIso: string;
+    try {
+      dateIso = fromDatetimeLocalValue(sessionDate);
+    } catch {
+      toastError("تاريخ غير صالح");
+      return;
+    }
+
     startTransition(async () => {
 
       const res = await fetch("/api/sessions", {
@@ -319,7 +328,7 @@ export default function GuideBeneficiaryTable({
 
           beneficiaryId: selected.id,
 
-          date: sessionDate,
+          date: dateIso,
 
           notes: sessionNotes,
 
@@ -377,7 +386,7 @@ export default function GuideBeneficiaryTable({
 
     setEditingSessionId(s.id);
 
-    setEditSessionDate(s.date.slice(0, 16));
+    setEditSessionDate(toDatetimeLocalValue(s.date));
 
     setEditSessionNotes(s.notes);
 
@@ -397,6 +406,14 @@ export default function GuideBeneficiaryTable({
 
     if (!selected || !editingSessionId) return;
 
+    let dateIso: string;
+    try {
+      dateIso = fromDatetimeLocalValue(editSessionDate);
+    } catch {
+      toastError("تاريخ غير صالح");
+      return;
+    }
+
     startTransition(async () => {
 
       const res = await fetch(`/api/sessions/${editingSessionId}`, {
@@ -407,7 +424,7 @@ export default function GuideBeneficiaryTable({
 
         body: JSON.stringify({
 
-          date: editSessionDate,
+          date: dateIso,
 
           notes: editSessionNotes,
 
@@ -440,7 +457,7 @@ export default function GuideBeneficiaryTable({
             s.id === editingSessionId
               ? {
                   ...s,
-                  date: editSessionDate,
+                  date: dateIso,
                   notes: editSessionNotes,
                   meetingLink: editSessionMeetingLink || null,
                   location: editSessionLocation || null,
@@ -761,7 +778,8 @@ export default function GuideBeneficiaryTable({
     { id: "evaluations", label: guideCopy.evaluationsTab, icon: Star },
   ];
 
-  const tabs = readOnly ? allTabs.filter((t) => t.id === "profile") : allTabs;
+  /* Previous beneficiaries: all tabs visible, write actions gated by readOnly */
+  const tabs = allTabs;
 
 
 
@@ -1117,7 +1135,7 @@ export default function GuideBeneficiaryTable({
 
 
 
-            {!readOnly && activeTab === "sessions" && (
+            {activeTab === "sessions" && (
 
               <div className="card-section space-y-4">
 
@@ -1131,6 +1149,7 @@ export default function GuideBeneficiaryTable({
 
                   </h4>
 
+                  {!readOnly && (
                   <div className="flex flex-wrap gap-2">
 
                     <button
@@ -1150,6 +1169,7 @@ export default function GuideBeneficiaryTable({
                     </button>
 
                   </div>
+                  )}
 
                 </div>
 
@@ -1231,6 +1251,7 @@ export default function GuideBeneficiaryTable({
 
                           <div className="flex justify-between gap-2">
 
+                            {!readOnly && (
                             <div className="flex flex-wrap gap-1">
 
                               {s.status === "SCHEDULED" && (
@@ -1256,6 +1277,7 @@ export default function GuideBeneficiaryTable({
                               <button type="button" onClick={() => handleDeleteSession(s.id)} className="text-red-600" title={guideCopy.deleteSession}><Trash2 className="h-4 w-4" /></button>
 
                             </div>
+                            )}
 
                             <div className="text-start">
 
@@ -1297,7 +1319,9 @@ export default function GuideBeneficiaryTable({
 
                 ) : (
 
-                  <p className="text-sm text-brand-gray">لا توجد جلسات مجدولة — استخدم زر الجدولة لإضافة جلسة</p>
+                  <p className="text-sm text-brand-gray">
+                    {readOnly ? "لا توجد جلسات مسجّلة" : "لا توجد جلسات مجدولة — استخدم زر الجدولة لإضافة جلسة"}
+                  </p>
 
                 )}
 
@@ -1305,14 +1329,14 @@ export default function GuideBeneficiaryTable({
 
             )}
 
-            {!readOnly && activeTab === "tasks" && selected && (() => {
+            {activeTab === "tasks" && selected && (() => {
               const currentTasks = selected.tasks.filter((t) => !t.isCompleted);
               const completedTasks = selected.tasks.filter((t) => t.isCompleted);
 
               function renderTaskItem(t: BeneficiaryTask) {
                 return (
                   <li key={t.id} className="rounded-lg border border-surface-border px-3 py-2">
-                    {editingTaskId === t.id ? (
+                    {editingTaskId === t.id && !readOnly ? (
                       <div className="space-y-2">
                         <FieldRow label={guideCopy.taskTitleLabel}>
                           <input value={editTaskTitle} onChange={(e) => setEditTaskTitle(e.target.value)} className="input-field" />
@@ -1327,10 +1351,12 @@ export default function GuideBeneficiaryTable({
                       </div>
                     ) : (
                       <div className="flex items-start justify-between gap-2">
+                        {!readOnly && (
                         <div className="flex gap-1">
                           <button type="button" onClick={() => startEditTask(t)} className="text-primary" title={guideCopy.editTask}><Pencil className="h-4 w-4" /></button>
                           <button type="button" onClick={() => handleDeleteTask(t.id)} className="text-red-600" title={guideCopy.deleteTask}><Trash2 className="h-4 w-4" /></button>
                         </div>
+                        )}
                         <div className="text-start">
                           <span className={`text-sm font-medium ${t.isCompleted ? "line-through opacity-60" : "text-primary"}`}>{t.title}</span>
                           {t.description && <p className="mt-1 text-xs text-brand-gray">{t.description}</p>}
@@ -1345,6 +1371,7 @@ export default function GuideBeneficiaryTable({
                 <div className="card-section space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <h4 className="font-bold text-primary">{guideCopy.tasksCardTitle}</h4>
+                    {!readOnly && (
                     <button
                       type="button"
                       onClick={() => setTaskDrawerOpen(true)}
@@ -1353,6 +1380,7 @@ export default function GuideBeneficiaryTable({
                       <Plus className="h-4 w-4" />
                       {guideCopy.addNewTask}
                     </button>
+                    )}
                   </div>
 
                   <div className="space-y-3">
@@ -1380,7 +1408,7 @@ export default function GuideBeneficiaryTable({
 
 
 
-            {!readOnly && activeTab === "evaluations" && selected && (
+            {activeTab === "evaluations" && selected && (
 
               <GuideEvaluationsTab
 
@@ -1391,6 +1419,8 @@ export default function GuideBeneficiaryTable({
                 selectedCourseIds={selected.selectedTrainingCourseIds}
 
                 trainingCourses={trainingCourses}
+
+                readOnly={readOnly}
 
                 onSaved={(recs, courseIds) =>
 

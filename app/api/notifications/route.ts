@@ -5,12 +5,21 @@ import {
   getUnreadNotificationCount,
   markNotificationRead,
   markAllNotificationsRead,
+  syncFollowUpRemindersForAdmin,
 } from "@/lib/notifications";
 
 export async function GET() {
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
+  }
+
+  if (session.role === "ADMIN") {
+    try {
+      await syncFollowUpRemindersForAdmin();
+    } catch {
+      /* non-fatal — still return existing notifications */
+    }
   }
 
   const [notifications, unreadCount] = await Promise.all([

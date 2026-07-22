@@ -133,7 +133,8 @@ export default async function GuideDashboardPage() {
           <div className="text-start">
             <h1 className="text-2xl font-bold text-primary">لوحة المرشد المهني</h1>
             <p className="text-brand-gray">
-              المستفيدون في مرحلة الإرشاد ({serialized.length}) — عرض وتعديل
+              النشطون ({serialized.length}) قابلون للتعديل · السابقون (
+              {previousSerialized.length}) للعرض فقط
             </p>
           </div>
         </div>

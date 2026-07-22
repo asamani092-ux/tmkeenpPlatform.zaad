@@ -105,6 +105,7 @@ async function main() {
     },
   });
 
+  const followUpStartedAt = new Date(Date.now() - 86400000 * 75);
   const beneficiary4 = await prisma.user.create({
     data: {
       name: "خالد الشمري",
@@ -113,7 +114,10 @@ async function main() {
       password: passwordHash,
       role: "BENEFICIARY",
       stage: "FOLLOW_UP",
-      stageEnteredAt: new Date(Date.now() - 86400000 * 30 * 6),
+      stageEnteredAt: followUpStartedAt,
+      followUpProgramStatus: "ACTIVE",
+      followUpProgramStartedAt: followUpStartedAt,
+      followUpStatusUpdatedAt: followUpStartedAt,
       guideId: guide.id,
       educationLevel: "بكالوريوس محاسبة",
       experience: "سنتان في محاسبة",
@@ -172,6 +176,7 @@ async function main() {
       duration: "6 أسابيع",
       status: "متاحة",
       requirements: "إتمام مرحلة الإرشاد — التفرغ للحضور",
+      showToAll: true,
     },
   });
 
@@ -183,6 +188,7 @@ async function main() {
       duration: "4 أسابيع",
       status: "متاحة",
       requirements: "مهارات حاسب أساسية",
+      showToAll: true,
     },
   });
 
@@ -196,6 +202,7 @@ async function main() {
       requirements: "شهادة ثانوية — خبرة سنة",
       salary: "4500 ريال",
       jobType: "دوام كامل",
+      showToAll: true,
     },
   });
 
@@ -269,6 +276,11 @@ async function main() {
     ],
   });
 
+  const dayMs = 86400000;
+  const monthWindow = (month: number) => ({
+    opensAt: new Date(followUpStartedAt.getTime() + (month - 1) * 30 * dayMs),
+    dueAt: new Date(followUpStartedAt.getTime() + month * 30 * dayMs),
+  });
   await prisma.followUp.createMany({
     data: [
       {
@@ -276,14 +288,80 @@ async function main() {
         month: 1,
         status: "COMPLETED",
         notes: "استقرار جيد في العمل",
+        submittedAt: new Date(followUpStartedAt.getTime() + 20 * dayMs),
+        ...monthWindow(1),
+      },
+      {
+        beneficiaryId: beneficiary4.id,
+        month: 2,
+        status: "MISSED",
+        notes: "لم يُرسل النموذج في الموعد",
+        ...monthWindow(2),
       },
       {
         beneficiaryId: beneficiary4.id,
         month: 3,
         status: "PENDING",
         notes: "",
+        ...monthWindow(3),
+      },
+      {
+        beneficiaryId: beneficiary4.id,
+        month: 4,
+        status: "PENDING",
+        notes: "",
+        ...monthWindow(4),
+      },
+      {
+        beneficiaryId: beneficiary4.id,
+        month: 5,
+        status: "PENDING",
+        notes: "",
+        ...monthWindow(5),
+      },
+      {
+        beneficiaryId: beneficiary4.id,
+        month: 6,
+        status: "PENDING",
+        notes: "",
+        ...monthWindow(6),
       },
     ],
+  });
+
+  const admin = await prisma.user.findUnique({
+    where: { email: "admin@alzaad.org" },
+    select: { id: true },
+  });
+  if (admin) {
+    await prisma.inAppNotification.createMany({
+      data: [
+        {
+          userId: admin.id,
+          title: "مرحباً بك في المنصة",
+          message: "هذا إشعار تجريبي للتأكد من عمل جرس الإشعارات.",
+        },
+        {
+          userId: guide.id,
+          title: "مستفيد بانتظار الجلسة",
+          message: "تحقق من جدول جلسات المستفيدين النشطين.",
+        },
+        {
+          userId: beneficiary2.id,
+          title: "تحديث من مرشدك",
+          message: "تمت إضافة توصيات مهنية لحسابك — راجع قسم «من مرشدك».",
+        },
+      ],
+    });
+  }
+
+  // Ensure guidance beneficiary has visible recommendations for UAT
+  await prisma.user.update({
+    where: { id: beneficiary2.id },
+    data: {
+      professionalRecommendations:
+        "التركيز على مهارات المبيعات وخدمة العملاء، مع بناء سيرة ذاتية قصيرة وواضحة.",
+    },
   });
 
   console.log("Seed V5 completed.");

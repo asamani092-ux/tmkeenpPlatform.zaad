@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { OPPORTUNITY_STATUS_LABELS } from "@/lib/labels";
-import { Pencil, Trash2, Users, ChevronDown, ChevronUp } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { useSyncFromProps } from "@/lib/use-sync-from-props";
-
 
 type Opportunity = {
   id: string;
@@ -19,119 +18,17 @@ type Opportunity = {
   requirements: string;
   salary: string | null;
   jobType: string | null;
-};
-
-type BeneficiaryOption = {
-  id: string;
-  name: string;
-  phone: string;
-  stage: string;
+  showToAll: boolean;
 };
 
 type Props = {
   opportunities: Opportunity[];
-  beneficiaries: BeneficiaryOption[];
 };
 
-function OpportunityTargetPanel({
-  opportunityId,
-  beneficiaries,
-  onMessage,
-}: {
-  opportunityId: string;
-  beneficiaries: BeneficiaryOption[];
-  onMessage: (msg: string) => void;
-}) {
-  const router = useRouter();
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [loaded, setLoaded] = useState(false);
-  const [pending, startTransition] = useTransition();
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch(`/api/opportunities/${opportunityId}/targets`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (cancelled) return;
-        setSelected(new Set(data.beneficiaryIds ?? []));
-        setLoaded(true);
-      })
-      .catch(() => setLoaded(true));
-    return () => {
-      cancelled = true;
-    };
-  }, [opportunityId]);
-
-  function toggle(id: string) {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
-
-  function handleSave() {
-    startTransition(async () => {
-      const res = await fetch(`/api/opportunities/${opportunityId}/targets`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ beneficiaryIds: [...selected] }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        onMessage(data.error || "فشل حفظ الاستهداف");
-        return;
-      }
-      onMessage("تم حفظ المستفيدين المستهدفين");
-      router.refresh();
-    });
-  }
-
-  if (!loaded) {
-    return <p className="mt-3 text-sm text-brand-gray">جاري التحميل...</p>;
-  }
-
-  return (
-    <div className="mt-3 rounded-lg border border-primary/20 bg-surface-muted p-3 text-start">
-      <p className="mb-2 text-sm font-semibold text-primary">
-        استهداف مستفيدين محددين (يظهر لهم حتى خارج مرحلتهم)
-      </p>
-      <ul className="mb-3 max-h-40 space-y-1 overflow-y-auto">
-        {beneficiaries.map((b) => (
-          <li key={b.id}>
-            <label className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-surface">
-              <span className="flex-1 text-start text-brand-gray">{b.name}</span>
-              <input
-                type="checkbox"
-                checked={selected.has(b.id)}
-                onChange={() => toggle(b.id)}
-                className="shrink-0"
-              />
-            </label>
-          </li>
-        ))}
-      </ul>
-      <SubmitButton
-        type="button"
-        onClick={handleSave}
-        loading={pending}
-        className="btn-primary w-full !py-2 text-sm"
-      >
-        حفظ الاستهداف
-      </SubmitButton>
-    </div>
-  );
-}
-
-export default function AdminOpportunityList({
-  opportunities: initial,
-  beneficiaries,
-}: Props) {
+export default function AdminOpportunityList({ opportunities: initial }: Props) {
   const router = useRouter();
   const [opportunities, setOpportunities] = useSyncFromProps(initial);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [targetingId, setTargetingId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [pending, startTransition] = useTransition();
 
@@ -166,6 +63,7 @@ export default function AdminOpportunityList({
           requirements: form.get("requirements"),
           salary: form.get("salary"),
           jobType: form.get("jobType"),
+          showToAll: form.get("showToAll") === "on",
         }),
       });
       const data = await res.json();
@@ -225,6 +123,15 @@ export default function AdminOpportunityList({
                       ))}
                     </select>
                   </FieldRow>
+                  <label className="flex cursor-pointer items-center gap-2 text-sm text-brand-gray">
+                    <input
+                      type="checkbox"
+                      name="showToAll"
+                      defaultChecked={opp.showToAll}
+                      className="shrink-0"
+                    />
+                    عرض لجميع المستفيدين المعتمدين
+                  </label>
                   <div className="flex gap-2">
                     <SubmitButton loading={pending} className="btn-primary flex-1 !py-2 text-sm">
                       حفظ
@@ -239,14 +146,6 @@ export default function AdminOpportunityList({
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="min-w-0 flex-1 font-bold text-primary">{opp.title}</h3>
                     <div className="flex shrink-0 gap-1">
-                      <button
-                        type="button"
-                        onClick={() => setTargetingId(targetingId === opp.id ? null : opp.id)}
-                        className="rounded p-1 text-primary hover:bg-surface-muted"
-                        title="استهداف مستفيدين"
-                      >
-                        <Users className="h-4 w-4" />
-                      </button>
                       <button type="button" onClick={() => setEditingId(opp.id)} className="rounded p-1 text-primary hover:bg-surface-muted">
                         <Pencil className="h-4 w-4" />
                       </button>
@@ -267,31 +166,9 @@ export default function AdminOpportunityList({
                       {OPPORTUNITY_STATUS_LABELS[opp.status as keyof typeof OPPORTUNITY_STATUS_LABELS] ??
                         opp.status}
                     </span>
+                    {" · "}
+                    {opp.showToAll ? "للجميع" : "حسب المرحلة"}
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => setTargetingId(targetingId === opp.id ? null : opp.id)}
-                    className="mt-2 flex w-full items-center justify-center gap-1 text-sm font-semibold text-primary hover:underline"
-                  >
-                    {targetingId === opp.id ? (
-                      <>
-                        إخفاء الاستهداف
-                        <ChevronUp className="h-4 w-4" />
-                      </>
-                    ) : (
-                      <>
-                        استهداف مستفيدين
-                        <ChevronDown className="h-4 w-4" />
-                      </>
-                    )}
-                  </button>
-                  {targetingId === opp.id && (
-                    <OpportunityTargetPanel
-                      opportunityId={opp.id}
-                      beneficiaries={beneficiaries}
-                      onMessage={setMessage}
-                    />
-                  )}
                 </>
               )}
             </li>

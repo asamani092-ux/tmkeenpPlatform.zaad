@@ -496,6 +496,7 @@ export async function createOpportunity(data: {
   requirements: string;
   salary: string;
   jobType: string;
+  showToAll?: boolean;
 }): Promise<ActionResult> {
   const session = await getSession();
   if (!session || session.role !== "ADMIN") {
@@ -516,6 +517,7 @@ export async function createOpportunity(data: {
       requirements: data.requirements.trim(),
       salary: data.salary.trim() || null,
       jobType: data.jobType.trim() || null,
+      showToAll: data.showToAll !== false,
     },
   });
 
@@ -533,6 +535,7 @@ export async function updateOpportunity(
     requirements: string;
     salary: string;
     jobType: string;
+    showToAll: boolean;
   }>
 ): Promise<ActionResult> {
   const session = await getSession();
@@ -556,6 +559,7 @@ export async function updateOpportunity(
         : {}),
       ...(data.salary !== undefined ? { salary: data.salary.trim() || null } : {}),
       ...(data.jobType !== undefined ? { jobType: data.jobType.trim() || null } : {}),
+      ...(data.showToAll !== undefined ? { showToAll: data.showToAll } : {}),
     },
   });
 

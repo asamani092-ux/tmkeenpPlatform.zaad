@@ -125,7 +125,13 @@ export default async function BeneficiaryDashboardPage() {
 
   const targetedOppIds = new Set(targetedRows.map((t) => t.opportunityId));
   const visibleOpportunities = allOpportunities.filter((opp) =>
-    beneficiaryCanSeeOpportunity(user.stage, opp.type, opp.id, targetedOppIds)
+    beneficiaryCanSeeOpportunity(
+      user.stage,
+      opp.type,
+      opp.id,
+      targetedOppIds,
+      opp.showToAll
+    )
   );
   const trainingOpportunities = visibleOpportunities.filter((o) => o.type === "TRAINING");
   const employmentOpportunities = visibleOpportunities.filter((o) => o.type === "EMPLOYMENT");
@@ -252,7 +258,10 @@ export default async function BeneficiaryDashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <BeneficiaryGuideSummaryCard guide={user.guide} />
+          <BeneficiaryGuideSummaryCard
+            guide={user.guide}
+            professionalRecommendations={user.professionalRecommendations}
+          />
           <CommitmentTracker
             score={user.commitmentScore}
             variant="card"
