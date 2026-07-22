@@ -69,7 +69,7 @@ export default function BeneficiaryGuideDrawer({
               <FieldGrid cols={1}>
                 <DetailRow label="المرشد" value={guide.name} />
                 <DetailRow label="الجوال" value={guide.phone} ltr singleLine />
-                <DetailRow label="البريد" value={guide.email} ltr />
+                <DetailRow label="البريد" value={guide.email} ltr singleLine />
               </FieldGrid>
               <ContactLinks phone={guide.phone} email={guide.email} />
             </div>

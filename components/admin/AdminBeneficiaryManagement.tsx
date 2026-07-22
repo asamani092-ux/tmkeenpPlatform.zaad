@@ -465,9 +465,9 @@ export default function AdminBeneficiaryManagement({
                   </button>
                 </div>
                 <FieldGrid>
-                  <DetailRow label="رقم الجوال" value={selected.phone} ltr />
-                  <DetailRow label="البريد" value={selected.email} ltr />
-                  <DetailRow label="المرشد" value={selected.guideName} />
+                  <DetailRow label="رقم الجوال" value={selected.phone} ltr singleLine />
+                  <DetailRow label="البريد" value={selected.email} ltr singleLine />
+                  <DetailRow label="المرشد" value={selected.guideName} singleLine />
                   <DetailRow
                     label="مؤشر الالتزام"
                     value={<span className="font-bold">{selected.commitmentScore}</span>}

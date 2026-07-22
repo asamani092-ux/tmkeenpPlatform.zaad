@@ -51,7 +51,7 @@ export default function BeneficiaryUnifiedProfileModal({
         <FloatingModal title="الملف الموحد" onClose={() => setOpen(false)} wide>
           <FieldGrid>
             <DetailRow label="الاسم" value={profile.name} />
-            <DetailRow label="البريد" value={profile.email} ltr />
+            <DetailRow label="البريد" value={profile.email} ltr singleLine />
             <DetailRow label="الجوال" value={profile.phone} ltr singleLine />
             <DetailRow label="المستوى التعليمي" value={profile.educationLevel || "—"} />
             <div className="sm:col-span-2">

@@ -192,8 +192,8 @@ export default function BeneficiaryOpportunitiesProfile({
               }
             />
             <DetailRow label="الشهادات" value={userMeta.certificatesUrls ? "مرفقة" : "—"} />
-            <DetailRow label="الجوال" value={userMeta.phone} ltr />
-            <DetailRow label="البريد" value={userMeta.email} ltr />
+            <DetailRow label="الجوال" value={userMeta.phone} ltr singleLine />
+            <DetailRow label="البريد" value={userMeta.email} ltr singleLine />
             <div className="sm:col-span-2">
               <DetailRow label="الخبرات" value={userMeta.experience || "—"} />
             </div>
