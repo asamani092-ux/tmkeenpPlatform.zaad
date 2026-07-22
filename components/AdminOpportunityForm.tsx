@@ -103,7 +103,7 @@ export default function AdminOpportunityForm({ onSuccess }: Props) {
       </FieldRow>
       <label className="flex cursor-pointer items-center gap-2 text-sm text-brand-gray">
         <input type="checkbox" name="showToAll" defaultChecked className="shrink-0" />
-        عرض لجميع المستفيدين المعتمدين (بدل الاستهداف الفردي)
+        عرض لجميع المستفيدين المعتمدين
       </label>
       <SubmitButton loading={pending} className="btn-primary w-full">
         إضافة الفرصة
