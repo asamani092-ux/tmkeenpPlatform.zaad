@@ -8,6 +8,12 @@
 - تحقق: POST `/api/auth/forgot-password` يصل بريد الاستعادة عند ضبط SMTP
 - حساب تجربة: أي بريد seed صالح مع صندوق بريد قابل للمراقبة
 
+## register email OTP
+
+- المسار: `/register` → بعد تعبئة النموذج يُرسل رمز 6 أرقام إلى البريد (نطاقات معروفة فقط: Gmail/Outlook/Yahoo/Hotmail…)
+- تحقق: POST `/api/auth/register` ثم POST `/api/auth/register/verify` مع الرمز
+- يتطلب `SMTP_*` في الإنتاج؛ بدون SMTP في التطوير يظهر `previewCode` في الواجهة
+
 ## admin-settings
 
 - المسار: `/dashboard/admin` → تبويب الإعدادات

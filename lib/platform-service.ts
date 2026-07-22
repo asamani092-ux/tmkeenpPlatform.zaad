@@ -45,46 +45,30 @@ async function assertGuideBeneficiary(guideId: string, beneficiaryId: string) {
   });
 }
 
-export async function registerBeneficiary(data: {
+type RegisterVerifiedPayload = {
   name: string;
   phone: string;
   email: string;
-  password: string;
+  passwordHash: string;
   educationLevel: string;
   experience: string;
   skills: string;
   careerInterests: string;
-  cvUrl?: string;
-  certificatesUrls?: string;
-}): Promise<ActionResult> {
-  /** Time O(1) checks; Space O(1) */
-  if (
-    !data.name.trim() ||
-    !data.phone.trim() ||
-    !data.email.trim() ||
-    !data.password ||
-    !data.educationLevel.trim() ||
-    !data.experience.trim() ||
-    !data.skills.trim() ||
-    !data.careerInterests.trim()
-  ) {
-    return { success: false, error: "جميع الحقول مطلوبة" };
-  }
-  if (!data.cvUrl?.trim() || !data.certificatesUrls?.trim()) {
-    return { success: false, error: "رفع السيرة الذاتية والشهادات مطلوب" };
-  }
-  if (data.password.length < 6) {
-    return { success: false, error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" };
-  }
+  cvUrl: string;
+  certificatesUrls: string;
+};
 
+/** Create beneficiary after email OTP verified — Time O(1), Space O(1) */
+export async function registerBeneficiaryFromVerifiedPayload(
+  data: RegisterVerifiedPayload
+): Promise<ActionResult> {
   const email = data.email.toLowerCase().trim();
   if (!isValidEmailFormat(email)) {
-    return { success: false, error: "البريد الإلكتروني غير صالح" };
-  }
-
-  const phone = data.phone.replace(/[\s\-()]/g, "");
-  if (!/^(05\d{8}|\+9665\d{8}|9665\d{8})$/.test(phone)) {
-    return { success: false, error: "رقم الجوال غير صالح" };
+    return {
+      success: false,
+      error:
+        "البريد غير مقبول — استخدم Gmail أو Outlook أو Yahoo أو Hotmail أو مزوداً معروفاً مشابهًا",
+    };
   }
 
   const existing = await prisma.user.findUnique({ where: { email } });
@@ -100,9 +84,9 @@ export async function registerBeneficiary(data: {
   const created = await prisma.user.create({
     data: {
       name: data.name.trim(),
-      phone,
+      phone: data.phone.trim(),
       email,
-      password: await hashPassword(data.password),
+      password: data.passwordHash,
       role: "BENEFICIARY",
       stage: "PENDING_APPROVAL",
       stageEnteredAt: new Date(),
@@ -139,6 +123,34 @@ export async function registerBeneficiary(data: {
   }
 
   return { success: true };
+}
+
+/** @deprecated use startRegistrationChallenge + verify — kept for typed callers */
+export async function registerBeneficiary(data: {
+  name: string;
+  phone: string;
+  email: string;
+  password: string;
+  educationLevel: string;
+  experience: string;
+  skills: string;
+  careerInterests: string;
+  cvUrl?: string;
+  certificatesUrls?: string;
+}): Promise<ActionResult> {
+  const { startRegistrationChallenge } = await import("@/lib/register-verification");
+  return startRegistrationChallenge({
+    name: data.name,
+    phone: data.phone,
+    email: data.email,
+    password: data.password,
+    educationLevel: data.educationLevel,
+    experience: data.experience,
+    skills: data.skills,
+    careerInterests: data.careerInterests,
+    cvUrl: data.cvUrl ?? "",
+    certificatesUrls: data.certificatesUrls ?? "",
+  });
 }
 
 export async function applyToOpportunity(

@@ -281,4 +281,29 @@ export async function sendGenericEmail(params: GenericEmailParams): Promise<void
 
 }
 
+/** Registration email OTP — O(1) */
+export async function sendRegistrationOtpEmail(params: {
+  to: string;
+  name: string;
+  code: string;
+  senderEmail: string;
+}): Promise<void> {
+  await dispatch(params.senderEmail, [
+    {
+      to: params.to,
+      subject: "رمز التحقق — تسجيل منصة تمكين",
+      body: [
+        `مرحباً ${params.name}،`,
+        "",
+        `رمز التحقق لإتمام التسجيل هو: ${params.code}`,
+        "صالح لمدة 10 دقائق.",
+        "",
+        "إذا لم تطلب التسجيل، تجاهل هذه الرسالة.",
+        "",
+        "مع تحيات فريق منصة تمكين",
+      ].join("\n"),
+    },
+  ]);
+}
+
 

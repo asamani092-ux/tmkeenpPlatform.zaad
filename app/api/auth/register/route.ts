@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { registerBeneficiary } from "@/lib/platform-service";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { startRegistrationChallenge } from "@/lib/register-verification";
 
+/** Start registration + send email OTP — does not create the user yet */
 export async function POST(request: Request) {
   try {
     const ip = request.headers.get("x-forwarded-for") ?? "local";
@@ -13,7 +14,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const result = await registerBeneficiary({
+    const result = await startRegistrationChallenge({
       name: String(body.name ?? ""),
       phone: String(body.phone ?? ""),
       email: String(body.email ?? ""),
@@ -22,15 +23,20 @@ export async function POST(request: Request) {
       experience: String(body.experience ?? ""),
       skills: String(body.skills ?? ""),
       careerInterests: String(body.careerInterests ?? ""),
-      cvUrl: body.cvUrl ? String(body.cvUrl) : undefined,
-      certificatesUrls: body.certificatesUrls
-        ? String(body.certificatesUrls)
-        : undefined,
+      cvUrl: String(body.cvUrl ?? ""),
+      certificatesUrls: String(body.certificatesUrls ?? ""),
     });
+
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
-    return NextResponse.json({ success: true });
+
+    return NextResponse.json({
+      success: true,
+      challengeId: result.challengeId,
+      requiresVerification: true,
+      ...(result.previewCode ? { previewCode: result.previewCode } : {}),
+    });
   } catch {
     return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
   }

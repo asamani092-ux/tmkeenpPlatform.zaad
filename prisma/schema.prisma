@@ -119,6 +119,19 @@ model PasswordResetToken {
   @@index([userId])
 }
 
+/** Pending beneficiary registration awaiting email OTP — O(1) lookup by id */
+model RegistrationChallenge {
+  id          String   @id @default(cuid())
+  email       String
+  codeHash    String
+  payloadJson String
+  expiresAt   DateTime
+  attempts    Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([email])
+}
+
 model InAppNotification {
   id        String   @id @default(cuid())
   userId    String

@@ -1,6 +1,7 @@
 /** Collect required-field errors after submit — Time O(n) fields, Space O(n) errors */
 
 import { isValidEmailFormat } from "@/lib/email-format";
+import { isAllowedEmailDomain } from "@/lib/allowed-email-domains";
 
 /** Saudi mobile: 05xxxxxxxx / +9665xxxxxxxx / 9665xxxxxxxx */
 const PHONE_RE = /^(05\d{8}|\+9665\d{8}|9665\d{8})$/;
@@ -55,12 +56,13 @@ export function getFormFieldErrors(form: HTMLFormElement): Record<string, string
       continue;
     }
 
-    if (
-      (field.type === "email" || field.name === "email" || field.id === "email") &&
-      !isValidRegisterEmail(value)
-    ) {
-      errors[key] = "أدخل بريداً إلكترونياً صالحاً";
-      continue;
+    if (field.type === "email" || field.name === "email" || field.id === "email") {
+      if (!isValidRegisterEmail(value)) {
+        errors[key] = !isAllowedEmailDomain(value)
+          ? "استخدم بريداً من Gmail أو Outlook أو Yahoo أو Hotmail أو مزود معروف"
+          : "أدخل بريداً إلكترونياً صالحاً";
+        continue;
+      }
     }
 
     if (
