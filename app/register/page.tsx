@@ -116,11 +116,11 @@ export default function RegisterPage() {
             <UserPlus className="h-8 w-8 text-primary" />
             <div>
               <h1 className="text-2xl font-bold text-primary">{registerCopy.title}</h1>
-              <p className="text-sm text-brand-gray">
-                {step === "form"
-                  ? registerCopy.subtitle
-                  : "أدخل رمز التحقق المرسل إلى بريدك لإتمام التسجيل"}
-              </p>
+              {step === "otp" && (
+                <p className="text-sm text-brand-gray">
+                  أدخل رمز التحقق المرسل إلى بريدك لإتمام التسجيل
+                </p>
+              )}
             </div>
           </div>
 
