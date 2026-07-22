@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { Stage } from "@/generated/prisma/client";
-import { adminUpdateBeneficiary } from "@/lib/platform-service";
+import {
+  adminUpdateBeneficiary,
+  deleteBeneficiary,
+} from "@/lib/platform-service";
 
 export async function PATCH(
   request: Request,
@@ -27,6 +30,22 @@ export async function PATCH(
             : undefined,
       stage: body.stage != null ? (String(body.stage) as Stage) : undefined,
     });
+    if (!result.success) {
+      return NextResponse.json({ error: result.error }, { status: 400 });
+    }
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const result = await deleteBeneficiary(id);
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }

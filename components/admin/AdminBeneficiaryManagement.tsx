@@ -12,7 +12,7 @@ import FieldGrid from "@/components/ui/FieldGrid";
 import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastSuccess, toastError } from "@/lib/toast";
-import { CheckCircle, ExternalLink, FileText } from "lucide-react";
+import { CheckCircle, ExternalLink, FileText, Trash2 } from "lucide-react";
 
 export type ManagedBeneficiary = {
   id: string;
@@ -63,6 +63,7 @@ export default function AdminBeneficiaryManagement({
   const [rows, setRows] = useSyncFromProps(initial);
   const [selected, setSelected] = useState<ManagedBeneficiary | null>(null);
   const [editMode, setEditMode] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -135,6 +136,31 @@ export default function AdminBeneficiaryManagement({
       );
       setSelected((s) => (s?.id === beneficiaryId ? { ...s, ...patch } : s));
       toastSuccess("تم الاعتماد بنجاح");
+      router.refresh();
+    });
+  }
+
+  /** O(1) delete by id after confirm click */
+  function handleDeleteClick(beneficiaryId: string) {
+    if (confirmDeleteId !== beneficiaryId) {
+      setConfirmDeleteId(beneficiaryId);
+      return;
+    }
+    startTransition(async () => {
+      const res = await fetch(`/api/admin/beneficiaries/${beneficiaryId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toastError(data.error || "فشل الحذف");
+        setConfirmDeleteId(null);
+        return;
+      }
+      setRows((prev) => prev.filter((b) => b.id !== beneficiaryId));
+      setSelected((s) => (s?.id === beneficiaryId ? null : s));
+      setConfirmDeleteId(null);
+      setEditMode(false);
+      toastSuccess("تم حذف المستفيد");
       router.refresh();
     });
   }
@@ -294,6 +320,29 @@ export default function AdminBeneficiaryManagement({
         ) : (
           <span className="text-xs font-semibold text-red-600">غير مرفقة</span>
         ),
+    },
+    {
+      key: "delete",
+      header: "حذف",
+      render: (b) => (
+        <button
+          type="button"
+          disabled={pending}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDeleteClick(b.id);
+          }}
+          className={`inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold ${
+            confirmDeleteId === b.id
+              ? "bg-red-600 text-white"
+              : "text-red-600 hover:bg-red-50"
+          }`}
+          title={confirmDeleteId === b.id ? "اضغط مجدداً للتأكيد" : "حذف المستفيد"}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+          {confirmDeleteId === b.id ? "تأكيد؟" : "حذف"}
+        </button>
+      ),
     },
   ];
 

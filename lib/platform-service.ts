@@ -726,6 +726,28 @@ export async function assignGuideToBeneficiary(data: {
   return { success: true };
 }
 
+/**
+ * Admin deletes a beneficiary and cascaded records.
+ * Time O(1) by id; Space O(1).
+ */
+export async function deleteBeneficiary(id: string): Promise<ActionResult> {
+  const session = await getSession();
+  if (!session || session.role !== "ADMIN") {
+    return { success: false, error: "غير مصرح" };
+  }
+
+  const beneficiary = await prisma.user.findFirst({
+    where: { id, role: "BENEFICIARY" },
+    select: { id: true },
+  });
+  if (!beneficiary) {
+    return { success: false, error: "المستفيد غير موجود" };
+  }
+
+  await prisma.user.delete({ where: { id } });
+  return { success: true };
+}
+
 /** Admin updates beneficiary profile fields — O(1) */
 export async function adminUpdateBeneficiary(
   beneficiaryId: string,
