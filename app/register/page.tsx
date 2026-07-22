@@ -83,31 +83,58 @@ export default function RegisterPage() {
               <FieldRow label="الاسم الكامل" htmlFor="name" className="sm:col-span-2" variant="auth" error={fieldError("name")}>
                 <input id="name" name="name" className="input-field-auth" />
               </FieldRow>
-              <FieldRow label="رقم الجوال" htmlFor="phone" ltr variant="auth" error={fieldError("phone")}>
+              <FieldRow
+                label="رقم الجوال"
+                htmlFor="phone"
+                ltr
+                variant="auth"
+                className="sm:col-span-2"
+                error={fieldError("phone")}
+              >
                 <input
                   id="phone"
                   name="phone"
                   type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
                   className="input-field-auth"
+                  placeholder="05xxxxxxxx"
                   dir="ltr"
                 />
               </FieldRow>
-              <FieldRow label="البريد الإلكتروني" htmlFor="email" ltr variant="auth" error={fieldError("email")}>
+              <FieldRow
+                label="البريد الإلكتروني"
+                htmlFor="email"
+                ltr
+                variant="auth"
+                className="sm:col-span-2"
+                error={fieldError("email")}
+              >
                 <input
                   id="email"
                   name="email"
                   type="email"
+                  autoComplete="email"
                   className="input-field-auth"
+                  placeholder="email@example.com"
                   dir="ltr"
                 />
               </FieldRow>
-              <FieldRow label="كلمة المرور" htmlFor="password" className="sm:col-span-2" ltr variant="auth" error={fieldError("password")}>
+              <FieldRow
+                label="كلمة المرور"
+                htmlFor="password"
+                className="sm:col-span-2"
+                ltr
+                variant="auth"
+                error={fieldError("password")}
+              >
                 <input
                   id="password"
                   name="password"
                   type="password"
-                  minLength={6}
+                  autoComplete="new-password"
                   className="input-field-auth"
+                  placeholder="••••••••"
                   dir="ltr"
                 />
               </FieldRow>
