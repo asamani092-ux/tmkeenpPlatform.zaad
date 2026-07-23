@@ -40,7 +40,11 @@ export default function AdminApplicationsPanel({ applications: initial }: Props)
         return;
       }
       setRows((prev) => prev.filter((r) => r.id !== id));
-      toastSuccess(status === "ACCEPTED" ? "تم قبول التقديم" : "تم رفض التقديم");
+      toastSuccess(
+        status === "ACCEPTED"
+          ? "تم القبول — أُشعر المستفيد بالواجهة والبريد (التفاصيل قريباً)"
+          : "تم رفض التقديم وإشعار المستفيد"
+      );
       router.refresh();
     });
   }
