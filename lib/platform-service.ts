@@ -1402,19 +1402,28 @@ export async function reviewApplication(data: {
   });
 
   const statusLabel = data.status === "ACCEPTED" ? "مقبول" : "مرفوض";
+  const acceptFollowUp =
+    data.status === "ACCEPTED"
+      ? " سيتم إشعارك بالتفاصيل قريباً عبر المنصة والبريد."
+      : "";
+  const notePart = data.reviewNote ? ` ملاحظة: ${data.reviewNote}` : "";
   await createNotification(
     app.beneficiaryId,
     `تحديث حالة التقديم — ${statusLabel}`,
-    `تقديمك على "${app.opportunity.title}": ${statusLabel}.${data.reviewNote ? ` ملاحظة: ${data.reviewNote}` : ""}`
+    `تقديمك على "${app.opportunity.title}": ${statusLabel}.${notePart}${acceptFollowUp}`
   );
 
   const settings = await getSystemSettings();
   const { sendGenericEmail } = await import("@/lib/email-notify");
+  const emailBody =
+    data.status === "ACCEPTED"
+      ? `مرحباً ${app.beneficiary.name}،\n\nتم قبول تقديمك على "${app.opportunity.title}".\nسيتم إشعارك بالتفاصيل قريباً عبر المنصة والبريد الإلكتروني.${data.reviewNote ? `\n\nملاحظة: ${data.reviewNote}` : ""}\n\nمع تحيات فريق منصة تمكين`
+      : `مرحباً ${app.beneficiary.name}،\n\nتم رفض تقديمك على "${app.opportunity.title}".${data.reviewNote ? `\n\nملاحظة: ${data.reviewNote}` : ""}\n\nمع تحيات فريق منصة تمكين`;
   await safeSendEmail("review application", () =>
     sendGenericEmail({
       to: app.beneficiary.email,
       subject: `تحديث تقديمك — ${app.opportunity.title}`,
-      body: `مرحباً ${app.beneficiary.name}،\n\nتم ${statusLabel} تقديمك على "${app.opportunity.title}".${data.reviewNote ? `\n\nملاحظة: ${data.reviewNote}` : ""}\n\nمع تحيات فريق منصة تمكين`,
+      body: emailBody,
       senderEmail: settings.senderEmail,
     })
   );

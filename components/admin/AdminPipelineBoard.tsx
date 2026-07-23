@@ -21,9 +21,13 @@ type OpenView = Stage | "pending-requests";
 
 type Props = {
   beneficiaries: PipelineBeneficiary[];
+  onOpenBeneficiary?: (beneficiaryId: string) => void;
 };
 
-export default function AdminPipelineBoard({ beneficiaries }: Props) {
+export default function AdminPipelineBoard({
+  beneficiaries,
+  onOpenBeneficiary,
+}: Props) {
   const router = useRouter();
   const [openView, setOpenView] = useState<OpenView | null>(null);
   const [quickView, setQuickView] = useState<PipelineBeneficiary | null>(null);
@@ -41,9 +45,14 @@ export default function AdminPipelineBoard({ beneficiaries }: Props) {
   const pendingRequests = beneficiaries.filter((b) => b.pendingStage);
   const pendingTotal = pendingRequests.length;
 
+  /** Close pipeline layers then open management modal in-place — O(1) */
   function goToRegistrationFlow(beneficiaryId: string) {
     setOpenView(null);
     setQuickView(null);
+    if (onOpenBeneficiary) {
+      onOpenBeneficiary(beneficiaryId);
+      return;
+    }
     toastSuccess("جاري فتح ملف المستفيد…");
     router.push(`/dashboard/admin?tab=management&beneficiary=${beneficiaryId}`);
   }
@@ -255,13 +264,14 @@ export default function AdminPipelineBoard({ beneficiaries }: Props) {
                   : "الانتقال للمرحلة التالية"}
               </button>
             )}
-            <a
-              href={`/dashboard/admin?tab=management&beneficiary=${quickView.id}`}
+            <button
+              type="button"
+              onClick={() => goToRegistrationFlow(quickView.id)}
               className="btn-secondary inline-flex !px-3 !py-2 text-sm"
             >
               <ExternalLink className="h-4 w-4" />
               عرض الملف الكامل
-            </a>
+            </button>
           </div>
         </FloatingModal>
       )}

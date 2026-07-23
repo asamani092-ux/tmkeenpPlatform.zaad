@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useMemo } from "react";
 import { useSyncFromProps } from "@/lib/use-sync-from-props";
 import { useRouter } from "next/navigation";
 import { Stage } from "@/generated/prisma/client";
@@ -64,6 +64,8 @@ export default function AdminBeneficiaryManagement({
   const [selected, setSelected] = useState<ManagedBeneficiary | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [stageFilter, setStageFilter] = useState<Stage | "ALL">("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -74,6 +76,24 @@ export default function AdminBeneficiaryManagement({
       onBeneficiaryOpened?.();
     }
   }, [initialOpenBeneficiaryId, rows, onBeneficiaryOpened]);
+
+  /** Filter O(n); normalize query once — Space O(n) for result view */
+  const filteredRows = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    const digits = q.replace(/\D/g, "");
+    return rows.filter((b) => {
+      if (stageFilter !== "ALL" && b.stage !== stageFilter) return false;
+      if (!q) return true;
+      const name = b.name.toLowerCase();
+      const email = b.email.toLowerCase();
+      const phone = b.phone.replace(/\D/g, "");
+      return (
+        name.includes(q) ||
+        email.includes(q) ||
+        (digits.length > 0 && phone.includes(digits))
+      );
+    });
+  }, [rows, stageFilter, searchQuery]);
 
   function assign(beneficiaryId: string, guideId: string) {
     startTransition(async () => {
@@ -140,10 +160,16 @@ export default function AdminBeneficiaryManagement({
     });
   }
 
-  /** O(1) delete by id after confirm click */
+  /** Dual confirm: arm button, then browser confirm — O(1) */
   function handleDeleteClick(beneficiaryId: string) {
     if (confirmDeleteId !== beneficiaryId) {
       setConfirmDeleteId(beneficiaryId);
+      return;
+    }
+    const target = rows.find((b) => b.id === beneficiaryId);
+    const label = target?.name ?? "هذا المستفيد";
+    if (!window.confirm(`تأكيد نهائي: حذف «${label}» نهائياً؟ لا يمكن التراجع.`)) {
+      setConfirmDeleteId(null);
       return;
     }
     startTransition(async () => {
@@ -356,14 +382,46 @@ export default function AdminBeneficiaryManagement({
               عرض شامل، إسناد المرشدين، واعتماد المراحل — انقر على الصف لعرض الملف الكامل
             </p>
           </div>
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+            <label className="block min-w-[12rem] flex-1 text-start text-sm">
+              <span className="mb-1 block font-semibold text-brand-gray">بحث ذكي</span>
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="اسم، جوال، أو بريد…"
+                className="input-field !py-2"
+              />
+            </label>
+            <label className="block w-full text-start text-sm sm:w-56">
+              <span className="mb-1 block font-semibold text-brand-gray">فلتر المرحلة</span>
+              <select
+                value={stageFilter}
+                onChange={(e) =>
+                  setStageFilter(e.target.value === "ALL" ? "ALL" : (e.target.value as Stage))
+                }
+                className="input-field !py-2"
+              >
+                <option value="ALL">كل المراحل</option>
+                {STAGE_ORDER.map((s) => (
+                  <option key={s} value={s}>
+                    {STAGE_LABELS[s]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <p className="text-xs text-brand-gray sm:ms-auto">
+              المعروض: {filteredRows.length} / {rows.length}
+            </p>
+          </div>
         </div>
 
         <DataTable
           columns={columns}
-          rows={rows}
+          rows={filteredRows}
           rowKey={(b) => b.id}
           minWidth="720px"
-          emptyMessage="لا يوجد مستفيدون"
+          emptyMessage="لا يوجد مستفيدون مطابقون للبحث أو الفلتر"
           onRowClick={setSelected}
         />
       </div>

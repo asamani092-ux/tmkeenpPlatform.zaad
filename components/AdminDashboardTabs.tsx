@@ -145,6 +145,12 @@ export default function AdminDashboardTabs({
     { id: "settings", label: adminCopy.settingsTab, icon: Settings },
   ];
 
+  /** Open management modal without soft-nav URL race / stacked modals — O(1) */
+  function openBeneficiaryFile(beneficiaryId: string) {
+    setOpenBeneficiaryId(beneficiaryId);
+    setTab("management");
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-2 rounded-xl bg-surface p-1 shadow-sm">
@@ -163,7 +169,12 @@ export default function AdminDashboardTabs({
         ))}
       </div>
 
-      {tab === "pipeline" && <AdminPipelineBoard beneficiaries={beneficiaries} />}
+      {tab === "pipeline" && (
+        <AdminPipelineBoard
+          beneficiaries={beneficiaries}
+          onOpenBeneficiary={openBeneficiaryFile}
+        />
+      )}
 
       {tab === "opportunities" && (
         <AdminOpportunitiesSection opportunities={opportunities} />
