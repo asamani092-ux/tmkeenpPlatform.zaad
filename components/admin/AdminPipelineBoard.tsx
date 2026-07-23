@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Stage } from "@/generated/prisma/client";
 import { STAGE_LABELS, STAGE_ORDER } from "@/lib/stages";
 import FloatingModal from "@/components/admin/FloatingModal";
+import SubmitButton from "@/components/ui/SubmitButton";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { CheckCircle, ExternalLink, Loader2, UserRound } from "lucide-react";
 
@@ -14,23 +15,30 @@ type PipelineBeneficiary = {
   phone: string;
   stage: Stage;
   pendingStage: Stage | null;
+  guideId: string | null;
   guideName: string | null;
 };
+
+type GuideOption = { id: string; name: string };
 
 type OpenView = Stage | "pending-requests";
 
 type Props = {
   beneficiaries: PipelineBeneficiary[];
+  guides?: GuideOption[];
   onOpenBeneficiary?: (beneficiaryId: string) => void;
 };
 
 export default function AdminPipelineBoard({
   beneficiaries,
+  guides = [],
   onOpenBeneficiary,
 }: Props) {
   const router = useRouter();
   const [openView, setOpenView] = useState<OpenView | null>(null);
   const [quickView, setQuickView] = useState<PipelineBeneficiary | null>(null);
+  const [approveTarget, setApproveTarget] = useState<PipelineBeneficiary | null>(null);
+  const [selectedGuideId, setSelectedGuideId] = useState("");
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -45,26 +53,82 @@ export default function AdminPipelineBoard({
   const pendingRequests = beneficiaries.filter((b) => b.pendingStage);
   const pendingTotal = pendingRequests.length;
 
-  /** Close pipeline layers then open management modal in-place — O(1) */
-  function goToRegistrationFlow(beneficiaryId: string) {
+  /** Open full file in management tab — O(1) */
+  function openFullFile(beneficiaryId: string) {
     setOpenView(null);
     setQuickView(null);
+    setApproveTarget(null);
     if (onOpenBeneficiary) {
       onOpenBeneficiary(beneficiaryId);
       return;
     }
-    toastSuccess("جاري فتح ملف المستفيد…");
     router.push(`/dashboard/admin?tab=management&beneficiary=${beneficiaryId}`);
   }
 
-  function approve(beneficiaryId: string, action: "registration" | "transition") {
+  function openApproveModal(b: PipelineBeneficiary) {
+    setApproveTarget(b);
+    setSelectedGuideId(b.guideId ?? "");
+  }
+
+  function closeApproveModal() {
+    setApproveTarget(null);
+    setSelectedGuideId("");
+  }
+
+  /**
+   * Assign guide then approve registration — Time O(1) network calls.
+   */
+  function confirmRegistrationApprove() {
+    if (!approveTarget) return;
+    if (!selectedGuideId) {
+      toastError("اختر مرشداً قبل الاعتماد");
+      return;
+    }
+    const beneficiaryId = approveTarget.id;
+    setApprovingId(beneficiaryId);
+    startTransition(async () => {
+      try {
+        const assignRes = await fetch(`/api/beneficiaries/${beneficiaryId}/assign-guide`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ guideId: selectedGuideId }),
+        });
+        const assignData = await assignRes.json().catch(() => ({}));
+        if (!assignRes.ok) {
+          toastError(assignData.error || "فشل إسناد المرشد");
+          return;
+        }
+
+        const res = await fetch("/api/stage-approve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ beneficiaryId, action: "registration" }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          toastError(data.error || "فشل الاعتماد");
+          return;
+        }
+
+        toastSuccess("تم إسناد المرشد واعتماد التسجيل");
+        closeApproveModal();
+        setQuickView(null);
+        setOpenView(null);
+        router.refresh();
+      } finally {
+        setApprovingId(null);
+      }
+    });
+  }
+
+  function approveTransition(beneficiaryId: string) {
     setApprovingId(beneficiaryId);
     startTransition(async () => {
       try {
         const res = await fetch("/api/stage-approve", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ beneficiaryId, action }),
+          body: JSON.stringify({ beneficiaryId, action: "transition" }),
         });
         const data = await res.json();
         if (!res.ok) {
@@ -137,8 +201,8 @@ export default function AdminPipelineBoard({
         <FloatingModal title={modalTitle} onClose={() => setOpenView(null)} wide>
           {openView === "PENDING_APPROVAL" && modalList.length > 0 && (
             <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
-              مستفيدون جدد بانتظار الاعتماد — انقر «إسناد مرشد واعتماد» لفتح ملف المستفيد،
-              اختر المرشد، ثم أكمل اعتماد التسجيل.
+              مستفيدون جدد بانتظار الاعتماد — اضغط «اعتماد» لإسناد مرشد وتأكيد الاعتماد، أو «عرض
+              الملف» للتفاصيل الكاملة.
             </p>
           )}
           {modalList.length === 0 ? (
@@ -159,25 +223,40 @@ export default function AdminPipelineBoard({
                       </span>
                       <span>
                         <span className="text-xs text-brand-gray">الجوال: </span>
-                        <span className="text-brand-gray" dir="ltr">{b.phone}</span>
+                        <span className="text-brand-gray" dir="ltr">
+                          {b.phone}
+                        </span>
                       </span>
                     </div>
-                    <div className="flex shrink-0 items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                    <div
+                      className="flex shrink-0 flex-wrap items-center justify-end gap-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       {b.stage === "PENDING_APPROVAL" && (
-                        <button
-                          type="button"
-                          onClick={() => goToRegistrationFlow(b.id)}
-                          className="btn-primary !px-3 !py-1.5 text-xs"
-                        >
-                          <UserRound className="inline h-3 w-3" />
-                          إسناد مرشد واعتماد
-                        </button>
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => openApproveModal(b)}
+                            className="btn-primary !px-3 !py-1.5 text-xs"
+                          >
+                            <CheckCircle className="inline h-3 w-3" />
+                            اعتماد
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openFullFile(b.id)}
+                            className="btn-secondary !px-3 !py-1.5 text-xs"
+                          >
+                            <ExternalLink className="inline h-3 w-3" />
+                            عرض الملف
+                          </button>
+                        </>
                       )}
                       {b.pendingStage && (
                         <button
                           type="button"
                           disabled={pending && approvingId === b.id}
-                          onClick={() => approve(b.id, "transition")}
+                          onClick={() => approveTransition(b.id)}
                           className="btn-primary !px-3 !py-1.5 text-xs"
                         >
                           {pending && approvingId === b.id ? (
@@ -195,6 +274,7 @@ export default function AdminPipelineBoard({
                   {b.stage === "PENDING_APPROVAL" && (
                     <p className="mt-2 text-xs text-brand-gray">
                       الحالة: بانتظار إسناد مرشد واعتماد التسجيل
+                      {b.guideName ? ` — المرشد الحالي: ${b.guideName}` : ""}
                     </p>
                   )}
                   {b.pendingStage && (
@@ -221,7 +301,9 @@ export default function AdminPipelineBoard({
             </div>
             <div>
               <dt className="text-xs text-brand-gray">المرحلة</dt>
-              <dd className="font-semibold text-primary">{STAGE_LABELS[quickView.stage]}</dd>
+              <dd className="font-semibold text-primary">
+                {STAGE_LABELS[quickView.stage]}
+              </dd>
             </div>
             {quickView.stage !== "PENDING_APPROVAL" && (
               <div>
@@ -240,18 +322,18 @@ export default function AdminPipelineBoard({
             {quickView.stage === "PENDING_APPROVAL" && (
               <button
                 type="button"
-                onClick={() => goToRegistrationFlow(quickView.id)}
+                onClick={() => openApproveModal(quickView)}
                 className="btn-primary !px-3 !py-2 text-sm"
               >
-                <UserRound className="inline h-4 w-4" />
-                إسناد مرشد واعتماد
+                <CheckCircle className="inline h-4 w-4" />
+                اعتماد
               </button>
             )}
             {quickView.pendingStage && (
               <button
                 type="button"
                 disabled={pending && approvingId === quickView.id}
-                onClick={() => approve(quickView.id, "transition")}
+                onClick={() => approveTransition(quickView.id)}
                 className="btn-primary !px-3 !py-2 text-sm"
               >
                 {pending && approvingId === quickView.id ? (
@@ -266,12 +348,75 @@ export default function AdminPipelineBoard({
             )}
             <button
               type="button"
-              onClick={() => goToRegistrationFlow(quickView.id)}
+              onClick={() => openFullFile(quickView.id)}
               className="btn-secondary inline-flex !px-3 !py-2 text-sm"
             >
               <ExternalLink className="h-4 w-4" />
-              عرض الملف الكامل
+              عرض الملف
             </button>
+          </div>
+        </FloatingModal>
+      )}
+
+      {approveTarget && (
+        <FloatingModal
+          title={`اعتماد تسجيل — ${approveTarget.name}`}
+          onClose={closeApproveModal}
+        >
+          <div className="space-y-4 text-start">
+            <p className="text-sm text-brand-gray">
+              اختر المرشد ثم أكّد الاعتماد لنقل المستفيد إلى مرحلة الإرشاد.
+            </p>
+            <div>
+              <p className="text-xs text-brand-gray">الجوال</p>
+              <p dir="ltr" className="font-medium text-primary">
+                {approveTarget.phone}
+              </p>
+            </div>
+            <div>
+              <label htmlFor="pipeline-approve-guide" className="label-field">
+                إسناد المرشد
+              </label>
+              <select
+                id="pipeline-approve-guide"
+                className="input-field"
+                value={selectedGuideId}
+                disabled={pending}
+                onChange={(e) => setSelectedGuideId(e.target.value)}
+              >
+                <option value="">— اختر مرشداً —</option>
+                {guides.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+              {guides.length === 0 && (
+                <p className="mt-1 text-xs font-semibold text-amber-900">
+                  لا يوجد مرشدون — أضف مرشداً من تبويب إدارة المرشدين أولاً.
+                </p>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <SubmitButton
+                type="button"
+                loading={pending && approvingId === approveTarget.id}
+                disabled={!selectedGuideId || pending}
+                onClick={confirmRegistrationApprove}
+                className="btn-primary flex-1 !py-2 text-sm"
+              >
+                <UserRound className="h-4 w-4" />
+                تأكيد الاعتماد
+              </SubmitButton>
+              <button
+                type="button"
+                disabled={pending}
+                onClick={closeApproveModal}
+                className="btn-secondary flex-1 !py-2 text-sm"
+              >
+                إلغاء
+              </button>
+            </div>
           </div>
         </FloatingModal>
       )}

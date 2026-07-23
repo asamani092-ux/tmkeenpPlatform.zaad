@@ -55,6 +55,8 @@ type Beneficiary = {
   guideName: string | null;
 };
 
+type PipelineGuide = { id: string; name: string };
+
 type FollowUp = {
   id: string;
   month: number;
@@ -172,6 +174,7 @@ export default function AdminDashboardTabs({
       {tab === "pipeline" && (
         <AdminPipelineBoard
           beneficiaries={beneficiaries}
+          guides={guides.map((g): PipelineGuide => ({ id: g.id, name: g.name }))}
           onOpenBeneficiary={openBeneficiaryFile}
         />
       )}
