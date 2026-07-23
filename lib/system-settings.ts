@@ -6,8 +6,17 @@ export type SystemSettings = {
   senderEmail: string;
 };
 
-const SETTINGS_DIR = path.join(process.cwd(), "data");
-const SETTINGS_PATH = path.join(SETTINGS_DIR, "system-settings.json");
+/**
+ * Persist under UPLOAD_DIR when set (Coolify volume is writable).
+ * Fallback: ./data for local dev — O(1).
+ */
+function getSettingsPaths(): { dir: string; file: string } {
+  const uploadDir = process.env.UPLOAD_DIR?.trim();
+  const dir = uploadDir
+    ? path.join(uploadDir, "data")
+    : path.join(process.cwd(), "data");
+  return { dir, file: path.join(dir, "system-settings.json") };
+}
 
 const DEFAULT_SETTINGS: SystemSettings = {
   senderEmail: "noreply@tmkeen.local",
@@ -20,8 +29,9 @@ export function isValidEmail(email: string): boolean {
 
 /** Load system settings from file — O(1). Prefer saved senderEmail always. */
 export async function getSystemSettings(): Promise<SystemSettings> {
+  const { file } = getSettingsPaths();
   try {
-    const raw = await fs.readFile(SETTINGS_PATH, "utf-8");
+    const raw = await fs.readFile(file, "utf-8");
     const parsed = JSON.parse(raw) as Partial<SystemSettings>;
     const stored = parsed.senderEmail?.trim();
     if (stored && isValidAsciiEmail(stored)) {
@@ -38,13 +48,14 @@ export async function getSystemSettings(): Promise<SystemSettings> {
   return { ...DEFAULT_SETTINGS };
 }
 
-/** Persist system settings to file — O(1) */
+/** Persist system settings to writable volume/dir — O(1) */
 export async function saveSystemSettings(
   settings: SystemSettings
 ): Promise<void> {
-  await fs.mkdir(SETTINGS_DIR, { recursive: true });
+  const { dir, file } = getSettingsPaths();
+  await fs.mkdir(dir, { recursive: true });
   await fs.writeFile(
-    SETTINGS_PATH,
+    file,
     JSON.stringify(
       { senderEmail: settings.senderEmail.trim().toLowerCase() },
       null,

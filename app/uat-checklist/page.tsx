@@ -14,6 +14,10 @@ export default function UatChecklistPage() {
           <p className="mt-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm font-semibold text-primary">
             أعلى الصفحة: قسم «تصدير النتائج للوكيل» — زر «نسخ التقرير للحافظة»
           </p>
+          <p className="mt-2 text-sm text-brand-gray">
+            بعد النشر: مجموعة «ما بعد النشر (بريد وتحقق حي)» في نهاية القائمة —
+            8 بنود للبريد والجلسة والإشعارات.
+          </p>
         </div>
         <UatChecklistForm />
       </main>

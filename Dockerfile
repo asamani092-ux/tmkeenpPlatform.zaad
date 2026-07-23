@@ -28,7 +28,7 @@ COPY --from=builder /app/generated ./generated
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
-RUN mkdir -p uploads && chown -R nextjs:nodejs uploads && chmod +x /app/docker-entrypoint.sh
+RUN mkdir -p uploads/data && chown -R nextjs:nodejs uploads && chmod +x /app/docker-entrypoint.sh
 USER nextjs
 EXPOSE 3000
 ENTRYPOINT ["/app/docker-entrypoint.sh"]

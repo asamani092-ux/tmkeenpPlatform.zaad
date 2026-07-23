@@ -9,6 +9,14 @@
 - علامة النسخة: `/login` يحتوي زر **عرض/إخفاء كلمة المرور**
 - إن غابت العلامة: Coolify → Redeploy من `master` (تحقق من Branch + Auto Deploy)
 
+## 0.1) حفظ بريد المرسل (إصلاح مسار الكتابة)
+
+`senderEmail` يُحفظ تحت `UPLOAD_DIR/data/system-settings.json` (مثلاً `/app/uploads/data/`).
+تأكد أن Coolify يوفّر volume دائم على `/app/uploads` وإلا يظهر «خطأ في الخادم» عند الحفظ.
+
+قائمة التحقق الحية: `/uat-checklist` → مجموعة «ما بعد النشر» أو Canvas
+`postdeploy-email-uat-tools-checklist`.
+
 ## 1) تفعيل SMTP في Coolify
 
 عيّن Runtime env ثم أعد النشر:

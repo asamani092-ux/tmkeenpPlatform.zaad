@@ -271,6 +271,63 @@ export const UAT_GROUPS: UatToolGroup[] = [
       },
     ],
   },
+  {
+    id: "postdeploy-email",
+    title: "ما بعد النشر (بريد وتحقق حي)",
+    tools: [
+      {
+        id: "postdeploy-admin-settings-sender",
+        tool: "حفظ بريد المرسل",
+        path: "/dashboard/admin → إعدادات",
+        checks:
+          "شارة SMTP مفعّل؛ PUT يحفظ senderEmail دون خطأ خادم؛ القيمة تبقى بعد إعادة التحميل",
+      },
+      {
+        id: "postdeploy-test-email",
+        tool: "إرسال بريد تجريبي",
+        path: "/dashboard/admin → إعدادات",
+        checks: "إرسال تجربة يصل لصندوق حقيقي؛ لا رسالة SMTP غير مفعّل",
+      },
+      {
+        id: "postdeploy-register-otp",
+        tool: "OTP تسجيل مستفيد (بريد حي)",
+        path: "/register",
+        checks:
+          "رمز 6 أرقام يصل للبريد؛ verify ينجح؛ لا الاعتماد على previewCode فقط",
+      },
+      {
+        id: "postdeploy-forgot-password-mail",
+        tool: "استعادة كلمة المرور (بريد حي)",
+        path: "/forgot-password",
+        checks: "رسالة الاستعادة تصل؛ الرابط يعمل؛ تعيين كلمة جديدة → دخول",
+      },
+      {
+        id: "postdeploy-app-accept-mail",
+        tool: "بريد قبول التقديم",
+        path: "admin → تقديمات",
+        checks:
+          "قبول تقديم → إشعار واجهة + بريد يوضح أنه سيُبلَّغ بالتفاصيل قريباً",
+      },
+      {
+        id: "postdeploy-followup-remind",
+        tool: "تذكير متابعة بالتوظيف",
+        path: "admin → متابعة",
+        checks: "تذكير يدوي/cron يرسل بريداً بعد تفعيل SMTP و CRON_SECRET",
+      },
+      {
+        id: "postdeploy-session-join-15m",
+        tool: "انضمام الجلسة قبل 15 د",
+        path: "مستفيد → الجلسة القادمة",
+        checks: "الرابط يُفعَّل قبل الموعد بـ 15 دقيقة فقط؛ نص «يفتح قبل 15 د»",
+      },
+      {
+        id: "postdeploy-notifications-live",
+        tool: "الإشعارات بعد النشر",
+        path: "Navbar",
+        checks: "شارة وقائمة بعد أحداث حقيقية (قبول تسجيل/تقديم)؛ تعليم كمقروء",
+      },
+    ],
+  },
 ];
 
 export const UAT_ALL_TOOLS: UatTool[] = UAT_GROUPS.flatMap((group) =>
@@ -285,7 +342,7 @@ export const UAT_OUT_OF_SCOPE = [
   "/api/career-plan* — API بدون شاشة UI",
   "/reset-password — غير موجود (المسار: /forgot-password)",
   "تبويبات Admin/Guide — بدون deep link URL",
-  "SMTP Hostinger — يحتاج SMTP_* في .env",
+  "SMTP — يُختبر عبر مجموعة «ما بعد النشر» بعد ضبط SMTP_* في Coolify",
 ];
 
 export const UAT_STORAGE_KEY = "tmkeen-uat-checklist-v1";
