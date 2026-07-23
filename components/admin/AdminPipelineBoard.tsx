@@ -66,6 +66,7 @@ export default function AdminPipelineBoard({
   }
 
   function openApproveModal(b: PipelineBeneficiary) {
+    setQuickView(null);
     setApproveTarget(b);
     setSelectedGuideId(b.guideId ?? "");
   }
