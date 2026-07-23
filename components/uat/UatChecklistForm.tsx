@@ -4,14 +4,16 @@ import { useEffect, useMemo, useState } from "react";
 import {
   buildUatAgentExport,
   createDefaultUatState,
-  UAT_ALL_TOOLS,
   UAT_DEFAULT_VERDICT,
   UAT_GROUPS,
   UAT_NOTE_CATEGORIES,
   UAT_OUT_OF_SCOPE,
+  UAT_POSTDEPLOY_GROUP_ID,
+  UAT_REMAINING_TOOLS,
   UAT_STORAGE_KEY,
   UAT_VERDICTS,
   type UatChecklistState,
+  type UatTool,
   type UatVerdict,
 } from "@/lib/uat-checklist-data";
 
@@ -19,11 +21,23 @@ function loadState(): UatChecklistState {
   if (typeof window === "undefined") return createDefaultUatState();
   try {
     const raw = window.localStorage.getItem(UAT_STORAGE_KEY);
-    if (!raw) return createDefaultUatState();
+    if (!raw) {
+      const defaults = createDefaultUatState();
+      return {
+        ...defaults,
+        activeToolId: UAT_REMAINING_TOOLS[0]?.id ?? defaults.activeToolId,
+      };
+    }
     const parsed = JSON.parse(raw) as UatChecklistState;
+    const activeToolId =
+      parsed.activeToolId &&
+      UAT_REMAINING_TOOLS.some((t) => t.id === parsed.activeToolId)
+        ? parsed.activeToolId
+        : (UAT_REMAINING_TOOLS[0]?.id ?? parsed.activeToolId ?? "");
     return {
       ...createDefaultUatState(),
       ...parsed,
+      activeToolId,
       verdicts: parsed.verdicts ?? {},
       noteCategories: parsed.noteCategories ?? {},
       notes: parsed.notes ?? {},
@@ -38,6 +52,8 @@ export default function UatChecklistForm() {
   const [ready, setReady] = useState(false);
   const [showExport, setShowExport] = useState(true);
   const [copyStatus, setCopyStatus] = useState<"idle" | "ok" | "fail">("idle");
+  /** Default: remaining post-deploy tools only — O(1) toggle. */
+  const [scope, setScope] = useState<"remaining" | "all">("remaining");
 
   useEffect(() => {
     setState(loadState());
@@ -49,15 +65,37 @@ export default function UatChecklistForm() {
     window.localStorage.setItem(UAT_STORAGE_KEY, JSON.stringify(state));
   }, [state, ready]);
 
+  const visibleTools: UatTool[] =
+    scope === "remaining" ? UAT_REMAINING_TOOLS : UAT_GROUPS.flatMap((group) =>
+      group.tools.map((tool) => ({ ...tool, groupTitle: group.title }))
+    );
+
+  const visibleGroups =
+    scope === "remaining"
+      ? UAT_GROUPS.filter((g) => g.id === UAT_POSTDEPLOY_GROUP_ID)
+      : UAT_GROUPS;
+
   const activeIndex = Math.max(
     0,
-    UAT_ALL_TOOLS.findIndex((tool) => tool.id === state.activeToolId)
+    visibleTools.findIndex((tool) => tool.id === state.activeToolId)
   );
-  const activeTool = UAT_ALL_TOOLS[activeIndex] ?? UAT_ALL_TOOLS[0];
-  const activeVerdict = state.verdicts[activeTool.id] ?? UAT_DEFAULT_VERDICT;
+  const activeTool = visibleTools[activeIndex] ?? visibleTools[0];
+  const activeVerdict = activeTool
+    ? state.verdicts[activeTool.id] ?? UAT_DEFAULT_VERDICT
+    : UAT_DEFAULT_VERDICT;
+
+  useEffect(() => {
+    if (!ready || visibleTools.length === 0) return;
+    if (!visibleTools.some((t) => t.id === state.activeToolId)) {
+      setState((prev) => ({
+        ...prev,
+        activeToolId: visibleTools[0].id,
+      }));
+    }
+  }, [ready, scope, visibleTools, state.activeToolId]);
 
   const stats = useMemo(() => {
-    return UAT_ALL_TOOLS.reduce(
+    return visibleTools.reduce(
       (acc, tool) => {
         const v = state.verdicts[tool.id] ?? UAT_DEFAULT_VERDICT;
         acc.total += 1;
@@ -68,9 +106,12 @@ export default function UatChecklistForm() {
       },
       { total: 0, approved: 0, needsWork: 0, untried: 0 }
     );
-  }, [state.verdicts]);
+  }, [state.verdicts, visibleTools]);
 
-  const exportText = useMemo(() => buildUatAgentExport(state), [state]);
+  const exportText = useMemo(
+    () => buildUatAgentExport(state, visibleTools),
+    [state, visibleTools]
+  );
   const reviewedCount = stats.approved + stats.needsWork;
 
   async function copyExport() {
@@ -84,16 +125,16 @@ export default function UatChecklistForm() {
   }
 
   function goTo(index: number) {
-    const next = UAT_ALL_TOOLS[index];
+    const next = visibleTools[index];
     if (next) setState((prev) => ({ ...prev, activeToolId: next.id }));
   }
 
   function goPrev() {
-    goTo(activeIndex <= 0 ? UAT_ALL_TOOLS.length - 1 : activeIndex - 1);
+    goTo(activeIndex <= 0 ? visibleTools.length - 1 : activeIndex - 1);
   }
 
   function goNext() {
-    goTo(activeIndex >= UAT_ALL_TOOLS.length - 1 ? 0 : activeIndex + 1);
+    goTo(activeIndex >= visibleTools.length - 1 ? 0 : activeIndex + 1);
   }
 
   function setVerdict(id: string, value: UatVerdict) {
@@ -147,11 +188,33 @@ export default function UatChecklistForm() {
         ) : null}
       </div>
 
-      <div className="rounded-lg border border-surface-border bg-surface-muted p-4 text-sm text-brand-gray">
-        <p>http://localhost:3000 — كلمة المرور من prisma/seed.ts</p>
-        <p className="mt-1">
+      <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-sm">
+        <p className="font-semibold text-primary">
+          العرض الافتراضي: البنود المتبقية بعد النشر (بريد وتحقق حي) —{" "}
+          {UAT_REMAINING_TOOLS.length} بنود
+        </p>
+        <p className="mt-1 text-brand-gray">
+          https://tmkeen.alzaad.org.sa أو http://localhost:3000 — كلمة المرور من prisma/seed.ts
+        </p>
+        <p className="mt-1 text-brand-gray">
           admin@alzaad.org · guide@alzaad.org · beneficiary1–4@alzaad.org
         </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            className={scope === "remaining" ? "btn-primary px-3 py-1.5 text-sm" : "btn-secondary px-3 py-1.5 text-sm"}
+            onClick={() => setScope("remaining")}
+          >
+            المتبقي فقط
+          </button>
+          <button
+            type="button"
+            className={scope === "all" ? "btn-primary px-3 py-1.5 text-sm" : "btn-secondary px-3 py-1.5 text-sm"}
+            onClick={() => setScope("all")}
+          >
+            كل البنود
+          </button>
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-4">
@@ -182,7 +245,7 @@ export default function UatChecklistForm() {
             setState((prev) => ({ ...prev, activeToolId: e.target.value }))
           }
         >
-          {UAT_ALL_TOOLS.map((tool, index) => (
+          {visibleTools.map((tool, index) => (
             <option key={tool.id} value={tool.id}>
               {index + 1}. {tool.tool} — {tool.groupTitle}
             </option>
@@ -193,7 +256,7 @@ export default function UatChecklistForm() {
             السابق
           </button>
           <span className="text-sm text-brand-gray">
-            {activeIndex + 1} / {UAT_ALL_TOOLS.length}
+            {activeIndex + 1} / {visibleTools.length}
           </span>
           <button type="button" className="btn-secondary px-4 py-2" onClick={goNext}>
             التالي
@@ -302,12 +365,12 @@ export default function UatChecklistForm() {
         </div>
       </div>
 
-      <details className="card-section">
+      <details className="card-section" open={scope === "remaining"}>
         <summary className="cursor-pointer font-semibold text-primary">
           ملخص سريع ({reviewedCount}/{stats.total} مُقيَّمة)
         </summary>
         <div className="mt-4 space-y-4">
-          {UAT_GROUPS.map((group) => (
+          {visibleGroups.map((group) => (
             <div key={group.id}>
               <p className="mb-2 font-semibold">{group.title}</p>
               <div className="flex flex-wrap gap-2">

@@ -334,6 +334,15 @@ export const UAT_ALL_TOOLS: UatTool[] = UAT_GROUPS.flatMap((group) =>
   group.tools.map((tool) => ({ ...tool, groupTitle: group.title }))
 );
 
+/** Wave after first UAT pass — email / live verify only. Stable ids. */
+export const UAT_POSTDEPLOY_GROUP_ID = "postdeploy-email";
+
+export const UAT_REMAINING_TOOLS: UatTool[] = UAT_ALL_TOOLS.filter(
+  (tool) =>
+    UAT_GROUPS.find((g) => g.tools.some((t) => t.id === tool.id))?.id ===
+    UAT_POSTDEPLOY_GROUP_ID
+);
+
 export const UAT_OUT_OF_SCOPE = [
   "AdminBeneficiaryAssign.tsx — غير مستورد (الإسناد من إدارة المستفيدين)",
   "ExportExcelButton / ExportButtons — غير مستورد (AdminBulkExport)",
@@ -363,8 +372,11 @@ export function createDefaultUatState(): UatChecklistState {
   };
 }
 
-/** Build Markdown report for pasting into the agent chat (includes full notes). */
-export function buildUatAgentExport(state: UatChecklistState): string {
+/** Build Markdown report for pasting into the agent chat (includes full notes). O(n). */
+export function buildUatAgentExport(
+  state: UatChecklistState,
+  tools: UatTool[] = UAT_ALL_TOOLS
+): string {
   const categoryLabel = Object.fromEntries(
     UAT_NOTE_CATEGORIES.map((c) => [c.value, c.label])
   ) as Record<string, string>;
@@ -373,7 +385,7 @@ export function buildUatAgentExport(state: UatChecklistState): string {
   let needsWork = 0;
   let untried = 0;
 
-  const rows = UAT_ALL_TOOLS.map((t) => {
+  const rows = tools.map((t) => {
     const verdict = state.verdicts[t.id] ?? UAT_DEFAULT_VERDICT;
     if (verdict === "يعتمد") approved += 1;
     else if (verdict === "يحتاج تحسين") needsWork += 1;
@@ -391,10 +403,16 @@ export function buildUatAgentExport(state: UatChecklistState): string {
     };
   });
 
+  const title =
+    tools === UAT_REMAINING_TOOLS ||
+    (tools.length > 0 && tools.every((t) => t.id.startsWith("postdeploy-")))
+      ? "# تقرير تقييم أدوات UAT — المتبقي بعد النشر (/uat-checklist)"
+      : "# تقرير تقييم أدوات UAT — من /uat-checklist";
+
   const lines: string[] = [
-    "# تقرير تقييم أدوات UAT — من /uat-checklist",
+    title,
     "",
-    `الإجمالي: ${UAT_ALL_TOOLS.length} | يعتمد: ${approved} | يحتاج تحسين: ${needsWork} | غير مجرّب: ${untried}`,
+    `الإجمالي: ${tools.length} | يعتمد: ${approved} | يحتاج تحسين: ${needsWork} | غير مجرّب: ${untried}`,
     "",
     "## يحتاج تحسين (أولوية الإصلاح)",
   ];
