@@ -11,7 +11,11 @@ export type SystemSettings = {
  * Fallback: ./data for local dev — O(1).
  */
 function getSettingsPaths(): { dir: string; file: string } {
-  const uploadDir = process.env.UPLOAD_DIR?.trim();
+  const uploadDir =
+    process.env.UPLOAD_DIR?.trim() ||
+    (process.env.NODE_ENV === "production"
+      ? path.join(process.cwd(), "uploads")
+      : "");
   const dir = uploadDir
     ? path.join(uploadDir, "data")
     : path.join(process.cwd(), "data");
