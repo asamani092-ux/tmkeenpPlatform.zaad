@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   buildUatAgentExport,
   createDefaultUatState,
+  UAT_ALL_TOOLS,
   UAT_DEFAULT_VERDICT,
   UAT_GROUPS,
   UAT_NOTE_CATEGORIES,
@@ -13,7 +14,6 @@ import {
   UAT_STORAGE_KEY,
   UAT_VERDICTS,
   type UatChecklistState,
-  type UatTool,
   type UatVerdict,
 } from "@/lib/uat-checklist-data";
 
@@ -65,10 +65,8 @@ export default function UatChecklistForm() {
     window.localStorage.setItem(UAT_STORAGE_KEY, JSON.stringify(state));
   }, [state, ready]);
 
-  const visibleTools: UatTool[] =
-    scope === "remaining" ? UAT_REMAINING_TOOLS : UAT_GROUPS.flatMap((group) =>
-      group.tools.map((tool) => ({ ...tool, groupTitle: group.title }))
-    );
+  const visibleTools =
+    scope === "remaining" ? UAT_REMAINING_TOOLS : UAT_ALL_TOOLS;
 
   const visibleGroups =
     scope === "remaining"

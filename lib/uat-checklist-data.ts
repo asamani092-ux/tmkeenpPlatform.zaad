@@ -337,10 +337,8 @@ export const UAT_ALL_TOOLS: UatTool[] = UAT_GROUPS.flatMap((group) =>
 /** Wave after first UAT pass — email / live verify only. Stable ids. */
 export const UAT_POSTDEPLOY_GROUP_ID = "postdeploy-email";
 
-export const UAT_REMAINING_TOOLS: UatTool[] = UAT_ALL_TOOLS.filter(
-  (tool) =>
-    UAT_GROUPS.find((g) => g.tools.some((t) => t.id === tool.id))?.id ===
-    UAT_POSTDEPLOY_GROUP_ID
+export const UAT_REMAINING_TOOLS: UatTool[] = UAT_ALL_TOOLS.filter((tool) =>
+  tool.id.startsWith("postdeploy-")
 );
 
 export const UAT_OUT_OF_SCOPE = [
