@@ -8,12 +8,14 @@ import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastError } from "@/lib/toast";
 import { useFormFieldErrors } from "@/hooks/useFormFieldErrors";
-import { LogIn } from "lucide-react";
+import { Eye, EyeOff, LogIn } from "lucide-react";
 
 function LoginForm() {
   const searchParams = useSearchParams();
   const registered = searchParams.get("registered");
   const [loading, setLoading] = useState(false);
+  /** O(1) toggle — show/hide password characters */
+  const [showPassword, setShowPassword] = useState(false);
   const { validate, fieldError } = useFormFieldErrors();
 
   useEffect(() => {
@@ -90,16 +92,28 @@ function LoginForm() {
           />
         </FieldRow>
         <FieldRow label="كلمة المرور" htmlFor="password" ltr variant="auth" error={fieldError("password")}>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            required
-            className="input-field-auth"
-            placeholder="••••••••"
-            dir="ltr"
-          />
+          <div className="relative">
+            <input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              required
+              className="input-field-auth pe-11"
+              placeholder="••••••••"
+              dir="ltr"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute end-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-brand-gray transition hover:bg-surface-muted hover:text-primary"
+              aria-label={showPassword ? "إخفاء كلمة المرور" : "عرض كلمة المرور"}
+              aria-pressed={showPassword}
+              tabIndex={0}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
         </FieldRow>
         <SubmitButton loading={loading} className="btn-primary w-full">
           دخول
