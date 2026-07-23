@@ -8,6 +8,15 @@
 - Coolify مثبت على السيرفر (Docker + BuildKit)
 - نطاق مربوط بـ A record → IP السيرفر (مثل `tmkeen.alzaad.org.sa`)
 - مستودع GitHub مربوط بـ Coolify
+- **المستودع:** `https://github.com/asamani092-ux/tmkeenpPlatform.zaad`
+- **فرع النشر:** `master` (آخر إصدار UAT مدمج هنا — تأكد أن Coolify يراقب `master` ويعيد البناء عند الدفع)
+
+### 0. ربط Coolify بالمستودع (تحقق سريع)
+
+1. Coolify → Application `tmkeen` → **Source**: GitHub → نفس المستودع أعلاه
+2. **Branch:** `master` + تفعيل Auto Deploy / Webhook
+3. بعد كل `git push origin master` يجب أن يظهر Deployment جديد خلال دقائق
+4. تحقق النشر الحي: `https://tmkeen.alzaad.org.sa/login` يظهر زر إظهار/إخفاء كلمة المرور (Eye)
 
 ### 1. Build Pack
 
@@ -81,9 +90,26 @@ sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapf
 ### 8. التحقق بعد النشر
 
 1. `https://tmkeen.alzaad.org.sa` — الصفحة الرئيسية
-2. `/login` — بعد seed (حساب admin من `prisma/seed.ts`)
+2. `/login` — بعد seed (حساب admin من `prisma/seed.ts`)؛ زر عرض/إخفاء كلمة المرور موجود
 3. رفع CV — يتحقق من volume `/app/uploads`
 4. Logs — لا أخطاء `DATABASE_URL is not set`
+
+### 9. تفعيل البريد (SMTP) بعد نشر الكود
+
+في Coolify → Environment Variables (Runtime) ثم **Redeploy**:
+
+| المتغير | مثال |
+|---------|------|
+| `SMTP_HOST` | `smtp.hostinger.com` |
+| `SMTP_PORT` | `465` |
+| `SMTP_SECURE` | `true` |
+| `SMTP_USER` | بريد صندوق Hostinger |
+| `SMTP_PASS` | كلمة مرور الصندوق |
+| `NEXT_PUBLIC_APP_URL` | `https://tmkeen.alzaad.org.sa` |
+
+ثم من لوحة المدير → **إعدادات النظام**: عيّن `senderEmail` (يفضّل نفس `SMTP_USER`) → **إرسال تجريبي**.
+
+قائمة تحقق البريد بعد التفعيل: [`docs/uat/post-deploy-verify.md`](uat/post-deploy-verify.md)
 
 ---
 
@@ -190,7 +216,7 @@ crontab -e
 
 ## 7. GitHub Actions (اختياري)
 
-أضف secrets في GitHub: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY` — workflow `deploy.yml` ينشر تلقائياً عند push لـ `main`.
+أضف secrets في GitHub: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY` — workflow `deploy.yml` ينشر تلقائياً عند push لـ `master` (مسار بديل إن لم يُستخدم Coolify).
 
 ## التطوير المحلي
 
