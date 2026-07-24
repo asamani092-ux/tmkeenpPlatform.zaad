@@ -39,6 +39,17 @@ NEXT_PUBLIC_APP_URL=https://tmkeen.alzaad.org.sa
 
 بدون `SMTP_*` يبقى النظام يعمل؛ التسجيل يعرض `previewCode` محلياً فقط ولا يُرسل بريداً حقيقياً.
 
+### إن ظهر «فشل المصادقة SMTP» رغم كلمة مرور صحيحة
+
+Microsoft ترفض غالباً كلمة مرور الحساب العادية مع SMTP:
+
+1. Coolify: `SMTP_HOST=smtp.office365.com` · `SMTP_PORT=587` · `SMTP_SECURE=false`
+2. `SMTP_USER` = البريد كاملاً · `SMTP_PASS` **بدون** علامات `"..."` حول القيمة
+3. Microsoft 365 Admin → المستخدم → Mail → **Authenticated SMTP = Enabled**
+4. إن وُجد MFA: أنشئ **App Password** من حساب Microsoft واستخدمه في `SMTP_PASS` (ليس كلمة الدخول)
+5. إن كانت Security Defaults / Conditional Access تمنع Basic Auth: اسمح بـ SMTP Auth لهذا الصندوق أو استخدم صندوقاً مستثنى
+6. Redeploy بعد أي تعديل على المتغيرات
+
 ## forgot-password
 
 - المسار: `/forgot-password` (من صفحة الدخول فقط — غير موجود في Navbar)
