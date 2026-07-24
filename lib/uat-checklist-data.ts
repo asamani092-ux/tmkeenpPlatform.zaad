@@ -328,17 +328,133 @@ export const UAT_GROUPS: UatToolGroup[] = [
       },
     ],
   },
+  {
+    id: "email-lifecycle",
+    title: "دورات البريد (تجربة حية)",
+    tools: [
+      {
+        id: "email-01-register-otp",
+        tool: "① OTP تسجيل مستفيد",
+        path: "/register",
+        checks: "رمز 6 أرقام يصل للبريد؛ verify ينجح؛ بدون الاعتماد على previewCode",
+      },
+      {
+        id: "email-02-admin-new-registration",
+        tool: "② بريد المدير — مستفيد جديد",
+        path: "بعد verify التسجيل",
+        checks: "كل حسابات ADMIN تستلم «تسجيل مستفيد جديد» مع الاسم والبريد",
+      },
+      {
+        id: "email-03-forgot-password",
+        tool: "③ استعادة كلمة المرور",
+        path: "/forgot-password",
+        checks: "رابط يصل خلال دقائق؛ صالح ~30 د؛ تعيين كلمة → دخول",
+      },
+      {
+        id: "email-04-test-send",
+        tool: "④ إرسال تجريبي من الإعدادات",
+        path: "/dashboard/admin → إعدادات",
+        checks: "إرسال تجربة ينجح؛ senderEmail = SMTP_USER",
+      },
+      {
+        id: "email-05-approve-registration",
+        tool: "⑤ اعتماد التسجيل",
+        path: "admin → اعتماد مستفيد",
+        checks: "بعد إسناد مرشد والاعتماد يصل بريد «تم اعتماد تسجيلك» للمستفيد",
+      },
+      {
+        id: "email-06-approve-stage",
+        tool: "⑥ اعتماد انتقال مرحلة",
+        path: "admin → اعتماد مرحلة",
+        checks: "بريد للمستفيد بعنوان المرحلة الجديدة",
+      },
+      {
+        id: "email-07-session-scheduled",
+        tool: "⑦ جدولة جلسة إرشاد",
+        path: "مرشد → إدارة الجلسات",
+        checks: "بريد للمستفيد وللمرشد بالتاريخ والرابط/الموقع + إشعار داخلي",
+      },
+      {
+        id: "email-08-application-accept",
+        tool: "⑧ قبول تقديم",
+        path: "admin → تقديمات",
+        checks: "بريد قبول يتضمن أنه سيُبلَّغ بالتفاصيل قريباً + إشعار واجهة",
+      },
+      {
+        id: "email-09-application-reject",
+        tool: "⑨ رفض تقديم",
+        path: "admin → تقديمات",
+        checks: "بريد رفض يصل للمستفيد مع الملاحظة إن وُجدت",
+      },
+      {
+        id: "email-10-followup-start",
+        tool: "⑩ بدء متابعة التوظيف",
+        path: "انتقال لمرحلة FOLLOW_UP",
+        checks: "بريد تذكير نموذج الشهر 1 + رابط اللوحة",
+      },
+      {
+        id: "email-11-followup-cron",
+        tool: "⑪ تذكير متابعة تلقائي (Cron)",
+        path: "GET /api/cron/follow-up-reminders",
+        checks: "مع CRON_SECRET؛ تذكير للشهر النشط؛ لا أكثر من مرة/24س",
+      },
+      {
+        id: "email-12-followup-manual",
+        tool: "⑫ تذكير متابعة يدوي",
+        path: "admin → متابعة",
+        checks: "زر التذكير يرسل بريداً لنموذج الشهر الحالي",
+      },
+      {
+        id: "email-13-followup-complete",
+        tool: "⑬ اكتمال برنامج المتابعة",
+        path: "إكمال أشهر المتابعة",
+        checks: "بريد «اكتمال برنامج المتابعة» يصل للمستفيد",
+      },
+    ],
+  },
+  {
+    id: "ui-notes",
+    title: "ملاحظات الواجهات (عامة)",
+    tools: [
+      {
+        id: "notes-general",
+        tool: "ملاحظات عامة على المنصة",
+        path: "—",
+        checks: "أي ملاحظة عامة لا تخص واجهة واحدة (أداء، نصوص، استقرار، اقتراحات)",
+      },
+      {
+        id: "notes-admin-ui",
+        tool: "ملاحظات واجهة المدير",
+        path: "/dashboard/admin",
+        checks: "سجّل ملاحظات تجربة لوحة المدير فقط (تنقل، نماذج، جداول، أخطاء)",
+      },
+      {
+        id: "notes-guide-ui",
+        tool: "ملاحظات واجهة المرشد",
+        path: "/dashboard/guide",
+        checks: "سجّل ملاحظات تجربة لوحة المرشد فقط (جلسات، مهام، تقييم، جوال)",
+      },
+      {
+        id: "notes-beneficiary-ui",
+        tool: "ملاحظات واجهة المستفيد",
+        path: "/dashboard/beneficiary",
+        checks: "سجّل ملاحظات تجربة لوحة المستفيد فقط (مسار، فرص، ملف، متابعة)",
+      },
+    ],
+  },
 ];
 
 export const UAT_ALL_TOOLS: UatTool[] = UAT_GROUPS.flatMap((group) =>
   group.tools.map((tool) => ({ ...tool, groupTitle: group.title }))
 );
 
-/** Wave after first UAT pass — email / live verify only. Stable ids. */
+/** Wave after first UAT pass — email / live verify / UI notes. Stable ids. */
 export const UAT_POSTDEPLOY_GROUP_ID = "postdeploy-email";
 
+export const UAT_WAVE_PREFIXES = ["postdeploy-", "email-", "notes-"] as const;
+
 export const UAT_REMAINING_TOOLS: UatTool[] = UAT_ALL_TOOLS.filter((tool) =>
-  tool.id.startsWith("postdeploy-")
+  UAT_WAVE_PREFIXES.some((prefix) => tool.id.startsWith(prefix))
 );
 
 export const UAT_OUT_OF_SCOPE = [
@@ -401,11 +517,16 @@ export function buildUatAgentExport(
     };
   });
 
-  const title =
+  const isWave =
     tools === UAT_REMAINING_TOOLS ||
-    (tools.length > 0 && tools.every((t) => t.id.startsWith("postdeploy-")))
-      ? "# تقرير تقييم أدوات UAT — المتبقي بعد النشر (/uat-checklist)"
-      : "# تقرير تقييم أدوات UAT — من /uat-checklist";
+    (tools.length > 0 &&
+      tools.every((t) =>
+        UAT_WAVE_PREFIXES.some((prefix) => t.id.startsWith(prefix))
+      ));
+
+  const title = isWave
+    ? "# تقرير تقييم أدوات UAT — بريد + ملاحظات واجهات (/uat-checklist)"
+    : "# تقرير تقييم أدوات UAT — من /uat-checklist";
 
   const lines: string[] = [
     title,
@@ -429,6 +550,19 @@ export function buildUatAgentExport(
   const ok = rows.filter((r) => r.verdict === "يعتمد");
   if (ok.length === 0) lines.push("_لا يوجد_");
   else for (const r of ok) lines.push(`- \`${r.id}\` | ${r.tool}`);
+
+  const uiNotes = rows.filter((r) => r.id.startsWith("notes-"));
+  if (uiNotes.length > 0) {
+    lines.push("", "## ملاحظات الواجهات");
+    for (const r of uiNotes) {
+      lines.push(
+        `### ${r.tool}`,
+        `التقييم: ${r.verdict} | التصنيف: ${r.category}`,
+        r.note,
+        ""
+      );
+    }
+  }
 
   lines.push("", "## جميع البنود");
   for (const r of rows) {

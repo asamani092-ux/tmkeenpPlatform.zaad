@@ -9,7 +9,6 @@ import {
   UAT_GROUPS,
   UAT_NOTE_CATEGORIES,
   UAT_OUT_OF_SCOPE,
-  UAT_POSTDEPLOY_GROUP_ID,
   UAT_REMAINING_TOOLS,
   UAT_STORAGE_KEY,
   UAT_VERDICTS,
@@ -70,7 +69,9 @@ export default function UatChecklistForm() {
 
   const visibleGroups =
     scope === "remaining"
-      ? UAT_GROUPS.filter((g) => g.id === UAT_POSTDEPLOY_GROUP_ID)
+      ? UAT_GROUPS.filter((g) =>
+          ["postdeploy-email", "email-lifecycle", "ui-notes"].includes(g.id)
+        )
       : UAT_GROUPS;
 
   const activeIndex = Math.max(
@@ -188,11 +189,16 @@ export default function UatChecklistForm() {
 
       <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-sm">
         <p className="font-semibold text-primary">
-          العرض الافتراضي: البنود المتبقية بعد النشر (بريد وتحقق حي) —{" "}
-          {UAT_REMAINING_TOOLS.length} بنود
+          العرض الافتراضي: ما بعد النشر + دورات البريد + ملاحظات الواجهات —{" "}
+          {UAT_REMAINING_TOOLS.length} بنداً
         </p>
         <p className="mt-1 text-brand-gray">
-          https://tmkeen.alzaad.org.sa أو http://localhost:3000 — كلمة المرور من prisma/seed.ts
+          مجموعات: ما بعد النشر · دورات البريد (①–⑬) · ملاحظات عامة / مدير / مرشد /
+          مستفيد
+        </p>
+        <p className="mt-1 text-brand-gray">
+          https://tmkeen.alzaad.org.sa أو http://localhost:3000 — كلمة المرور من
+          prisma/seed.ts
         </p>
         <p className="mt-1 text-brand-gray">
           admin@alzaad.org · guide@alzaad.org · beneficiary1–4@alzaad.org
@@ -200,14 +206,22 @@ export default function UatChecklistForm() {
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
-            className={scope === "remaining" ? "btn-primary px-3 py-1.5 text-sm" : "btn-secondary px-3 py-1.5 text-sm"}
+            className={
+              scope === "remaining"
+                ? "btn-primary px-3 py-1.5 text-sm"
+                : "btn-secondary px-3 py-1.5 text-sm"
+            }
             onClick={() => setScope("remaining")}
           >
-            المتبقي فقط
+            موجة البريد والملاحظات
           </button>
           <button
             type="button"
-            className={scope === "all" ? "btn-primary px-3 py-1.5 text-sm" : "btn-secondary px-3 py-1.5 text-sm"}
+            className={
+              scope === "all"
+                ? "btn-primary px-3 py-1.5 text-sm"
+                : "btn-secondary px-3 py-1.5 text-sm"
+            }
             onClick={() => setScope("all")}
           >
             كل البنود
