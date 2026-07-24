@@ -42,10 +42,10 @@
 | `UPLOAD_DIR` | `/app/uploads` |
 
 > **HTTP (nip.io):** اضبط `NEXT_PUBLIC_APP_URL` بـ `http://` — الكوكيز تُفعّل `Secure` تلقائياً فقط مع `https://`.
-| `SMTP_HOST` | `smtp.hostinger.com` |
-| `SMTP_PORT` | `465` |
-| `SMTP_SECURE` | `true` |
-| `SMTP_USER` / `SMTP_PASS` | بيانات البريد |
+| `SMTP_HOST` | Outlook: `smtp.office365.com` — أو Hostinger: `smtp.hostinger.com` |
+| `SMTP_PORT` | Outlook: `587` — Hostinger غالباً `465` |
+| `SMTP_SECURE` | Outlook: `false` (STARTTLS على 587) — Hostinger على 465: `true` |
+| `SMTP_USER` / `SMTP_PASS` | بريد الصندوق + كلمة المرور (Outlook: App Password إن وُجد MFA) |
 | `CRON_SECRET` | سر لـ `/api/cron/follow-up-reminders` (مثلاً `openssl rand -hex 32`) |
 
 ### 3.1 تذكير متابعة ما بعد التوظيف (Cron)
@@ -100,14 +100,16 @@ sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapf
 
 | المتغير | مثال |
 |---------|------|
-| `SMTP_HOST` | `smtp.hostinger.com` |
-| `SMTP_PORT` | `465` |
-| `SMTP_SECURE` | `true` |
-| `SMTP_USER` | بريد صندوق Hostinger |
-| `SMTP_PASS` | كلمة مرور الصندوق |
+| `SMTP_HOST` | `smtp.office365.com` (نطاق @alzaad.org.sa على Outlook) |
+| `SMTP_PORT` | `587` |
+| `SMTP_SECURE` | `false` |
+| `SMTP_USER` | مثل `noreply@alzaad.org.sa` |
+| `SMTP_PASS` | كلمة مرور الصندوق أو App Password |
 | `NEXT_PUBLIC_APP_URL` | `https://tmkeen.alzaad.org.sa` |
 
-ثم من لوحة المدير → **إعدادات النظام**: عيّن `senderEmail` (يفضّل نفس `SMTP_USER`) → **إرسال تجريبي**.
+ثم Redeploy. من لوحة المدير → **إعدادات النظام**: `senderEmail` = **نفس** `SMTP_USER` تماماً → **إرسال تجريبي**.
+
+إن فشل الإرسال: في Microsoft 365 Admin فعّل **Authenticated SMTP** للحساب، ومع MFA استخدم App Password.
 
 قائمة تحقق البريد بعد التفعيل: [`docs/uat/post-deploy-verify.md`](uat/post-deploy-verify.md)
 

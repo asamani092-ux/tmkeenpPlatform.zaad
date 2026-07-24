@@ -22,11 +22,12 @@
 عيّن Runtime env ثم أعد النشر:
 
 ```bash
-SMTP_HOST=smtp.hostinger.com
-SMTP_PORT=465
-SMTP_SECURE=true
-SMTP_USER=YOUR_MAILBOX@yourdomain.com
-SMTP_PASS=YOUR_MAILBOX_PASSWORD
+# Outlook / Microsoft 365 (@alzaad.org.sa)
+SMTP_HOST=smtp.office365.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=YOUR_MAILBOX@alzaad.org.sa
+SMTP_PASS=YOUR_PASSWORD_OR_APP_PASSWORD
 NEXT_PUBLIC_APP_URL=https://tmkeen.alzaad.org.sa
 ```
 

@@ -5,7 +5,7 @@ import {
   saveSystemSettings,
   isValidEmail,
 } from "@/lib/system-settings";
-import { isSmtpConfigured } from "@/lib/mail";
+import { getSmtpPublicInfo } from "@/lib/mail";
 
 export async function GET() {
   const session = await getSession();
@@ -14,7 +14,14 @@ export async function GET() {
   }
 
   const settings = await getSystemSettings();
-  return NextResponse.json({ ...settings, smtpConfigured: isSmtpConfigured() });
+  const smtp = getSmtpPublicInfo();
+  return NextResponse.json({
+    ...settings,
+    smtpConfigured: smtp.configured,
+    smtpHost: smtp.host,
+    smtpPort: smtp.port,
+    smtpUser: smtp.user,
+  });
 }
 
 export async function PUT(request: Request) {

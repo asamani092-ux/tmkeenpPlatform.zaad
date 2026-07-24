@@ -11,6 +11,9 @@ export default function AdminSystemSettings() {
   const [senderEmail, setSenderEmail] = useState("");
   const [testEmail, setTestEmail] = useState("");
   const [smtpConfigured, setSmtpConfigured] = useState(false);
+  const [smtpUser, setSmtpUser] = useState<string | null>(null);
+  const [smtpHost, setSmtpHost] = useState<string | null>(null);
+  const [smtpPort, setSmtpPort] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [pending, startTransition] = useTransition();
 
@@ -20,6 +23,13 @@ export default function AdminSystemSettings() {
       .then((data) => {
         if (data.senderEmail) setSenderEmail(data.senderEmail);
         setSmtpConfigured(Boolean(data.smtpConfigured));
+        setSmtpUser(typeof data.smtpUser === "string" ? data.smtpUser : null);
+        setSmtpHost(typeof data.smtpHost === "string" ? data.smtpHost : null);
+        setSmtpPort(
+          typeof data.smtpPort === "number" && !Number.isNaN(data.smtpPort)
+            ? data.smtpPort
+            : null
+        );
       })
       .catch(() => toastError("فشل تحميل الإعدادات"))
       .finally(() => setLoading(false));
@@ -76,11 +86,24 @@ export default function AdminSystemSettings() {
         </p>
 
         <div
-          className={`rounded-lg px-4 py-3 text-sm ${
+          className={`space-y-1 rounded-lg px-4 py-3 text-sm ${
             smtpConfigured ? "bg-secondary/10 text-primary" : "bg-amber-50 text-amber-900"
           }`}
         >
-          البريد: {smtpConfigured ? "مفعّل" : "غير مفعّل"}
+          <p>البريد: {smtpConfigured ? "مفعّل" : "غير مفعّل"}</p>
+          {smtpConfigured && smtpHost ? (
+            <p className="text-xs opacity-90" dir="ltr">
+              {smtpHost}
+              {smtpPort ? `:${smtpPort}` : ""}
+              {smtpUser ? ` · ${smtpUser}` : ""}
+            </p>
+          ) : null}
+          {smtpUser ? (
+            <p className="text-xs">
+              لـ Outlook: اجعل بريد المرسل مطابقاً لـ{" "}
+              <span dir="ltr">{smtpUser}</span>
+            </p>
+          ) : null}
         </div>
 
         {loading ? (

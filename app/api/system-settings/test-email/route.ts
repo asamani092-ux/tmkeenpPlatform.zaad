@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { getSystemSettings, isValidEmail } from "@/lib/system-settings";
 import { sendGenericEmail } from "@/lib/email-notify";
-import { isSmtpConfigured } from "@/lib/mail";
+import { describeSmtpError, getSmtpPublicInfo, isSmtpConfigured } from "@/lib/mail";
 
 export async function POST(request: Request) {
   try {
@@ -31,6 +31,19 @@ export async function POST(request: Request) {
     }
 
     const settings = await getSystemSettings();
+    const smtp = getSmtpPublicInfo();
+    if (
+      smtp.user &&
+      settings.senderEmail.trim().toLowerCase() !== smtp.user.toLowerCase()
+    ) {
+      return NextResponse.json(
+        {
+          error: `لـ Outlook يجب أن يساوي بريد المرسل SMTP_USER (${smtp.user})`,
+        },
+        { status: 400 }
+      );
+    }
+
     await sendGenericEmail({
       to: String(email).trim(),
       subject: "رسالة تجريبية — منصة تمكين",
@@ -48,12 +61,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("[test-email]", err);
-    return NextResponse.json(
-      {
-        error:
-          "فشل إرسال البريد — تحقق من SMTP_USER و senderEmail وكلمة مرور SMTP",
-      },
-      { status: 502 }
-    );
+    return NextResponse.json({ error: describeSmtpError(err) }, { status: 502 });
   }
 }
