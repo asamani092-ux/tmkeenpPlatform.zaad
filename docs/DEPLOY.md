@@ -76,12 +76,20 @@ Authorization: Bearer YOUR_CRON_SECRET
 - **Port Exposes:** `3000`
 - النطاق + HTTPS: من إعدادات Coolify (SSL تلقائي)
 
-### 7. ذاكرة محدودة (4 GB)
+### 7. ذاكرة / قرص محدود (فشل `exporting layers`)
 
-إذا فشل `next build` بـ OOM:
+الصورة تستخدم Next `output: "standalone"` لتقليل الحجم. إذا فشل النشر عند **exporting to image / exporting layers** (بعد نجاح `next build`):
 
 ```bash
-# swap على السيرفر
+# على سيرفر Coolify — نظّف صور/طبقات قديمة
+docker system df
+docker image prune -af
+docker builder prune -af
+```
+
+وإذا فشل `next build` بـ OOM:
+
+```bash
 sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile
 ```
 

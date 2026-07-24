@@ -1,8 +1,9 @@
 #!/bin/sh
+set -eu
 
-if [ -n "$DATABASE_URL" ]; then
+if [ -n "${DATABASE_URL:-}" ]; then
   echo "Running prisma migrate deploy..."
-  if npx prisma migrate deploy; then
+  if prisma migrate deploy; then
     echo "Migrations applied successfully."
   else
     echo "WARNING: prisma migrate deploy failed — starting app anyway."

@@ -4,6 +4,10 @@ node_modules
 .env
 .env.*
 uploads
-*.md
 .cursor
 .github
+Design_system_f
+**/node_modules
+*.log
+coverage
+.turbo
