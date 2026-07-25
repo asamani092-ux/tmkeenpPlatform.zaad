@@ -52,6 +52,7 @@ export default function BeneficiaryProfileEdit({ profile }: Props) {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            name: form.get("name"),
             phone: form.get("phone"),
             educationLevel: form.get("educationLevel"),
             experience: form.get("experience"),
@@ -100,14 +101,20 @@ export default function BeneficiaryProfileEdit({ profile }: Props) {
             </div>
 
             <form noValidate onSubmit={handleSubmit} className="space-y-3">
-              <FieldRow label="الاسم">
-                <input value={profile.name} disabled className="input-field bg-surface-muted" />
+              <FieldRow label="الاسم" htmlFor="profile-name">
+                <input
+                  id="profile-name"
+                  name="name"
+                  defaultValue={profile.name}
+                  required
+                  className="input-field w-full min-w-0"
+                />
               </FieldRow>
               <FieldRow label="البريد" ltr>
-                <input value={profile.email} disabled className="input-field bg-surface-muted" dir="ltr" />
+                <input value={profile.email} disabled className="input-field w-full min-w-0 bg-surface-muted" dir="ltr" />
               </FieldRow>
               <FieldRow label="رقم الجوال" htmlFor="phone" ltr>
-                <input id="phone" name="phone" defaultValue={profile.phone} required className="input-field" dir="ltr" />
+                <input id="phone" name="phone" defaultValue={profile.phone} required className="input-field w-full min-w-0" dir="ltr" />
               </FieldRow>
               <FieldRow label="المستوى التعليمي" htmlFor="educationLevel">
                 <input id="educationLevel" name="educationLevel" defaultValue={profile.educationLevel} className="input-field" />

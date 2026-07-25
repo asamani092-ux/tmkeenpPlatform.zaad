@@ -13,6 +13,7 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
     const result = await adminUpdateBeneficiary(id, {
+      name: body.name != null ? String(body.name) : undefined,
       phone: body.phone != null ? String(body.phone) : undefined,
       email: body.email != null ? String(body.email) : undefined,
       password: body.password ? String(body.password) : undefined,

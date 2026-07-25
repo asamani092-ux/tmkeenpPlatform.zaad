@@ -201,6 +201,7 @@ export default function AdminBeneficiaryManagement({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          name: form.get("name"),
           phone: form.get("phone"),
           email: form.get("email"),
           password: form.get("password") || undefined,
@@ -220,6 +221,7 @@ export default function AdminBeneficiaryManagement({
       const guideName = guides.find((g) => g.id === guideIdRaw)?.name ?? null;
       const nextStage = (form.get("stage") as Stage) || selected.stage;
       const patch = {
+        name: String(form.get("name") ?? selected.name),
         phone: String(form.get("phone") ?? ""),
         email: String(form.get("email") ?? selected.email),
         educationLevel: String(form.get("educationLevel") ?? ""),
@@ -465,12 +467,21 @@ export default function AdminBeneficiaryManagement({
             {editMode ? (
               <form noValidate onSubmit={handleProfileSave} className="card-section space-y-3">
                 <h4 className="font-bold text-primary">تعديل بيانات المستفيد</h4>
+                <FieldRow label="الاسم" htmlFor="beneficiary-name">
+                  <input
+                    id="beneficiary-name"
+                    name="name"
+                    defaultValue={selected.name}
+                    className="input-field w-full min-w-0"
+                    required
+                  />
+                </FieldRow>
                 <FieldRow label="الجوال" htmlFor="beneficiary-phone" ltr>
                   <input
                     id="beneficiary-phone"
                     name="phone"
                     defaultValue={selected.phone}
-                    className="input-field"
+                    className="input-field w-full min-w-0"
                     dir="ltr"
                     required
                   />
@@ -481,7 +492,7 @@ export default function AdminBeneficiaryManagement({
                     name="email"
                     type="email"
                     defaultValue={selected.email}
-                    className="input-field"
+                    className="input-field w-full min-w-0"
                     dir="ltr"
                     required
                   />
@@ -492,7 +503,7 @@ export default function AdminBeneficiaryManagement({
                     name="password"
                     type="password"
                     placeholder="اتركه فارغاً للإبقاء"
-                    className="input-field"
+                    className="input-field w-full min-w-0"
                     dir="ltr"
                   />
                 </FieldRow>
@@ -501,7 +512,7 @@ export default function AdminBeneficiaryManagement({
                     id="beneficiary-education"
                     name="educationLevel"
                     defaultValue={selected.educationLevel}
-                    className="input-field"
+                    className="input-field w-full min-w-0"
                   />
                 </FieldRow>
                 <FieldRow label="المرحلة" htmlFor="beneficiary-stage">
@@ -509,7 +520,7 @@ export default function AdminBeneficiaryManagement({
                     id="beneficiary-stage"
                     name="stage"
                     defaultValue={selected.stage}
-                    className="input-field"
+                    className="input-field w-full min-w-0"
                   >
                     {STAGE_ORDER.map((s) => (
                       <option key={s} value={s}>
@@ -523,7 +534,7 @@ export default function AdminBeneficiaryManagement({
                     id="beneficiary-guide"
                     name="guideId"
                     defaultValue={selected.guideId ?? ""}
-                    className="input-field"
+                    className="input-field w-full min-w-0"
                   >
                     <option value="">بدون مرشد</option>
                     {guides.map((g) => (
@@ -539,7 +550,7 @@ export default function AdminBeneficiaryManagement({
                     name="experience"
                     defaultValue={selected.experience}
                     rows={2}
-                    className="input-field resize-none"
+                    className="input-field w-full min-w-0 resize-none"
                   />
                 </FieldRow>
                 <FieldRow label="المهارات" htmlFor="beneficiary-skills" align="start">
@@ -548,7 +559,7 @@ export default function AdminBeneficiaryManagement({
                     name="skills"
                     defaultValue={selected.skills}
                     rows={2}
-                    className="input-field resize-none"
+                    className="input-field w-full min-w-0 resize-none"
                   />
                 </FieldRow>
                 <FieldRow label="الميول المهنية" htmlFor="beneficiary-career" align="start">
@@ -557,7 +568,7 @@ export default function AdminBeneficiaryManagement({
                     name="careerInterests"
                     defaultValue={selected.careerInterests}
                     rows={2}
-                    className="input-field resize-none"
+                    className="input-field w-full min-w-0 resize-none"
                   />
                 </FieldRow>
                 <div className="flex gap-2">

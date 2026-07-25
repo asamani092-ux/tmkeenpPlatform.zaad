@@ -65,13 +65,21 @@ export const resetPasswordCopy = {
 
 export const adminCopy = {
   pipelineTab: "لوحة التتبع",
+  pipelineTabShort: "التتبع",
   opportunitiesTab: "إدارة الفرص",
+  opportunitiesTabShort: "الفرص",
   guidesTab: "إدارة المرشدين",
+  guidesTabShort: "المرشدون",
   managementTab: "إدارة المستفيدين",
+  managementTabShort: "المستفيدون",
   followUpTab: "متابعة ما بعد التوظيف",
+  followUpTabShort: "المتابعة",
   settingsTab: "إعدادات النظام",
+  settingsTabShort: "الإعدادات",
   applicationsTab: "مراجعة التقديمات",
+  applicationsTabShort: "التقديمات",
   impactTab: "قياس الأثر",
+  impactTabShort: "الأثر",
 } as const;
 
 export const guideCopy = {
@@ -125,6 +133,8 @@ export const beneficiaryCopy = {
   noTasks: "لا توجد مهام مخصصة حالياً",
   recommendedCourses: "الدورات التدريبية الموصى بها من المرشد",
   professionalRecommendations: "التوصيات المهنية من المرشد",
+  professionalRecommendationsHint:
+    "توجيه مهني عام من مرشدك (مختلف عن مهام المسار القابلة للتنفيذ).",
   noRecommendedCourses: "لم يُحدّد مرشدك دورات تدريبية بعد",
   viewCv: "عرض السيرة الذاتية المرفقة",
   noCvBadge: "لا يوجد سيرة ذاتية - يرجى طلبها من المستفيد",

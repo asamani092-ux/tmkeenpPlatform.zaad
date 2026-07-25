@@ -23,7 +23,11 @@ import { STAGE_LABELS, getNextStage } from "@/lib/stages";
 import { SESSION_STATUS_LABELS } from "@/lib/labels";
 import { getUpcomingSession } from "@/lib/upcoming-session";
 import { formatCountdown } from "@/lib/follow-up-program";
-import { fromDatetimeLocalValue, toDatetimeLocalValue } from "@/lib/datetime-local";
+import {
+  formatArDateTime,
+  fromDatetimeLocalValue,
+  toDatetimeLocalValue,
+} from "@/lib/datetime-local";
 import ContactLinks from "@/components/ui/ContactLinks";
 import { useSyncFromProps } from "@/lib/use-sync-from-props";
 import { toastSuccess, toastError } from "@/lib/toast";
@@ -1288,7 +1292,7 @@ export default function GuideBeneficiaryTable({
 
                               <span className="mx-2 text-brand-gray">·</span>
 
-                              {new Date(s.date).toLocaleString("ar-SA")}
+                              {formatArDateTime(s.date)}
 
                               {s.meetingLink && (
 
@@ -1296,7 +1300,14 @@ export default function GuideBeneficiaryTable({
 
                                   <Video className="h-3 w-3" />
 
-                                  <span dir="ltr" className="truncate">{s.meetingLink}</span>
+                                  <a
+                                    href={s.meetingLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="font-semibold text-primary hover:underline"
+                                  >
+                                    رابط الاجتماع
+                                  </a>
 
                                 </p>
 

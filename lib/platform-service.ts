@@ -753,6 +753,7 @@ export async function deleteBeneficiary(id: string): Promise<ActionResult> {
 export async function adminUpdateBeneficiary(
   beneficiaryId: string,
   data: {
+    name?: string;
     phone?: string;
     email?: string;
     password?: string;
@@ -780,6 +781,10 @@ export async function adminUpdateBeneficiary(
     return { success: false, error: "مرحلة غير صالحة" };
   }
 
+  if (data.name !== undefined && !data.name.trim()) {
+    return { success: false, error: "الاسم مطلوب" };
+  }
+
   if (data.email !== undefined) {
     const email = data.email.toLowerCase().trim();
     const existing = await prisma.user.findFirst({
@@ -803,6 +808,7 @@ export async function adminUpdateBeneficiary(
   await prisma.user.update({
     where: { id: beneficiaryId },
     data: {
+      ...(data.name !== undefined ? { name: data.name.trim() } : {}),
       ...(data.phone !== undefined ? { phone: data.phone.trim() } : {}),
       ...(data.email !== undefined ? { email: data.email.toLowerCase().trim() } : {}),
       ...(data.password ? { password: await hashPassword(data.password) } : {}),
@@ -916,6 +922,7 @@ export async function deleteFollowUp(id: string): Promise<ActionResult> {
 }
 
 export async function updateBeneficiaryProfile(data: {
+  name?: string;
   educationLevel: string;
   experience: string;
   skills: string;
@@ -932,10 +939,14 @@ export async function updateBeneficiaryProfile(data: {
   if (!data.phone?.trim()) {
     return { success: false, error: "رقم الجوال مطلوب" };
   }
+  if (data.name !== undefined && !data.name.trim()) {
+    return { success: false, error: "الاسم مطلوب" };
+  }
 
   await prisma.user.update({
     where: { id: session.id },
     data: {
+      ...(data.name !== undefined ? { name: data.name.trim() } : {}),
       educationLevel: data.educationLevel.trim(),
       experience: data.experience.trim(),
       skills: data.skills.trim(),
@@ -1252,7 +1263,7 @@ export async function approveRegistration(
   await createNotification(
     beneficiaryId,
     "تم اعتماد تسجيلك",
-    "تم اعتماد حسابك في منصة تمكين. يمكنك الآن البدء بمرحلة الإرشاد."
+    "تم اعتماد حسابك في منصة تمكين. يمكنك الآن تسجيل الدخول والبدء بمرحلة الإرشاد."
   );
 
   const settings = await getSystemSettings();
@@ -1261,7 +1272,14 @@ export async function approveRegistration(
     sendGenericEmail({
       to: beneficiary.email,
       subject: "تم اعتماد تسجيلك في منصة تمكين",
-      body: `مرحباً ${beneficiary.name}،\n\nتم اعتماد حسابك. يمكنك تسجيل الدخول والبدء بمرحلة الإرشاد.\n\nمع تحيات فريق منصة تمكين`,
+      body: [
+        `مرحباً ${beneficiary.name}،`,
+        "",
+        "تم اعتماد حسابك في منصة تمكين.",
+        "يمكنك الآن تسجيل الدخول والبدء بمرحلة الإرشاد مع مرشدك.",
+        "",
+        "مع تحيات فريق منصة تمكين",
+      ].join("\n"),
       senderEmail: settings.senderEmail,
     })
   );
@@ -1313,8 +1331,15 @@ export async function approveStageTransition(
   await safeSendEmail("approve stage transition", () =>
     sendGenericEmail({
       to: beneficiary.email,
-      subject: `انتقال إلى مرحلة ${STAGE_LABELS[newStage]}`,
-      body: `مرحباً ${beneficiary.name}،\n\nتم اعتماد انتقالك إلى مرحلة: ${STAGE_LABELS[newStage]}.\n\nمع تحيات فريق منصة تمكين`,
+      subject: `انتقال إلى مرحلة ${STAGE_LABELS[newStage]} — منصة تمكين`,
+      body: [
+        `مرحباً ${beneficiary.name}،`,
+        "",
+        `تم اعتماد انتقالك إلى مرحلة: ${STAGE_LABELS[newStage]}.`,
+        "يمكنك متابعة الخطوات التالية من لوحة المستفيد.",
+        "",
+        "مع تحيات فريق منصة تمكين",
+      ].join("\n"),
       senderEmail: settings.senderEmail,
     })
   );

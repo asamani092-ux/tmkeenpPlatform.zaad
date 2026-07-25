@@ -5,6 +5,7 @@ export async function PATCH(request: Request) {
   try {
     const body = await request.json();
     const result = await updateBeneficiaryProfile({
+      name: body.name != null ? String(body.name) : undefined,
       educationLevel: String(body.educationLevel ?? ""),
       experience: String(body.experience ?? ""),
       skills: String(body.skills ?? ""),

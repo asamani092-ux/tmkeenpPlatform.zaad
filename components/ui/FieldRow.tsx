@@ -57,7 +57,7 @@ export default function FieldRow({
           {label}
         </label>
         <div
-          className={`field-cell-control ${invalidClass} ${ltr ? "[&_.input-field]:text-start" : ""}`}
+          className={`field-cell-control w-full min-w-0 ${invalidClass} ${ltr ? "[&_.input-field]:text-start" : ""}`}
           dir={ltr ? "ltr" : undefined}
         >
           {children}

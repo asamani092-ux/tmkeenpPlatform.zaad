@@ -49,6 +49,7 @@ export default function BeneficiaryEditModal({ profile, open, onClose }: Props) 
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            name: form.get("name"),
             phone: form.get("phone"),
             educationLevel: form.get("educationLevel"),
             experience: form.get("experience"),
@@ -97,8 +98,14 @@ export default function BeneficiaryEditModal({ profile, open, onClose }: Props) 
 
       {tab === "profile" ? (
         <form noValidate onSubmit={handleProfileSubmit} className="space-y-3 text-start">
-          <FieldRow label="الاسم">
-            <input value={profile.name} disabled className="input-field bg-surface-muted" />
+          <FieldRow label="الاسم" htmlFor="modal-name">
+            <input
+              id="modal-name"
+              name="name"
+              defaultValue={profile.name}
+              required
+              className="input-field w-full min-w-0"
+            />
           </FieldRow>
           <FieldRow label="رقم الجوال" htmlFor="modal-phone" ltr>
             <input
@@ -106,7 +113,7 @@ export default function BeneficiaryEditModal({ profile, open, onClose }: Props) 
               name="phone"
               defaultValue={profile.phone}
               required
-              className="input-field"
+              className="input-field w-full min-w-0"
               dir="ltr"
             />
           </FieldRow>

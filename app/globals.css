@@ -112,11 +112,11 @@ body {
   }
 
   .field-cell-control {
-    @apply min-w-0 flex-1;
+    @apply w-full min-w-0 flex-1;
   }
 
   .field-cell-control .input-field {
-    @apply border-surface-border;
+    @apply w-full min-w-0 border-surface-border;
   }
 
   .field-grid {

@@ -71,7 +71,7 @@ export default function BeneficiaryGuideDrawer({
                 <DetailRow label="الجوال" value={guide.phone} ltr singleLine />
                 <DetailRow label="البريد" value={guide.email} ltr singleLine />
               </FieldGrid>
-              <ContactLinks phone={guide.phone} email={guide.email} />
+              <ContactLinks phone={guide.phone} email={guide.email} whatsapp={guide.phone} />
             </div>
           ) : (
             <p className="text-sm text-brand-gray">لم يُسنَد لك مرشد بعد.</p>
@@ -79,6 +79,9 @@ export default function BeneficiaryGuideDrawer({
 
           <div className="space-y-2">
             <h3 className="font-bold text-primary">{beneficiaryCopy.professionalRecommendations}</h3>
+            <p className="text-xs text-brand-gray">
+              {beneficiaryCopy.professionalRecommendationsHint}
+            </p>
             {hasRecs ? (
               <p className="whitespace-pre-wrap text-sm text-brand-gray">{professionalRecommendations}</p>
             ) : (

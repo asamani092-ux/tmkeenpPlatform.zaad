@@ -45,7 +45,7 @@ export default function BeneficiaryGuideSummaryCard({
           {beneficiaryCopy.professionalRecommendations}
         </h3>
         <p className="mb-2 text-xs text-brand-gray">
-          توجيه مهني عام من مرشدك (مختلف عن مهام المسار القابلة للتنفيذ).
+          {beneficiaryCopy.professionalRecommendationsHint}
         </p>
         {hasRecs ? (
           <p className="whitespace-pre-wrap text-sm text-primary">

@@ -137,15 +137,60 @@ export default function AdminDashboardTabs({
     }
   }, [searchParams]);
 
-  const tabs: { id: Tab; label: string; icon: typeof ClipboardList }[] = [
-    { id: "pipeline", label: adminCopy.pipelineTab, icon: Kanban },
-    { id: "opportunities", label: adminCopy.opportunitiesTab, icon: ClipboardList },
-    { id: "guides", label: adminCopy.guidesTab, icon: UserCog },
-    { id: "management", label: adminCopy.managementTab, icon: UsersRound },
-    { id: "applications", label: adminCopy.applicationsTab, icon: FileCheck },
-    { id: "followup", label: adminCopy.followUpTab, icon: Briefcase },
-    { id: "impact", label: adminCopy.impactTab, icon: BarChart3 },
-    { id: "settings", label: adminCopy.settingsTab, icon: Settings },
+  const tabs: {
+    id: Tab;
+    label: string;
+    shortLabel: string;
+    icon: typeof ClipboardList;
+  }[] = [
+    {
+      id: "pipeline",
+      label: adminCopy.pipelineTab,
+      shortLabel: adminCopy.pipelineTabShort,
+      icon: Kanban,
+    },
+    {
+      id: "opportunities",
+      label: adminCopy.opportunitiesTab,
+      shortLabel: adminCopy.opportunitiesTabShort,
+      icon: ClipboardList,
+    },
+    {
+      id: "guides",
+      label: adminCopy.guidesTab,
+      shortLabel: adminCopy.guidesTabShort,
+      icon: UserCog,
+    },
+    {
+      id: "management",
+      label: adminCopy.managementTab,
+      shortLabel: adminCopy.managementTabShort,
+      icon: UsersRound,
+    },
+    {
+      id: "applications",
+      label: adminCopy.applicationsTab,
+      shortLabel: adminCopy.applicationsTabShort,
+      icon: FileCheck,
+    },
+    {
+      id: "followup",
+      label: adminCopy.followUpTab,
+      shortLabel: adminCopy.followUpTabShort,
+      icon: Briefcase,
+    },
+    {
+      id: "impact",
+      label: adminCopy.impactTab,
+      shortLabel: adminCopy.impactTabShort,
+      icon: BarChart3,
+    },
+    {
+      id: "settings",
+      label: adminCopy.settingsTab,
+      shortLabel: adminCopy.settingsTabShort,
+      icon: Settings,
+    },
   ];
 
   /** Open management modal without soft-nav URL race / stacked modals — O(1) */
@@ -156,20 +201,24 @@ export default function AdminDashboardTabs({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap gap-2 rounded-xl bg-surface p-1 shadow-sm">
-        {tabs.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setTab(id)}
-            className={`flex min-w-[100px] flex-1 items-center justify-center gap-2 rounded-lg px-2 py-3 text-sm font-semibold transition ${
-              tab === id ? "bg-primary text-white" : "text-brand-gray hover:bg-surface-muted"
-            }`}
-          >
-            <Icon className="h-4 w-4 shrink-0" />
-            {label}
-          </button>
-        ))}
+      <div className="-mx-1 overflow-x-auto px-1">
+        <div className="flex min-w-max gap-2 rounded-xl bg-surface p-1 shadow-sm sm:min-w-0 sm:flex-wrap">
+          {tabs.map(({ id, label, shortLabel, icon: Icon }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setTab(id)}
+              title={label}
+              className={`flex min-w-[4.5rem] shrink-0 items-center justify-center gap-1.5 rounded-lg px-2.5 py-2.5 text-xs font-semibold transition sm:min-w-[100px] sm:flex-1 sm:gap-2 sm:px-2 sm:py-3 sm:text-sm ${
+                tab === id ? "bg-primary text-white" : "text-brand-gray hover:bg-surface-muted"
+              }`}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              <span className="sm:hidden">{shortLabel}</span>
+              <span className="hidden sm:inline">{label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {tab === "pipeline" && (

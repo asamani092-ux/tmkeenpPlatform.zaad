@@ -64,12 +64,15 @@ export default function BeneficiaryGuideHub({
               {guide.phone} · {guide.email}
             </p>
           </div>
-          <ContactLinks phone={guide.phone} email={guide.email} />
+          <ContactLinks phone={guide.phone} email={guide.email} whatsapp={guide.phone} />
         </div>
       )}
 
       <div className="card-section space-y-3">
         <h3 className="font-bold text-primary">{beneficiaryCopy.professionalRecommendations}</h3>
+        <p className="text-xs text-brand-gray">
+          {beneficiaryCopy.professionalRecommendationsHint}
+        </p>
         {hasRecs ? (
           <p className="whitespace-pre-wrap text-sm text-brand-gray">{professionalRecommendations}</p>
         ) : (
