@@ -29,6 +29,10 @@ export default function ForgotPasswordPage() {
         }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        toastError(data.error || "تعذر إرسال رابط الاستعادة");
+        return;
+      }
       toastSuccess(data.message || forgotPasswordCopy.successMessage);
     } catch {
       toastError("حدث خطأ في الاتصال");

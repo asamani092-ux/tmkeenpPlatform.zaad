@@ -18,6 +18,7 @@ import { getSystemSettings } from "@/lib/system-settings";
 import { isValidEmailFormat } from "@/lib/email-format";
 import { sendSessionScheduledEmails } from "@/lib/email-notify";
 import { safeSendEmail } from "@/lib/safe-email";
+import { formatArDateTime } from "@/lib/datetime-local";
 import type { CareerPlanTask } from "@/lib/copy/ar";
 
 export type ActionResult = { success: true } | { success: false; error: string };
@@ -276,11 +277,11 @@ export async function scheduleSession(data: {
     },
   });
 
-  const dateStr = date.toLocaleString("ar-SA");
+  const dateStr = formatArDateTime(date);
   await createNotification(
     data.beneficiaryId,
     "جلسة إرشاد مجدولة",
-    `تم جدولة جلسة إرشاد في ${dateStr}.${meetingLink ? " يمكنك الانضمام عبر الرابط المرفق." : location ? ` الموقع: ${location}` : ""}`
+    `تم جدولة جلسة إرشاد في ${dateStr} (بتوقيت السعودية).${meetingLink ? " يُفتح رابط الانضمام قبل الموعد بـ 15 دقيقة." : location ? ` الموقع: ${location}` : ""}`
   );
 
   const settings = await getSystemSettings();

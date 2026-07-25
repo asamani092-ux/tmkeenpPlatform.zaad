@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { prisma } from "@/lib/prisma";
-import { hashPassword } from "@/lib/auth";
+import { hashPassword, verifyPassword } from "@/lib/auth";
 
 function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
-/** O(1) — verify token, update password, invalidate other tokens */
+/** O(1) — verify token, reject same password, update, invalidate other tokens */
 export async function POST(request: Request) {
   try {
     const { token, newPassword } = await request.json();
@@ -39,6 +39,22 @@ export async function POST(request: Request) {
     if (!record) {
       return NextResponse.json(
         { error: "رابط إعادة التعيين غير صالح أو منتهٍ" },
+        { status: 400 }
+      );
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: record.userId },
+      select: { password: true },
+    });
+    if (!user) {
+      return NextResponse.json({ error: "المستخدم غير موجود" }, { status: 400 });
+    }
+
+    const sameAsOld = await verifyPassword(password, user.password);
+    if (sameAsOld) {
+      return NextResponse.json(
+        { error: "لا يمكن استخدام نفس كلمة المرور السابقة" },
         { status: 400 }
       );
     }

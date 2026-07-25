@@ -35,6 +35,20 @@ export function formatDaysRemaining(dueAt: Date, now = new Date()): string {
 export function formatCountdown(targetDate: Date, now = new Date()): string {
   const diff = targetDate.getTime() - now.getTime();
   if (diff <= 0) return "الموعد الآن";
+  const minutes = Math.ceil(diff / (60 * 1000));
+  if (minutes < 60) {
+    if (minutes <= 1) return "متبقي دقيقة واحدة";
+    if (minutes === 2) return "متبقي دقيقتان";
+    if (minutes <= 10) return `متبقي ${minutes} دقائق`;
+    return `متبقي ${minutes} دقيقة`;
+  }
+  const hours = Math.ceil(diff / (60 * 60 * 1000));
+  if (hours < 24) {
+    if (hours === 1) return "متبقي ساعة واحدة";
+    if (hours === 2) return "متبقي ساعتان";
+    if (hours <= 10) return `متبقي ${hours} ساعات`;
+    return `متبقي ${hours} ساعة`;
+  }
   const days = Math.ceil(diff / MS_PER_DAY);
   if (days === 1) return "متبقي يوم واحد";
   if (days === 2) return "متبقي يومان";

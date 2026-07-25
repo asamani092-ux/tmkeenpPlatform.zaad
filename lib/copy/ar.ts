@@ -48,7 +48,8 @@ export const forgotPasswordCopy = {
   submitBtn: "إرسال رابط إعادة التعيين",
   backToLogin: "العودة لتسجيل الدخول",
   successMessage:
-    "إذا كان البريد مسجّلاً لدينا، ستصلك رسالة برابط إعادة التعيين خلال دقائق.",
+    "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك. الرابط صالح لمدة 10 دقائق.",
+  notFoundMessage: "البريد غير مسجّل في النظام",
 } as const;
 
 export const resetPasswordCopy = {

@@ -3,6 +3,7 @@ import fs from "fs/promises";
 import path from "path";
 
 import { sendMail, isSmtpConfigured } from "@/lib/mail";
+import { formatArDateTime } from "@/lib/datetime-local";
 
 
 
@@ -60,11 +61,11 @@ function buildSessionEmail(
 
 ): EmailPayload {
 
-  const dateStr = params.sessionDate.toLocaleString("ar-SA");
+  const dateStr = formatArDateTime(params.sessionDate);
 
   const linkOrLocation = params.meetingLink
 
-    ? `رابط الجلسة: ${params.meetingLink}`
+    ? `رابط الجلسة (يُفتح قبل الموعد بـ 15 دقيقة): ${params.meetingLink}`
 
     : params.location
 
@@ -80,7 +81,7 @@ function buildSessionEmail(
 
       to: params.beneficiaryEmail,
 
-      subject: "تم جدولة جلسة إرشاد جديدة",
+      subject: "تم جدولة جلسة إرشاد جديدة — منصة تمكين",
 
       body: [
 
@@ -88,7 +89,9 @@ function buildSessionEmail(
 
         "",
 
-        `تم جدولة جلسة إرشاد مع المرشد ${params.guideName} في ${dateStr}.`,
+        `تم جدولة جلسة إرشاد مع المرشد ${params.guideName}.`,
+
+        `الموعد: ${dateStr} (بتوقيت السعودية).`,
 
         linkOrLocation,
 
@@ -112,7 +115,7 @@ function buildSessionEmail(
 
     to: params.guideEmail,
 
-    subject: "تأكيد جدولة جلسة إرشاد",
+    subject: "تأكيد جدولة جلسة إرشاد — منصة تمكين",
 
     body: [
 
@@ -120,7 +123,9 @@ function buildSessionEmail(
 
       "",
 
-      `تم جدولة جلسة إرشاد مع المستفيد ${params.beneficiaryName} في ${dateStr}.`,
+      `تم جدولة جلسة إرشاد مع المستفيد ${params.beneficiaryName}.`,
+
+      `الموعد: ${dateStr} (بتوقيت السعودية).`,
 
       linkOrLocation,
 
@@ -264,7 +269,7 @@ export async function sendPasswordResetEmail(params: {
         `مرحباً ${params.name}،`,
         "",
         "تلقّينا طلباً لإعادة تعيين كلمة المرور الخاصة بك.",
-        `اضغط على الرابط التالي خلال 30 دقيقة: ${params.resetUrl}`,
+        `اضغط على الرابط التالي خلال 10 دقائق: ${params.resetUrl}`,
         "",
         "إذا لم تطلب ذلك، تجاهل هذه الرسالة.",
         "",
@@ -296,14 +301,16 @@ export async function sendRegistrationOtpEmail(params: {
   await dispatch(params.senderEmail, [
     {
       to: params.to,
-      subject: "رمز التحقق — تسجيل منصة تمكين",
+      subject: "رمز التحقق لإتمام التسجيل — منصة تمكين",
       body: [
         `مرحباً ${params.name}،`,
         "",
-        `رمز التحقق لإتمام التسجيل هو: ${params.code}`,
-        "صالح لمدة 10 دقائق.",
+        "لإكمال تسجيل حسابك في منصة تمكين، استخدم رمز التحقق التالي:",
         "",
-        "إذا لم تطلب التسجيل، تجاهل هذه الرسالة.",
+        `الرمز: ${params.code}`,
+        "",
+        "الرمز صالح لمدة 10 دقائق فقط.",
+        "إذا لم تطلب التسجيل، يمكنك تجاهل هذه الرسالة.",
         "",
         "مع تحيات فريق منصة تمكين",
       ].join("\n"),

@@ -926,20 +926,23 @@ export default function GuideBeneficiaryTable({
                         جلسة قادمة
                       </p>
                       <p className="text-xs text-brand-gray">
-                        {new Date(upcomingSession.date).toLocaleString("ar-SA")}
+                        {new Date(upcomingSession.date).toLocaleString("ar-SA", {
+                          timeZone: "Asia/Riyadh",
+                          hour12: true,
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}
                       </p>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex w-full flex-wrap gap-2 sm:w-auto">
                       {upcomingSession.meetingLink ? (
-                        <a
-                          href={upcomingSession.meetingLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn-primary inline-flex w-full justify-center !px-3 !py-1.5 text-xs sm:w-auto"
-                        >
-                          <Video className="h-3 w-3" />
-                          الدخول للجلسة
-                        </a>
+                        <SessionJoinButton
+                          meetingLink={upcomingSession.meetingLink}
+                          sessionDate={upcomingSession.date}
+                        />
                       ) : upcomingSession.location ? (
                         <span className="inline-flex items-center gap-1 text-xs text-brand-gray">
                           <MapPin className="h-3 w-3" />
