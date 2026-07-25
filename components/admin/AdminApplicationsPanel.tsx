@@ -104,23 +104,23 @@ export default function AdminApplicationsPanel({ applications: initial }: Props)
       header: "إجراء",
       render: (a) =>
         a.status === "PENDING" ? (
-          <div className="flex flex-wrap justify-start gap-1">
+          <div className="flex w-full min-w-[9.5rem] flex-col gap-2 sm:min-w-0 sm:flex-row sm:flex-wrap sm:justify-start">
             <SubmitButton
               type="button"
               loading={pending}
               onClick={() => review(a.id, "ACCEPTED")}
-              className="btn-primary !px-2 !py-1 text-xs"
+              className="btn-primary w-full !px-3 !py-2 text-sm sm:w-auto sm:!px-2 sm:!py-1 sm:text-xs"
             >
-              <CheckCircle className="inline h-3 w-3" />
+              <CheckCircle className="inline h-4 w-4 sm:h-3 sm:w-3" />
               قبول
             </SubmitButton>
             <SubmitButton
               type="button"
               loading={pending}
               onClick={() => review(a.id, "REJECTED")}
-              className="btn-secondary !px-2 !py-1 text-xs"
+              className="w-full !border-2 !border-red-600 !bg-white !px-3 !py-2 text-sm !text-red-700 hover:!bg-red-50 sm:w-auto sm:!px-2 sm:!py-1 sm:text-xs"
             >
-              <XCircle className="inline h-3 w-3" />
+              <XCircle className="inline h-4 w-4 sm:h-3 sm:w-3" />
               رفض
             </SubmitButton>
           </div>

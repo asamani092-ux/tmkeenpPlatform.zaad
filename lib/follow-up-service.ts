@@ -344,7 +344,10 @@ export async function resumeFollowUp(beneficiaryId: string): Promise<ActionResul
   return { success: true };
 }
 
-/** Admin ends follow-up after all 6 months completed — O(6) time, O(1) space */
+/**
+ * Admin ends follow-up (complete or early with required reason).
+ * Time O(6) over month records; Space O(1).
+ */
 export async function endFollowUp(
   beneficiaryId: string,
   reason: string
@@ -366,22 +369,19 @@ export async function endFollowUp(
   if (!user) {
     return { success: false, error: "المستفيد غير موجود" };
   }
+  if (
+    user.followUpProgramStatus === "COMPLETED" ||
+    user.followUpProgramStatus === "WITHDRAWN"
+  ) {
+    return { success: false, error: "برنامج المتابعة منتهٍ مسبقاً" };
+  }
 
   const records = user.followUps;
-  if (records.length < 6) {
-    return { success: false, error: "لم يكتمل برنامج المتابعة — يجب وجود 6 سجلات شهرية" };
-  }
-
-  const allCompleted = [1, 2, 3, 4, 5, 6].every((m) => {
+  const completedCount = [1, 2, 3, 4, 5, 6].filter((m) => {
     const r = records.find((x) => x.month === m);
     return r?.status === "COMPLETED";
-  });
-  if (!allCompleted) {
-    return {
-      success: false,
-      error: "لا يمكن إنهاء البرنامج — يجب إكمال جميع نماذج الستة أشهر أولاً",
-    };
-  }
+  }).length;
+  const earlyEnd = completedCount < 6;
 
   const now = new Date();
   await prisma.user.update({
@@ -393,10 +393,29 @@ export async function endFollowUp(
     },
   });
 
-  await createNotification(
-    beneficiaryId,
-    "إنهاء برنامج المتابعة",
-    `تم إنهاء برنامج المتابعة بنجاح. السبب: ${trimmed}`
+  const notifyBody = earlyEnd
+    ? `تم إنهاء برنامج المتابعة من الإدارة قبل اكتمال الأشهر الستة (${completedCount}/6). السبب: ${trimmed}`
+    : `تم إنهاء برنامج المتابعة بنجاح بعد اكتمال الأشهر. السبب: ${trimmed}`;
+
+  await createNotification(beneficiaryId, "إنهاء برنامج المتابعة", notifyBody);
+
+  const settings = await getSystemSettings();
+  await safeSendEmail("follow-up program end", () =>
+    sendGenericEmail({
+      to: user.email,
+      subject: "إنهاء برنامج المتابعة — منصة تمكين",
+      body: [
+        `مرحباً ${user.name}،`,
+        "",
+        earlyEnd
+          ? "تم إنهاء برنامج متابعة ما بعد التوظيف من قبل الإدارة قبل اكتمال الأشهر الستة."
+          : "تم إنهاء برنامج متابعة ما بعد التوظيف بنجاح.",
+        `السبب: ${trimmed}`,
+        "",
+        "مع تحيات فريق منصة تمكين",
+      ].join("\n"),
+      senderEmail: settings.senderEmail,
+    })
   );
 
   return { success: true };

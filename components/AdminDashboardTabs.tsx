@@ -66,6 +66,7 @@ type FollowUp = {
   submittedAt?: string | null;
   opensAt?: string | null;
   dueAt?: string | null;
+  lastReminderAt?: string | null;
   beneficiary: { id: string; name: string; phone: string };
 };
 
@@ -207,6 +208,7 @@ export default function AdminDashboardTabs({
             submittedAt: f.submittedAt ?? null,
             opensAt: f.opensAt ?? null,
             dueAt: f.dueAt ?? null,
+            lastReminderAt: f.lastReminderAt ?? null,
             answers:
               f.answers && typeof f.answers === "object" && !Array.isArray(f.answers)
                 ? (f.answers as Record<string, string>)

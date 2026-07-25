@@ -351,6 +351,7 @@ export default async function AdminDashboardPage() {
     submittedAt: f.submittedAt?.toISOString() ?? null,
     opensAt: f.opensAt?.toISOString() ?? null,
     dueAt: f.dueAt?.toISOString() ?? null,
+    lastReminderAt: f.lastReminderAt?.toISOString() ?? null,
     beneficiary: f.beneficiary,
   }));
 

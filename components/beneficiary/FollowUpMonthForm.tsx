@@ -6,6 +6,7 @@ import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import FloatingModal from "@/components/admin/FloatingModal";
 import { toastSuccess, toastError } from "@/lib/toast";
+import { formatArDateTime } from "@/lib/datetime-local";
 import { ClipboardList } from "lucide-react";
 
 type Question = {
@@ -21,6 +22,7 @@ type FollowUpRecord = {
   month: number;
   status: string;
   submittedAt: string | null;
+  opensAt?: string | null;
   dueAt: string | null;
 };
 
@@ -126,6 +128,13 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
           <ClipboardList className="mt-0.5 h-6 w-6 shrink-0 text-primary" />
           <div className="min-w-0 flex-1 text-start">
             <h2 className="text-lg font-bold text-primary">متابعة ما بعد التوظيف</h2>
+            {current && (current.opensAt || current.dueAt) && (
+              <p className="mt-2 text-sm text-brand-gray">
+                نموذج الشهر {activeMonth}
+                {current.opensAt ? ` يفتح في ${formatArDateTime(current.opensAt)}` : ""}
+                {current.dueAt ? ` / يستحق في ${formatArDateTime(current.dueAt)}` : ""}
+              </p>
+            )}
             <button
               type="button"
               onClick={openModal}

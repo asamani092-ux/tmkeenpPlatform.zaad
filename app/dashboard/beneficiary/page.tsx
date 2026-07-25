@@ -244,6 +244,7 @@ export default async function BeneficiaryDashboardPage() {
               month: r.month,
               status: r.status,
               submittedAt: r.submittedAt?.toISOString() ?? null,
+              opensAt: r.opensAt?.toISOString() ?? null,
               dueAt: r.dueAt?.toISOString() ?? null,
             }))}
           />

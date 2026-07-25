@@ -8,6 +8,8 @@ import SubmitButton from "@/components/ui/SubmitButton";
 import FieldRow from "@/components/ui/FieldRow";
 import { useSyncFromProps } from "@/lib/use-sync-from-props";
 import { toastSuccess, toastError } from "@/lib/toast";
+import { formatArDateTime } from "@/lib/datetime-local";
+import { formatCountdown } from "@/lib/follow-up-program";
 import {
   FOLLOW_UP_PROGRAM_STATUS_LABELS,
   FOLLOW_UP_STATUS_LABELS,
@@ -24,6 +26,7 @@ type FollowUp = {
   submittedAt?: string | null;
   opensAt?: string | null;
   dueAt?: string | null;
+  lastReminderAt?: string | null;
   beneficiary: { id: string; name: string; phone: string };
 };
 
@@ -129,7 +132,33 @@ function statusLabel(status: string) {
 
 function formatShortDate(value?: string | null) {
   if (!value) return "—";
-  return new Date(value).toLocaleDateString("ar-SA");
+  return formatArDateTime(value) || "—";
+}
+
+/** Active pending month for schedule/remind UI — O(6). */
+function getActivePendingRecord(records: FollowUp[]): FollowUp | null {
+  const now = Date.now();
+  const pending = records
+    .filter((r) => r.status === "PENDING" || r.status === "MISSED")
+    .sort((a, b) => a.month - b.month);
+  if (pending.length === 0) return null;
+  const openNow = pending.find((r) => {
+    if (!r.opensAt) return true;
+    return new Date(r.opensAt).getTime() <= now;
+  });
+  return openNow ?? pending[0];
+}
+
+function nextReminderHint(lastReminderAt?: string | null): string {
+  if (!lastReminderAt) {
+    return "لم يُرسل تذكير بعد — يمكن الإرسال الآن.";
+  }
+  const nextAt = new Date(new Date(lastReminderAt).getTime() + 24 * 60 * 60 * 1000);
+  const now = new Date();
+  if (nextAt.getTime() <= now.getTime()) {
+    return "يمكن إرسال تذكير الآن.";
+  }
+  return `التذكير التالي بعد 24 ساعة من آخر تذكير (${formatCountdown(nextAt, now)}).`;
 }
 
 /** Later month completed/pending while earlier month empty or missed gap */
@@ -318,14 +347,39 @@ export default function AdminFollowUpPanel({
         toastError(data.error || "فشل إرسال التذكير");
         return;
       }
+      const sentAt = new Date().toISOString();
+      const active = selected ? getActivePendingRecord(selected.records) : null;
+      if (active) {
+        setFollowUps((prev) =>
+          prev.map((f) =>
+            f.id === active.id ? { ...f, lastReminderAt: sentAt } : f
+          )
+        );
+        setSelected((s) =>
+          s
+            ? {
+                ...s,
+                records: s.records.map((r) =>
+                  r.id === active.id ? { ...r, lastReminderAt: sentAt } : r
+                ),
+              }
+            : s
+        );
+      }
       toastSuccess("تم إرسال تذكير المتابعة للمستفيد");
+      router.refresh();
     });
   }
 
   const canPause = selected?.programStatus === "ACTIVE";
   const canResume =
     selected?.programStatus === "PAUSED" || selected?.programStatus === "COMPLETED";
-  const canEnd = selected && isProgramComplete(selected.records);
+  const canEnd =
+    selected != null &&
+    selected.programStatus !== "COMPLETED" &&
+    selected.programStatus !== "WITHDRAWN";
+  const activePending = selected ? getActivePendingRecord(selected.records) : null;
+  const programIncomplete = selected ? !isProgramComplete(selected.records) : false;
 
   return (
     <>
@@ -382,13 +436,36 @@ export default function AdminFollowUpPanel({
       {selected && (
         <FloatingModal title={`متابعة: ${selected.name}`} onClose={() => setSelected(null)} wide>
           <div className="space-y-4 text-start">
-            <a
-              href={`/dashboard/admin?tab=management&beneficiary=${selected.id}`}
-              className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
-            >
-              <ExternalLink className="h-4 w-4" />
-              الانتقال إلى بيانات المستفيد
-            </a>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <a
+                href={`/dashboard/admin?tab=management&beneficiary=${selected.id}`}
+                className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
+              >
+                <ExternalLink className="h-4 w-4" />
+                الانتقال إلى بيانات المستفيد
+              </a>
+              <div className="flex flex-col items-stretch gap-1 sm:items-end">
+                <button
+                  type="button"
+                  onClick={() => sendReminder(selected.id)}
+                  disabled={pending || !canPause}
+                  className="btn-primary inline-flex justify-center !px-4 !py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                  title={
+                    canPause
+                      ? "إرسال تذكير يدوي للمستفيد"
+                      : "التذكير متاح فقط عندما يكون البرنامج نشطاً"
+                  }
+                >
+                  <Bell className="h-4 w-4" />
+                  إعادة إرسال تذكير
+                </button>
+                {!canPause && (
+                  <span className="text-xs text-brand-gray">
+                    التذكير معطّل — البرنامج غير نشط
+                  </span>
+                )}
+              </div>
+            </div>
 
             {selected.programStatus && (
               <div className="rounded-lg bg-surface-muted px-3 py-2 text-sm">
@@ -396,7 +473,7 @@ export default function AdminFollowUpPanel({
                 {FOLLOW_UP_PROGRAM_STATUS_LABELS[selected.programStatus]}
                 {selected.statusUpdatedAt && (
                   <span className="ms-2 text-xs text-brand-gray">
-                    ({new Date(selected.statusUpdatedAt).toLocaleString("ar-SA")})
+                    ({formatArDateTime(selected.statusUpdatedAt)})
                   </span>
                 )}
                 {selected.pauseReason && (
@@ -409,6 +486,34 @@ export default function AdminFollowUpPanel({
                     سبب الإنهاء: {selected.endReason}
                   </p>
                 )}
+              </div>
+            )}
+
+            {activePending && (
+              <div className="rounded-lg border border-primary/25 bg-primary/5 px-3 py-3 text-sm">
+                <p className="font-semibold text-primary">
+                  جدول الشهر {activePending.month}
+                </p>
+                <ul className="mt-2 space-y-1 text-brand-gray">
+                  <li>يفتح في: {formatShortDate(activePending.opensAt)}</li>
+                  <li>يستحق في: {formatShortDate(activePending.dueAt)}</li>
+                  <li>
+                    آخر تذكير:{" "}
+                    {activePending.lastReminderAt
+                      ? formatArDateTime(activePending.lastReminderAt)
+                      : "—"}
+                  </li>
+                  <li className="font-medium text-primary">
+                    {nextReminderHint(activePending.lastReminderAt)}
+                  </li>
+                  {activePending.opensAt &&
+                    new Date(activePending.opensAt).getTime() > Date.now() && (
+                      <li>
+                        حتى الفتح:{" "}
+                        {formatCountdown(new Date(activePending.opensAt))}
+                      </li>
+                    )}
+                </ul>
               </div>
             )}
 
@@ -510,17 +615,6 @@ export default function AdminFollowUpPanel({
               {canPause && (
                 <button
                   type="button"
-                  onClick={() => sendReminder(selected.id)}
-                  disabled={pending}
-                  className="btn-primary inline-flex !px-4 !py-2 text-sm"
-                >
-                  <Bell className="h-4 w-4" />
-                  إعادة إرسال تذكير
-                </button>
-              )}
-              {canPause && (
-                <button
-                  type="button"
                   onClick={() => {
                     setModalKind("pause");
                     setModalReason("");
@@ -543,16 +637,10 @@ export default function AdminFollowUpPanel({
                   استئناف المتابعة
                 </button>
               )}
-              {selected.programStatus !== "COMPLETED" && (
+              {canEnd && (
                 <button
                   type="button"
                   onClick={() => {
-                    if (!canEnd) {
-                      toastError(
-                        "لا يمكن إنهاء البرنامج — يجب إكمال جميع نماذج الستة أشهر أولاً"
-                      );
-                      return;
-                    }
                     setModalKind("end");
                     setModalReason("");
                     setEndConfirm(false);
@@ -561,7 +649,7 @@ export default function AdminFollowUpPanel({
                   className="btn-primary inline-flex !px-4 !py-2 text-sm"
                 >
                   <StopCircle className="h-4 w-4" />
-                  إنهاء المتابعة
+                  إنهاء/إكمال المتابعة
                 </button>
               )}
             </div>
@@ -614,7 +702,7 @@ export default function AdminFollowUpPanel({
 
       {modalKind === "end" && selected && (
         <FloatingModal
-          title="إنهاء برنامج المتابعة"
+          title="إنهاء/إكمال المتابعة"
           onClose={() => setModalKind(null)}
         >
           <div className="space-y-4 text-start">
@@ -622,13 +710,19 @@ export default function AdminFollowUpPanel({
               تحذير: سيتم إغلاق برنامج المتابعة رسمياً. لن تُرسل نماذج أو تذكيرات
               جديدة. يمكنك استئناف المتابعة لاحقاً إذا رغبت بذلك.
             </div>
+            {programIncomplete && (
+              <div className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-900">
+                تنبيه: لم تكتمل جميع أشهر المتابعة ({progressSummary(selected.records)}).
+                الإنهاء المبكر يتطلب سبباً واضحاً وسيُشعر المستفيد بالبريد.
+              </div>
+            )}
             <FieldRow label="سبب الإنهاء (إلزامي)" htmlFor="end-reason" align="start">
               <textarea
                 id="end-reason"
                 value={modalReason}
                 onChange={(e) => setModalReason(e.target.value)}
                 rows={3}
-                className="input-field resize-none"
+                className="input-field w-full min-w-0 resize-none"
                 placeholder="اذكر سبب إنهاء البرنامج..."
                 required
               />
