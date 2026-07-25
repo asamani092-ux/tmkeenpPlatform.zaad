@@ -9,20 +9,16 @@ export default function UatChecklistPage() {
   return (
     <div className="min-h-screen bg-surface-muted">
       <Navbar showAuth={false} />
-      <main className="mx-auto max-w-3xl px-4 py-10">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-primary">
-            إعادة تحقق UAT بعد الإصلاحات — منصة تمكين
+      <main className="mx-auto max-w-5xl px-4 py-8 sm:py-10">
+        <header className="mb-6 text-start">
+          <h1 className="text-2xl font-extrabold text-primary sm:text-3xl">
+            نموذج تقييم UAT — بيئة التجربة
           </h1>
-          <p className="mt-2 text-sm text-brand-gray">
-            أداة داخلية للتطوير فقط — غير متاحة في بيئة النشر. التقييم يُحفظ في
-            المتصفح دون مسح السجل السابق.
+          <p className="mt-2 max-w-2xl text-sm text-brand-gray">
+            واجهة داخلية لاكتمال تجربة التقييم محلياً فقط. في النشر العام المسار
+            مغلق (`404`).
           </p>
-          <p className="mt-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm font-semibold text-primary">
-            أعلى الصفحة: «تصدير النتائج للوكيل» — التبديل «إعادة التحقق» / «بريد +
-            ملاحظات» / «كل البنود»
-          </p>
-        </div>
+        </header>
         <UatChecklistForm />
       </main>
     </div>
