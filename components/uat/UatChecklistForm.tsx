@@ -10,11 +10,14 @@ import {
   UAT_NOTE_CATEGORIES,
   UAT_OUT_OF_SCOPE,
   UAT_REMAINING_TOOLS,
+  UAT_REVERIFY_TOOLS,
   UAT_STORAGE_KEY,
   UAT_VERDICTS,
   type UatChecklistState,
   type UatVerdict,
 } from "@/lib/uat-checklist-data";
+
+type Scope = "reverify" | "remaining" | "all";
 
 function loadState(): UatChecklistState {
   if (typeof window === "undefined") return createDefaultUatState();
@@ -24,15 +27,15 @@ function loadState(): UatChecklistState {
       const defaults = createDefaultUatState();
       return {
         ...defaults,
-        activeToolId: UAT_REMAINING_TOOLS[0]?.id ?? defaults.activeToolId,
+        activeToolId: UAT_REVERIFY_TOOLS[0]?.id ?? defaults.activeToolId,
       };
     }
     const parsed = JSON.parse(raw) as UatChecklistState;
     const activeToolId =
       parsed.activeToolId &&
-      UAT_REMAINING_TOOLS.some((t) => t.id === parsed.activeToolId)
+      UAT_ALL_TOOLS.some((t) => t.id === parsed.activeToolId)
         ? parsed.activeToolId
-        : (UAT_REMAINING_TOOLS[0]?.id ?? parsed.activeToolId ?? "");
+        : (UAT_REVERIFY_TOOLS[0]?.id ?? parsed.activeToolId ?? "");
     return {
       ...createDefaultUatState(),
       ...parsed,
@@ -51,8 +54,8 @@ export default function UatChecklistForm() {
   const [ready, setReady] = useState(false);
   const [showExport, setShowExport] = useState(true);
   const [copyStatus, setCopyStatus] = useState<"idle" | "ok" | "fail">("idle");
-  /** Default: remaining post-deploy tools only — O(1) toggle. */
-  const [scope, setScope] = useState<"remaining" | "all">("remaining");
+  /** Default: post-fix re-verify wave — O(1) toggle. */
+  const [scope, setScope] = useState<Scope>("reverify");
 
   useEffect(() => {
     setState(loadState());
@@ -65,14 +68,25 @@ export default function UatChecklistForm() {
   }, [state, ready]);
 
   const visibleTools =
-    scope === "remaining" ? UAT_REMAINING_TOOLS : UAT_ALL_TOOLS;
+    scope === "reverify"
+      ? UAT_REVERIFY_TOOLS
+      : scope === "remaining"
+        ? UAT_REMAINING_TOOLS
+        : UAT_ALL_TOOLS;
 
   const visibleGroups =
-    scope === "remaining"
-      ? UAT_GROUPS.filter((g) =>
-          ["postdeploy-email", "email-lifecycle", "ui-notes"].includes(g.id)
-        )
-      : UAT_GROUPS;
+    scope === "reverify"
+      ? UAT_GROUPS.filter((g) => g.id === "reverify-fixes")
+      : scope === "remaining"
+        ? UAT_GROUPS.filter((g) =>
+            [
+              "reverify-fixes",
+              "postdeploy-email",
+              "email-lifecycle",
+              "ui-notes",
+            ].includes(g.id)
+          )
+        : UAT_GROUPS;
 
   const activeIndex = Math.max(
     0,
@@ -189,21 +203,32 @@ export default function UatChecklistForm() {
 
       <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-sm">
         <p className="font-semibold text-primary">
-          العرض الافتراضي: ما بعد النشر + دورات البريد + ملاحظات الواجهات —{" "}
-          {UAT_REMAINING_TOOLS.length} بنداً
+          العرض الافتراضي: إعادة تحقق بعد الإصلاحات — {UAT_REVERIFY_TOOLS.length}{" "}
+          بنداً (من آخر ملاحظات UAT)
         </p>
         <p className="mt-1 text-brand-gray">
-          مجموعات: ما بعد النشر · دورات البريد (①–⑬) · ملاحظات عامة / مدير / مرشد /
-          مستفيد
+          وقت الجلسة · انضمام 15د · كلمة المرور · تذكير/إنهاء المتابعة · تقديمات ·
+          بريد · تواصل · اسم · جوال المدير
         </p>
         <p className="mt-1 text-brand-gray">
-          https://tmkeen.alzaad.org.sa أو http://localhost:3000 — كلمة المرور من
-          prisma/seed.ts
+          https://tmkeen.alzaad.org.sa — التقييمات السابقة في المتصفح لا تُمسح
+          (إضافة تراكمية)
         </p>
         <p className="mt-1 text-brand-gray">
           admin@alzaad.org · guide@alzaad.org · beneficiary1–4@alzaad.org
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            className={
+              scope === "reverify"
+                ? "btn-primary px-3 py-1.5 text-sm"
+                : "btn-secondary px-3 py-1.5 text-sm"
+            }
+            onClick={() => setScope("reverify")}
+          >
+            إعادة التحقق ({UAT_REVERIFY_TOOLS.length})
+          </button>
           <button
             type="button"
             className={
@@ -213,7 +238,7 @@ export default function UatChecklistForm() {
             }
             onClick={() => setScope("remaining")}
           >
-            موجة البريد والملاحظات
+            بريد + ملاحظات ({UAT_REMAINING_TOOLS.length})
           </button>
           <button
             type="button"

@@ -255,7 +255,8 @@ export const UAT_GROUPS: UatToolGroup[] = [
         id: "admin-followup",
         tool: "متابعة ما بعد التوظيف",
         path: "tab followup",
-        checks: "أشهر 1–6؛ تذكير يدوي /api/follow-ups/remind؛ فجوات الأشهر",
+        checks:
+          "أشهر 1–6؛ تذكير يدوي ظاهر؛ إنهاء مبكر بسبب؛ فجوات الأشهر؛ null→ACTIVE",
       },
       {
         id: "admin-impact",
@@ -299,7 +300,8 @@ export const UAT_GROUPS: UatToolGroup[] = [
         id: "postdeploy-forgot-password-mail",
         tool: "استعادة كلمة المرور (بريد حي)",
         path: "/forgot-password",
-        checks: "رسالة الاستعادة تصل؛ الرابط يعمل؛ تعيين كلمة جديدة → دخول",
+        checks:
+          "بريد غير مسجّل → تنبيه؛ رسالة الاستعادة تصل (10 د)؛ رفض إعادة نفس المرور؛ دخول بعدها",
       },
       {
         id: "postdeploy-app-accept-mail",
@@ -312,13 +314,15 @@ export const UAT_GROUPS: UatToolGroup[] = [
         id: "postdeploy-followup-remind",
         tool: "تذكير متابعة بالتوظيف",
         path: "admin → متابعة",
-        checks: "تذكير يدوي/cron يرسل بريداً بعد تفعيل SMTP و CRON_SECRET",
+        checks:
+          "زر تذكير ظاهر؛ opens/due/lastReminder؛ يعمل لـ ACTIVE أو null→ACTIVE؛ بريد بعد SMTP",
       },
       {
         id: "postdeploy-session-join-15m",
         tool: "انضمام الجلسة قبل 15 د",
         path: "مستفيد → الجلسة القادمة",
-        checks: "الرابط يُفعَّل قبل الموعد بـ 15 دقيقة فقط؛ نص «يفتح قبل 15 د»",
+        checks:
+          "وقت Asia/Riyadh متطابق؛ عدّاد ساعات/دقائق؛ انضمام قبل 15 د فقط؛ «رابط الاجتماع»",
       },
       {
         id: "postdeploy-notifications-live",
@@ -348,7 +352,8 @@ export const UAT_GROUPS: UatToolGroup[] = [
         id: "email-03-forgot-password",
         tool: "③ استعادة كلمة المرور",
         path: "/forgot-password",
-        checks: "رابط يصل خلال دقائق؛ صالح ~30 د؛ تعيين كلمة → دخول",
+        checks:
+          "بريد غير مسجّل → رسالة صريحة؛ رابط صالح 10 د؛ رفض نفس كلمة المرور السابقة",
       },
       {
         id: "email-04-test-send",
@@ -372,7 +377,8 @@ export const UAT_GROUPS: UatToolGroup[] = [
         id: "email-07-session-scheduled",
         tool: "⑦ جدولة جلسة إرشاد",
         path: "مرشد → إدارة الجلسات",
-        checks: "بريد للمستفيد وللمرشد بالتاريخ والرابط/الموقع + إشعار داخلي",
+        checks:
+          "بريد للمستفيد وللمرشد بنفس وقت السعودية (12س بلا ثوانٍ) + رابط يُفتح قبل 15 د",
       },
       {
         id: "email-08-application-accept",
@@ -402,13 +408,103 @@ export const UAT_GROUPS: UatToolGroup[] = [
         id: "email-12-followup-manual",
         tool: "⑫ تذكير متابعة يدوي",
         path: "admin → متابعة",
-        checks: "زر التذكير يرسل بريداً لنموذج الشهر الحالي",
+        checks:
+          "زر التذكير في رأس البطاقة؛ لا يظهر «معطّل» لحالة null؛ يرسل بريد الشهر الحالي",
       },
       {
         id: "email-13-followup-complete",
-        tool: "⑬ اكتمال برنامج المتابعة",
-        path: "إكمال أشهر المتابعة",
-        checks: "بريد «اكتمال برنامج المتابعة» يصل للمستفيد",
+        tool: "⑬ اكتمال/إنهاء برنامج المتابعة",
+        path: "admin → متابعة → إنهاء",
+        checks:
+          "إنهاء قبل اكتمال 6 أشهر بسبب إجباري؛ بريد/إشعار للمستفيد؛ استئناف لاحقاً ممكن",
+      },
+    ],
+  },
+  {
+    id: "reverify-fixes",
+    title: "إعادة تحقق بعد إصلاحات UAT (موجة جديدة)",
+    tools: [
+      {
+        id: "reverify-session-timezone",
+        tool: "وقت الجلسة موحّد (السعودية)",
+        path: "مرشد + مستفيد + بريد",
+        checks:
+          "موعد المرشد = المستفيد = البريد بتوقيت Asia/Riyadh و12 ساعة بلا ثوانٍ (ملاحظات #8)",
+        hint: "كان يظهر فرق ~3 ساعات",
+      },
+      {
+        id: "reverify-session-join",
+        tool: "انضمام الجلسة + العدّاد",
+        path: "مستفيد / مودال المرشد",
+        checks:
+          "أقل من 24س → ساعات/دقائق؛ SessionJoinButton؛ يُفتح قبل 15 د؛ تسمية «رابط الاجتماع» (#9)",
+      },
+      {
+        id: "reverify-forgot-password",
+        tool: "نسيت كلمة المرور (قواعد جديدة)",
+        path: "/forgot-password",
+        checks:
+          "بريد غير مسجّل → «البريد غير مسجّل»؛ صلاحية 10 د؛ رفض نفس كلمة المرور السابقة",
+      },
+      {
+        id: "reverify-followup-remind-ui",
+        tool: "تذكير المتابعة ظاهر وواضح",
+        path: "admin → متابعة",
+        checks:
+          "زر إعادة إرسال تذكير في الرأس؛ opensAt/dueAt/lastReminder؛ عدّاد التذكير التالي 24س",
+      },
+      {
+        id: "reverify-followup-force-end",
+        tool: "إنهاء متابعة مبكر بسبب",
+        path: "admin → متابعة → إنهاء/إكمال",
+        checks:
+          "أشهر ناقصة → تنبيه + سبب إلزامي + تأكيد مزدوج؛ إشعار وبريد للمستفيد",
+      },
+      {
+        id: "reverify-apps-accept-reject",
+        tool: "قبول/رفض التقديم",
+        path: "admin → تقديمات",
+        checks:
+          "رفض بنفس بروز القبول على الجوال؛ بريد القبول يبدأ بجملة التفاصيل قريباً",
+      },
+      {
+        id: "reverify-email-bodies",
+        tool: "نصوص البريد العربي",
+        path: "OTP / اعتماد / جلسة / تقديم",
+        checks:
+          "صياغة أوضح؛ أوقات السعودية؛ OTP وreset خلال 10 د؛ بدون ثوانٍ في الموعد",
+      },
+      {
+        id: "reverify-contact-icons",
+        tool: "أيقونات التواصل",
+        path: "مرشد / مستفيد / جداول",
+        checks:
+          "واتساب أخضر #25D366؛ أيقونة بريد واضحة؛ tel: بهاتف عند وجود رقم (ملاحظات #3–4–6)",
+      },
+      {
+        id: "reverify-recommendations-hint",
+        tool: "نص توضيحي للتوصيات",
+        path: "من مرشدك (Hub/Drawer)",
+        checks:
+          "يظهر أن التوصيات توجيه مهني عام ومختلفة عن مهام المسار",
+      },
+      {
+        id: "reverify-name-edit",
+        tool: "تعديل الاسم",
+        path: "admin إدارة المستفيدين + تعديل بياناتي",
+        checks: "حقل الاسم قابل للتعديل والحفظ للمدير والمستفيد",
+      },
+      {
+        id: "reverify-admin-mobile-tabs",
+        tool: "تبويبات المدير على الجوال",
+        path: "/dashboard/admin",
+        checks: "شريط أفقي قابل للتمرير؛ تسميات قصيرة على الشاشات الصغيرة",
+      },
+      {
+        id: "reverify-followup-beneficiary-schedule",
+        tool: "بطاقة جدول المتابعة للمستفيد",
+        path: "مستفيد FOLLOW_UP",
+        checks: "نموذج الشهر X يفتح في … / يستحق في … بتوقيت السعودية",
       },
     ],
   },
@@ -451,8 +547,22 @@ export const UAT_ALL_TOOLS: UatTool[] = UAT_GROUPS.flatMap((group) =>
 /** Wave after first UAT pass — email / live verify / UI notes. Stable ids. */
 export const UAT_POSTDEPLOY_GROUP_ID = "postdeploy-email";
 
-export const UAT_WAVE_PREFIXES = ["postdeploy-", "email-", "notes-"] as const;
+/** Post-fix re-verification wave from latest UAT notes. Stable ids — never rename. */
+export const UAT_REVERIFY_GROUP_ID = "reverify-fixes";
 
+export const UAT_WAVE_PREFIXES = [
+  "reverify-",
+  "postdeploy-",
+  "email-",
+  "notes-",
+] as const;
+
+/** Default wave: re-check after postdeploy fixes only. */
+export const UAT_REVERIFY_TOOLS: UatTool[] = UAT_ALL_TOOLS.filter((tool) =>
+  tool.id.startsWith("reverify-")
+);
+
+/** Broader remaining wave (email + notes + postdeploy + reverify). */
 export const UAT_REMAINING_TOOLS: UatTool[] = UAT_ALL_TOOLS.filter((tool) =>
   UAT_WAVE_PREFIXES.some((prefix) => tool.id.startsWith(prefix))
 );
@@ -517,16 +627,21 @@ export function buildUatAgentExport(
     };
   });
 
+  const isReverify =
+    tools.length > 0 && tools.every((t) => t.id.startsWith("reverify-"));
   const isWave =
+    isReverify ||
     tools === UAT_REMAINING_TOOLS ||
     (tools.length > 0 &&
       tools.every((t) =>
         UAT_WAVE_PREFIXES.some((prefix) => t.id.startsWith(prefix))
       ));
 
-  const title = isWave
-    ? "# تقرير تقييم أدوات UAT — بريد + ملاحظات واجهات (/uat-checklist)"
-    : "# تقرير تقييم أدوات UAT — من /uat-checklist";
+  const title = isReverify
+    ? "# تقرير إعادة تحقق UAT بعد الإصلاحات (/uat-checklist)"
+    : isWave
+      ? "# تقرير تقييم أدوات UAT — بريد + ملاحظات واجهات (/uat-checklist)"
+      : "# تقرير تقييم أدوات UAT — من /uat-checklist";
 
   const lines: string[] = [
     title,
