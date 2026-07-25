@@ -11,10 +11,23 @@ const ROLE_PATHS: { prefix: string; role: Role }[] = [
   { prefix: "/dashboard/beneficiary", role: "BENEFICIARY" },
 ];
 
+function isUatChecklistAllowed(): boolean {
+  if (process.env.ENABLE_UAT_CHECKLIST === "true") return true;
+  return process.env.NODE_ENV !== "production";
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const sessionId = request.cookies.get(SESSION_COOKIE)?.value;
   const role = request.cookies.get(ROLE_COOKIE)?.value as Role | undefined;
+
+  /** Block UAT evaluation form on production deploy — O(1). */
+  if (
+    (pathname === "/uat-checklist" || pathname.startsWith("/uat-checklist/")) &&
+    !isUatChecklistAllowed()
+  ) {
+    return new NextResponse("Not Found", { status: 404 });
+  }
 
   const isDashboard = pathname.startsWith("/dashboard");
   const isAuthPage = pathname === "/login" || pathname === "/register";
@@ -45,5 +58,12 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard", "/dashboard/:path*", "/login", "/register"],
+  matcher: [
+    "/dashboard",
+    "/dashboard/:path*",
+    "/login",
+    "/register",
+    "/uat-checklist",
+    "/uat-checklist/:path*",
+  ],
 };
