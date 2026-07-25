@@ -372,6 +372,30 @@ export default function AdminFollowUpPanel({
   }
 
   const canPause = selected?.programStatus === "ACTIVE";
+  /** Remind when ACTIVE, or legacy null status with pending/missed months — O(6). */
+  const canRemind =
+    selected != null &&
+    (selected.programStatus === "ACTIVE" ||
+      (selected.programStatus == null &&
+        selected.records.some(
+          (r) => r.status === "PENDING" || r.status === "MISSED"
+        )));
+  const remindDisabledReason = (() => {
+    if (!selected || canRemind) return null;
+    if (selected.programStatus === "PAUSED") {
+      return "التذكير معطّل — البرنامج متوقف مؤقتاً. استأنف المتابعة أولاً.";
+    }
+    if (
+      selected.programStatus === "COMPLETED" ||
+      selected.programStatus === "WITHDRAWN"
+    ) {
+      return "التذكير معطّل — البرنامج منتهٍ.";
+    }
+    if (selected.programStatus == null) {
+      return "التذكير معطّل — لا يوجد شهر متابعة معلّق لإرسال تذكير.";
+    }
+    return "التذكير معطّل — البرنامج غير نشط.";
+  })();
   const canResume =
     selected?.programStatus === "PAUSED" || selected?.programStatus === "COMPLETED";
   const canEnd =
@@ -448,46 +472,44 @@ export default function AdminFollowUpPanel({
                 <button
                   type="button"
                   onClick={() => sendReminder(selected.id)}
-                  disabled={pending || !canPause}
+                  disabled={pending || !canRemind}
                   className="btn-primary inline-flex justify-center !px-4 !py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-50"
                   title={
-                    canPause
+                    canRemind
                       ? "إرسال تذكير يدوي للمستفيد"
-                      : "التذكير متاح فقط عندما يكون البرنامج نشطاً"
+                      : (remindDisabledReason ?? "التذكير غير متاح")
                   }
                 >
                   <Bell className="h-4 w-4" />
                   إعادة إرسال تذكير
                 </button>
-                {!canPause && (
-                  <span className="text-xs text-brand-gray">
-                    التذكير معطّل — البرنامج غير نشط
-                  </span>
+                {remindDisabledReason && (
+                  <span className="text-xs text-brand-gray">{remindDisabledReason}</span>
                 )}
               </div>
             </div>
 
-            {selected.programStatus && (
-              <div className="rounded-lg bg-surface-muted px-3 py-2 text-sm">
-                <span className="font-semibold text-primary">حالة البرنامج: </span>
-                {FOLLOW_UP_PROGRAM_STATUS_LABELS[selected.programStatus]}
-                {selected.statusUpdatedAt && (
-                  <span className="ms-2 text-xs text-brand-gray">
-                    ({formatArDateTime(selected.statusUpdatedAt)})
-                  </span>
-                )}
-                {selected.pauseReason && (
-                  <p className="mt-1 text-xs text-brand-gray">
-                    سبب الإيقاف: {selected.pauseReason}
-                  </p>
-                )}
-                {selected.endReason && (
-                  <p className="mt-1 text-xs text-brand-gray">
-                    سبب الإنهاء: {selected.endReason}
-                  </p>
-                )}
-              </div>
-            )}
+            <div className="rounded-lg bg-surface-muted px-3 py-2 text-sm">
+              <span className="font-semibold text-primary">حالة البرنامج: </span>
+              {selected.programStatus
+                ? FOLLOW_UP_PROGRAM_STATUS_LABELS[selected.programStatus]
+                : "غير مفعّل (سيُفعَّل تلقائياً عند إرسال تذكير)"}
+              {selected.statusUpdatedAt && (
+                <span className="ms-2 text-xs text-brand-gray">
+                  ({formatArDateTime(selected.statusUpdatedAt)})
+                </span>
+              )}
+              {selected.pauseReason && (
+                <p className="mt-1 text-xs text-brand-gray">
+                  سبب الإيقاف: {selected.pauseReason}
+                </p>
+              )}
+              {selected.endReason && (
+                <p className="mt-1 text-xs text-brand-gray">
+                  سبب الإنهاء: {selected.endReason}
+                </p>
+              )}
+            </div>
 
             {activePending && (
               <div className="rounded-lg border border-primary/25 bg-primary/5 px-3 py-3 text-sm">

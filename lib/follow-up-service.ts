@@ -481,6 +481,7 @@ export async function backfillFollowUpProgram(): Promise<{ updated: number }> {
 /**
  * Admin manual reminder for the active follow-up month.
  * Time O(1) lookups + O(1) notify; Space O(1).
+ * Heals null program status → ACTIVE when stage is FOLLOW_UP.
  */
 export async function sendManualFollowUpReminder(
   beneficiaryId: string
@@ -495,21 +496,55 @@ export async function sendManualFollowUpReminder(
       id: beneficiaryId,
       role: "BENEFICIARY",
       stage: "FOLLOW_UP",
-      followUpProgramStatus: "ACTIVE",
-      followUpProgramStartedAt: { not: null },
+      OR: [
+        { followUpProgramStatus: "ACTIVE" },
+        { followUpProgramStatus: null },
+      ],
     },
     select: {
       id: true,
       name: true,
       email: true,
       followUpProgramStartedAt: true,
+      followUpProgramStatus: true,
+      stageEnteredAt: true,
     },
   });
-  if (!beneficiary?.followUpProgramStartedAt) {
-    return { success: false, error: "برنامج المتابعة غير نشط" };
+  if (!beneficiary) {
+    return {
+      success: false,
+      error: "برنامج المتابعة غير نشط أو المستفيد ليس في مرحلة المتابعة",
+    };
   }
 
-  const month = getActiveFollowUpMonth(beneficiary.followUpProgramStartedAt);
+  let startedAt = beneficiary.followUpProgramStartedAt;
+  if (!startedAt || beneficiary.followUpProgramStatus == null) {
+    startedAt = startedAt ?? beneficiary.stageEnteredAt ?? new Date();
+    await prisma.user.update({
+      where: { id: beneficiaryId },
+      data: {
+        followUpProgramStatus: "ACTIVE",
+        followUpProgramStartedAt: startedAt,
+        followUpStatusUpdatedAt: new Date(),
+      },
+    });
+    for (let month = 1; month <= 6; month++) {
+      const { opensAt, dueAt } = computeMonthWindow(startedAt, month);
+      await prisma.followUp.upsert({
+        where: { beneficiaryId_month: { beneficiaryId, month } },
+        create: {
+          beneficiaryId,
+          month,
+          status: "PENDING",
+          opensAt,
+          dueAt,
+        },
+        update: {},
+      });
+    }
+  }
+
+  const month = getActiveFollowUpMonth(startedAt);
   if (!month) {
     return { success: false, error: "لا يوجد شهر متابعة نشط حالياً" };
   }

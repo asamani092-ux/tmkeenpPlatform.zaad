@@ -5,6 +5,7 @@ import AdminBulkExport from "@/components/admin/AdminBulkExport";
 import { getDashboardPath } from "@/lib/auth";
 import { getSession } from "@/lib/session";
 import { withPrismaRetry } from "@/lib/prisma";
+import { backfillFollowUpProgram } from "@/lib/follow-up-service";
 import { STAGE_LABELS, STAGE_ORDER } from "@/lib/stages";
 import { APPLICATION_STATUS_LABELS, FOLLOW_UP_STATUS_LABELS } from "@/lib/labels";
 import type { BulkExportSection } from "@/lib/export-table";
@@ -14,6 +15,9 @@ export default async function AdminDashboardPage() {
   const session = await getSession();
   if (!session) redirect("/login");
   if (session.role !== "ADMIN") redirect(getDashboardPath(session.role));
+
+  /** Heal FOLLOW_UP users missing ACTIVE status — O(6n) once per load. */
+  await backfillFollowUpProgram();
 
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
