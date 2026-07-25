@@ -1,27 +1,25 @@
-# موجة إعادة تحقق UAT بعد الإصلاحات
+# موجة إعادة تحقق UAT — آخر الملاحظات
 
-**المسار (تطوير فقط):** `http://localhost:3000/uat-checklist`  
-**ممنوع في النشر:** المسار يعيد `404` في الإنتاج ما لم يُضبط `ENABLE_UAT_CHECKLIST=true` (لا تضعه على Coolify).  
-**التخزين:** `localStorage` مفتاح `tmkeen-uat-checklist-v1` — **إضافة تراكمية** (لا مسح).  
-**البادئة المستقرة:** `reverify-*` — لا تُعاد تسمية المعرّفات بعد التقييم.
+**بيئة التجربة فقط:** `http://localhost:3000/uat-checklist`  
+**النشر العام:** `404` (ما لم `ENABLE_UAT_CHECKLIST=true` — لا تضعه على Coolify).  
+**التخزين:** `tmkeen-uat-checklist-v1` — إضافة تراكمية، لا مسح.  
+**البادئة:** `reverify-*` — لا تُعاد تسمية المعرّفات.
 
-## البنود (12)
+## البنود (14)
 
-| id | ما يُعاد التحقق منه |
-|----|---------------------|
-| `reverify-session-timezone` | وقت الجلسة موحّد Asia/Riyadh |
-| `reverify-session-join` | عدّاد ساعات/دقائق + انضمام 15د + «رابط الاجتماع» |
-| `reverify-forgot-password` | بريد غير مسجّل + TTL 10د + رفض نفس المرور |
-| `reverify-followup-remind-ui` | تذكير ظاهر + جدول opens/due/lastReminder |
-| `reverify-followup-force-end` | إنهاء مبكر بسبب إجباري + بريد |
-| `reverify-apps-accept-reject` | رفض بارز + جملة التفاصيل قريباً |
-| `reverify-email-bodies` | نصوص البريد العربي |
-| `reverify-contact-icons` | واتساب/بريد/هاتف |
-| `reverify-recommendations-hint` | نص توضيحي للتوصيات |
+| id | الملاحظة / التحقق |
+|----|-------------------|
+| `reverify-session-timezone` | وقت موحّد Asia/Riyadh (#8) |
+| `reverify-session-join` | عدّاد + انضمام 15د + رابط الاجتماع (#9) |
+| `reverify-forgot-password` | بريد غير مسجّل + 10د + رفض نفس المرور |
+| `reverify-followup-remind-ui` | تذكير ظاهر + opens/due/lastReminder |
+| `reverify-followup-remind-null-status` | لا «معطّل» عند status=null → ACTIVE |
+| `reverify-followup-force-end` | إنهاء مبكر بسبب إجباري |
+| `reverify-apps-accept-reject` | رفض بارز + التفاصيل قريباً |
+| `reverify-email-bodies` | نصوص البريد |
+| `reverify-contact-icons` | واتساب/بريد/هاتف (#3–4–6) |
+| `reverify-recommendations-hint` | نص التوصيات ≠ المهام |
 | `reverify-name-edit` | تعديل الاسم |
-| `reverify-admin-mobile-tabs` | تبويبات المدير على الجوال |
-| `reverify-followup-beneficiary-schedule` | بطاقة يفتح/يستحق للمستفيد |
-
-## التصدير
-
-انسخ «تقرير إعادة تحقق UAT» من أعلى الصفحة والصقه في شات الوكيل.
+| `reverify-admin-mobile-tabs` | تبويبات الجوال |
+| `reverify-followup-beneficiary-schedule` | يفتح/يستحق للمستفيد |
+| `reverify-uat-form-local-only` | النموذج محلي فقط |
