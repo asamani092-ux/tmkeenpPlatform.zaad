@@ -1,10 +1,15 @@
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import UatChecklistForm from "@/components/uat/UatChecklistForm";
 import { isUatChecklistEnabled } from "@/lib/uat-access";
 
-export default function UatChecklistPage() {
-  if (!isUatChecklistEnabled()) notFound();
+/** Runtime host check — do not statically prerender for production CDN. */
+export const dynamic = "force-dynamic";
+
+export default async function UatChecklistPage() {
+  const host = (await headers()).get("host");
+  if (!isUatChecklistEnabled(host)) notFound();
 
   return (
     <div className="min-h-screen bg-surface-muted">
@@ -15,8 +20,8 @@ export default function UatChecklistPage() {
             نموذج تقييم UAT — بيئة التجربة
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-brand-gray">
-            واجهة داخلية لاكتمال تجربة التقييم محلياً فقط. في النشر العام المسار
-            مغلق (`404`).
+            موجة إعادة تحقق من آخر ملاحظات ما بعد النشر + إصلاح التذكير. متاح على
+            localhost فقط؛ على النطاق العام يُرجع 404.
           </p>
         </header>
         <UatChecklistForm />

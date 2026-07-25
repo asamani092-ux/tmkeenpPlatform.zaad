@@ -11,9 +11,18 @@ const ROLE_PATHS: { prefix: string; role: Role }[] = [
   { prefix: "/dashboard/beneficiary", role: "BENEFICIARY" },
 ];
 
-function isUatChecklistAllowed(): boolean {
+function isUatChecklistAllowed(request: NextRequest): boolean {
   if (process.env.ENABLE_UAT_CHECKLIST === "true") return true;
-  return process.env.NODE_ENV !== "production";
+  if (process.env.NODE_ENV !== "production") return true;
+  const host = request.headers.get("host");
+  const h = host?.split(":")[0]?.toLowerCase() ?? "";
+  return (
+    h === "localhost" ||
+    h === "127.0.0.1" ||
+    h === "::1" ||
+    h === "[::1]" ||
+    h.endsWith(".localhost")
+  );
 }
 
 export function middleware(request: NextRequest) {
@@ -21,10 +30,10 @@ export function middleware(request: NextRequest) {
   const sessionId = request.cookies.get(SESSION_COOKIE)?.value;
   const role = request.cookies.get(ROLE_COOKIE)?.value as Role | undefined;
 
-  /** Block UAT evaluation form on production deploy — O(1). */
+  /** Block UAT form on public deploy; allow localhost trial — O(1). */
   if (
     (pathname === "/uat-checklist" || pathname.startsWith("/uat-checklist/")) &&
-    !isUatChecklistAllowed()
+    !isUatChecklistAllowed(request)
   ) {
     return new NextResponse("Not Found", { status: 404 });
   }

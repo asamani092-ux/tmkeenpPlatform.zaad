@@ -422,7 +422,7 @@ export const UAT_GROUPS: UatToolGroup[] = [
   },
   {
     id: "reverify-fixes",
-    title: "إعادة تحقق بعد إصلاحات UAT (موجة جديدة)",
+    title: "إعادة تحقق — آخر ملاحظات UAT",
     tools: [
       {
         id: "reverify-session-timezone",
@@ -452,6 +452,14 @@ export const UAT_GROUPS: UatToolGroup[] = [
         path: "admin → متابعة",
         checks:
           "زر إعادة إرسال تذكير في الرأس؛ opensAt/dueAt/lastReminder؛ عدّاد التذكير التالي 24س",
+      },
+      {
+        id: "reverify-followup-remind-null-status",
+        tool: "لا تظهر «التذكير معطّل» لحالة null",
+        path: "admin → متابعة (مستفيد بلا ACTIVE)",
+        checks:
+          "programStatus=null مع أشهر معلّقة → التذكير مفعّل؛ بعد الإرسال تصبح ACTIVE؛ PAUSED يوضح استئناف أولاً",
+        hint: "آخر ملاحظة: رسالة «التذكير معطّل — البرنامج غير نشط» كانت خاطئة",
       },
       {
         id: "reverify-followup-force-end",
@@ -505,6 +513,13 @@ export const UAT_GROUPS: UatToolGroup[] = [
         tool: "بطاقة جدول المتابعة للمستفيد",
         path: "مستفيد FOLLOW_UP",
         checks: "نموذج الشهر X يفتح في … / يستحق في … بتوقيت السعودية",
+      },
+      {
+        id: "reverify-uat-form-local-only",
+        tool: "نموذج التقييم محلي فقط",
+        path: "/uat-checklist",
+        checks:
+          "يعمل على localhost؛ على tmkeen.alzaad.org.sa يعيد 404؛ التقييمات لا تُمسح",
       },
     ],
   },
