@@ -29,11 +29,14 @@ export function fromDatetimeLocalValue(local: string): string {
   return date.toISOString();
 }
 
-/** Arabic display datetime in Asia/Riyadh, 12-hour, no seconds — O(1). */
+/** Gregorian Arabic locale — "ar-SA" alone defaults to the Hijri calendar. */
+const AR_GREGORIAN = "ar-SA-u-ca-gregory";
+
+/** Arabic display datetime in Asia/Riyadh (Gregorian), 12-hour, no seconds — O(1). */
 export function formatArDateTime(isoOrDate: string | Date): string {
   const d = typeof isoOrDate === "string" ? new Date(isoOrDate) : isoOrDate;
   if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleString("ar-SA", {
+  return d.toLocaleString(AR_GREGORIAN, {
     timeZone: APP_TZ,
     year: "numeric",
     month: "short",
@@ -41,5 +44,17 @@ export function formatArDateTime(isoOrDate: string | Date): string {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
+  });
+}
+
+/** Arabic date only in Asia/Riyadh (Gregorian) — O(1). */
+export function formatArDate(isoOrDate: string | Date): string {
+  const d = typeof isoOrDate === "string" ? new Date(isoOrDate) : isoOrDate;
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString(AR_GREGORIAN, {
+    timeZone: APP_TZ,
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   });
 }

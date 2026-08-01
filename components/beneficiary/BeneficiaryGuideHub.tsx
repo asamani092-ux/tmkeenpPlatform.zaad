@@ -3,6 +3,7 @@ import ContactLinks from "@/components/ui/ContactLinks";
 import { ApplicationStatus } from "@/generated/prisma/client";
 import { beneficiaryCopy } from "@/lib/copy/ar";
 import { Compass, MessageSquare, BookOpen } from "lucide-react";
+import { formatArDate } from "@/lib/datetime-local";
 
 type GuideInfo = {
   name: string;
@@ -111,7 +112,7 @@ export default function BeneficiaryGuideHub({
             {notes.map((note) => (
               <li key={note.id} className="rounded-lg border border-surface-border p-3 text-sm">
                 <p className="text-xs text-brand-gray">
-                  {note.guideName} · {new Date(note.createdAt).toLocaleDateString("ar-SA")}
+                  {note.guideName} · {formatArDate(note.createdAt)}
                 </p>
                 <p className="mt-1 text-brand-gray">{note.content}</p>
               </li>

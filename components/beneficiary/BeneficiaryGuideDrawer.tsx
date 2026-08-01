@@ -9,6 +9,7 @@ import OpportunityApplyCard from "@/components/OpportunityApplyCard";
 import { ApplicationStatus } from "@/generated/prisma/client";
 import { beneficiaryCopy } from "@/lib/copy/ar";
 import { Compass, BookOpen, MessageSquare } from "lucide-react";
+import { formatArDate } from "@/lib/datetime-local";
 
 type GuideInfo = {
   name: string;
@@ -120,7 +121,7 @@ export default function BeneficiaryGuideDrawer({
                 {notes.map((note) => (
                   <li key={note.id} className="field-cell text-sm">
                     <p className="text-xs text-brand-gray">
-                      {note.guideName} · {new Date(note.createdAt).toLocaleDateString("ar-SA")}
+                      {note.guideName} · {formatArDate(note.createdAt)}
                     </p>
                     <p className="mt-1 text-brand-gray">{note.content}</p>
                   </li>

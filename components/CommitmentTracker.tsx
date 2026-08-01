@@ -5,6 +5,7 @@ import { getUpcomingSession } from "@/lib/upcoming-session";
 import type { SessionStatus } from "@/generated/prisma/client";
 import SessionJoinButton from "@/components/beneficiary/SessionJoinButton";
 import { Calendar, MapPin } from "lucide-react";
+import { formatArDateTime } from "@/lib/datetime-local";
 
 type Session = {
   date: string;
@@ -54,7 +55,7 @@ export default function CommitmentTracker({
               <p className="font-semibold text-primary">{beneficiaryCopy.upcomingSessionAlert}</p>
               <p className="text-sm text-brand-gray">
                 {SESSION_STATUS_LABELS[upcoming.status as SessionStatus]} —{" "}
-                {new Date(upcoming.date).toLocaleString("ar-SA")}
+                {formatArDateTime(upcoming.date)}
               </p>
               <p className="mt-1 text-xs font-semibold text-secondary-dark">
                 {formatCountdown(new Date(upcoming.date))}

@@ -10,13 +10,14 @@ import { STAGE_LABELS, STAGE_ORDER } from "@/lib/stages";
 import { APPLICATION_STATUS_LABELS, FOLLOW_UP_STATUS_LABELS } from "@/lib/labels";
 import type { BulkExportSection } from "@/lib/export-table";
 import { Briefcase, GraduationCap, LayoutDashboard, Users } from "lucide-react";
+import { formatArDate } from "@/lib/datetime-local";
 
 export default async function AdminDashboardPage() {
   const session = await getSession();
   if (!session) redirect("/login");
   if (session.role !== "ADMIN") redirect(getDashboardPath(session.role));
 
-  /** Heal FOLLOW_UP users missing ACTIVE status — O(6n) once per load. */
+  /** Heal FOLLOW_UP users missing ACTIVE status — throttled to O(1) per load. */
   await backfillFollowUpProgram();
 
   const sixMonthsAgo = new Date();
@@ -160,7 +161,7 @@ export default async function AdminDashboardPage() {
     applicationsAccepted,
     applicationsTotal,
     employedCount: employedBeneficiaries.length,
-    periodLabel: `تقرير الأثر — آخر 6 أشهر (من ${sixMonthsAgo.toLocaleDateString("ar-SA")})`,
+    periodLabel: `تقرير الأثر — آخر 6 أشهر (من ${formatArDate(sixMonthsAgo)})`,
   };
 
   const guides = guidesRaw.map((g) => ({
@@ -253,7 +254,7 @@ export default async function AdminDashboardPage() {
         b.email,
         STAGE_LABELS[b.stage],
         b.stageEnteredAt
-          ? new Date(b.stageEnteredAt).toLocaleDateString("ar-SA")
+          ? formatArDate(b.stageEnteredAt)
           : "—",
         b.pendingStage ? STAGE_LABELS[b.pendingStage] : "—",
         b.guide?.name ?? "—",
@@ -284,7 +285,7 @@ export default async function AdminDashboardPage() {
         a.opportunity.type === "TRAINING" ? "تدريب" : "توظيف",
         APPLICATION_STATUS_LABELS[a.status],
         a.reviewNote || "—",
-        a.appliedAt.toLocaleDateString("ar-SA"),
+        formatArDate(a.appliedAt),
       ]),
     },
     {
@@ -337,7 +338,7 @@ export default async function AdminDashboardPage() {
         f.beneficiary.phone,
         String(f.month),
         FOLLOW_UP_STATUS_LABELS[f.status as keyof typeof FOLLOW_UP_STATUS_LABELS] ?? f.status,
-        f.submittedAt ? f.submittedAt.toLocaleDateString("ar-SA") : "—",
+        f.submittedAt ? formatArDate(f.submittedAt) : "—",
         f.notes || "—",
         f.answers ? JSON.stringify(f.answers) : "—",
       ]),

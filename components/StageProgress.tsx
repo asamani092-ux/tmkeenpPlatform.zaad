@@ -1,6 +1,7 @@
 import { Stage } from "@/generated/prisma/client";
 import { STAGE_LABELS, STAGE_ORDER, getStageProgress } from "@/lib/stages";
 import { Check } from "lucide-react";
+import { formatArDate } from "@/lib/datetime-local";
 
 type StageProgressProps = {
   currentStage: Stage;
@@ -11,7 +12,7 @@ export default function StageProgress({ currentStage, stageEnteredAt }: StagePro
   const currentIndex = STAGE_ORDER.indexOf(currentStage);
   const progress = getStageProgress(currentStage);
   const enteredLabel = stageEnteredAt
-    ? new Date(stageEnteredAt).toLocaleDateString("ar-SA")
+    ? formatArDate(stageEnteredAt)
     : null;
 
   return (

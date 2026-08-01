@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Bell } from "lucide-react";
+import { formatArDateTime } from "@/lib/datetime-local";
 
 type NotificationItem = {
   id: string;
@@ -35,8 +36,18 @@ export default function NotificationBell() {
 
   useEffect(() => {
     load();
-    const interval = setInterval(load, 60000);
-    return () => clearInterval(interval);
+    // Poll only while the tab is visible; refresh on return to the tab.
+    const interval = setInterval(() => {
+      if (!document.hidden) load();
+    }, 60000);
+    const onVisible = () => {
+      if (!document.hidden) load();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [load]);
 
   useEffect(() => {
@@ -44,20 +55,28 @@ export default function NotificationBell() {
   }, [open, load]);
 
   async function markRead(id: string) {
-    await fetch("/api/notifications", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
-    });
+    try {
+      await fetch("/api/notifications", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+    } catch {
+      // Network hiccup — the periodic reload restores true state.
+    }
     load();
   }
 
   async function markAllRead() {
-    await fetch("/api/notifications", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ markAllRead: true }),
-    });
+    try {
+      await fetch("/api/notifications", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ markAllRead: true }),
+      });
+    } catch {
+      // Network hiccup — the periodic reload restores true state.
+    }
     load();
   }
 
@@ -117,7 +136,7 @@ export default function NotificationBell() {
                     <p className="font-semibold text-primary">{n.title}</p>
                     <p className="mt-1 text-brand-gray">{n.message}</p>
                     <p className="mt-1 text-xs text-brand-gray">
-                      {new Date(n.createdAt).toLocaleString("ar-SA")}
+                      {formatArDateTime(n.createdAt)}
                     </p>
                   </li>
                 ))

@@ -6,6 +6,7 @@ import {
   getStageProgress,
 } from "@/lib/stages";
 import { Check } from "lucide-react";
+import { formatArDate } from "@/lib/datetime-local";
 
 type Props = {
   currentStage: Stage;
@@ -45,7 +46,7 @@ export default function VerticalStageTimeline({ currentStage, stageEnteredAt }: 
   const currentIndex = STAGE_ORDER.indexOf(currentStage);
   const progress = getStageProgress(currentStage);
   const enteredLabel = stageEnteredAt
-    ? new Date(stageEnteredAt).toLocaleDateString("ar-SA")
+    ? formatArDate(stageEnteredAt)
     : null;
 
   return (

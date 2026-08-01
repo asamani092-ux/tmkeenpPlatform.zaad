@@ -3,6 +3,7 @@ import { MapPin, AlertCircle } from "lucide-react";
 import { SESSION_STATUS_LABELS } from "@/lib/labels";
 import type { SessionStatus } from "@/generated/prisma/client";
 import SessionJoinButton from "@/components/beneficiary/SessionJoinButton";
+import { formatArDateTime } from "@/lib/datetime-local";
 
 type Session = {
   id: string;
@@ -35,7 +36,7 @@ export default function NextSessionCard({ sessions }: Props) {
           <h2 className="text-xl font-bold text-primary">{beneficiaryCopy.upcomingSessionAlert}</h2>
           <p className="text-sm text-brand-gray">
             {SESSION_STATUS_LABELS[upcoming.status as SessionStatus]} —{" "}
-            {new Date(upcoming.date).toLocaleString("ar-SA")}
+            {formatArDateTime(upcoming.date)}
           </p>
         </div>
       </div>

@@ -8,7 +8,7 @@ import SubmitButton from "@/components/ui/SubmitButton";
 import FieldRow from "@/components/ui/FieldRow";
 import { useSyncFromProps } from "@/lib/use-sync-from-props";
 import { toastSuccess, toastError } from "@/lib/toast";
-import { formatArDateTime } from "@/lib/datetime-local";
+import { formatArDate, formatArDateTime } from "@/lib/datetime-local";
 import { formatCountdown } from "@/lib/follow-up-program";
 import {
   FOLLOW_UP_PROGRAM_STATUS_LABELS,
@@ -103,7 +103,7 @@ function latestStatusLabel(g: GroupedBeneficiary) {
       FOLLOW_UP_PROGRAM_STATUS_LABELS[g.programStatus] ?? g.programStatus;
     parts.push(programLabel);
     if (g.statusUpdatedAt) {
-      parts.push(new Date(g.statusUpdatedAt).toLocaleDateString("ar-SA"));
+      parts.push(formatArDate(g.statusUpdatedAt));
     }
   }
 
@@ -117,7 +117,7 @@ function latestStatusLabel(g: GroupedBeneficiary) {
       latest.status;
     const dateStr = latest.submittedAt ?? latest.dueAt;
     if (dateStr) {
-      parts.push(`${monthLabel} — ${new Date(dateStr).toLocaleDateString("ar-SA")}`);
+      parts.push(`${monthLabel} — ${formatArDate(dateStr)}`);
     } else if (!g.programStatus) {
       parts.push(monthLabel);
     }
@@ -435,7 +435,14 @@ export default function AdminFollowUpPanel({
                 <tr
                   key={g.id}
                   onClick={() => openBeneficiaryModal(g)}
-                  className="cursor-pointer border-t border-surface-border transition hover:bg-secondary/10"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      openBeneficiaryModal(g);
+                    }
+                  }}
+                  className="cursor-pointer border-t border-surface-border transition hover:bg-secondary/10 focus:outline-none focus-visible:bg-secondary/10 focus-visible:ring-2 focus-visible:ring-primary/40"
                 >
                   <td className="px-4 py-3 font-medium">{g.name}</td>
                   <td className="px-4 py-3 text-end font-mono text-xs" dir="ltr">

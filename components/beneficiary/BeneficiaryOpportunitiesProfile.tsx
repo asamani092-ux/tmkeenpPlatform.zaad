@@ -8,6 +8,7 @@ import FieldGrid from "@/components/ui/FieldGrid";
 import { APPLICATION_STATUS_LABELS } from "@/lib/labels";
 import { ApplicationStatus } from "@/generated/prisma/client";
 import { Briefcase, BookOpen, FileText, ClipboardList } from "lucide-react";
+import { formatArDate } from "@/lib/datetime-local";
 
 type Opportunity = {
   id: string;
@@ -157,7 +158,7 @@ export default function BeneficiaryOpportunitiesProfile({
                     </span>
                     <span className="text-brand-gray">
                       {app.opportunity.title} —{" "}
-                      {new Date(app.appliedAt).toLocaleDateString("ar-SA")}
+                      {formatArDate(app.appliedAt)}
                     </span>
                   </li>
                 ))}

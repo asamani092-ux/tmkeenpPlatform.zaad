@@ -24,6 +24,7 @@ import { SESSION_STATUS_LABELS } from "@/lib/labels";
 import { getUpcomingSession } from "@/lib/upcoming-session";
 import { formatCountdown } from "@/lib/follow-up-program";
 import {
+  formatArDate,
   formatArDateTime,
   fromDatetimeLocalValue,
   toDatetimeLocalValue,
@@ -818,7 +819,7 @@ export default function GuideBeneficiaryTable({
       header: "تاريخ التسجيل",
       render: (b) => (
         <span className="text-brand-gray">
-          {new Date(b.createdAt).toLocaleDateString("ar-SA")}
+          {formatArDate(b.createdAt)}
         </span>
       ),
     },
@@ -835,7 +836,7 @@ export default function GuideBeneficiaryTable({
           >
             <span className="inline-flex items-center gap-1 text-primary">
               <Calendar className="h-4 w-4" />
-              {new Date(upcoming.date).toLocaleDateString("ar-SA")}
+              {formatArDate(upcoming.date)}
             </span>
             <span className="text-brand-gray">{formatCountdown(new Date(upcoming.date))}</span>
             {upcoming.meetingLink && (
@@ -930,15 +931,7 @@ export default function GuideBeneficiaryTable({
                         جلسة قادمة
                       </p>
                       <p className="text-xs text-brand-gray">
-                        {new Date(upcomingSession.date).toLocaleString("ar-SA", {
-                          timeZone: "Asia/Riyadh",
-                          hour12: true,
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                          hour: "numeric",
-                          minute: "2-digit",
-                        })}
+                        {formatArDateTime(upcomingSession.date)}
                       </p>
                     </div>
                     <div className="flex w-full flex-wrap gap-2 sm:w-auto">
@@ -1127,7 +1120,7 @@ export default function GuideBeneficiaryTable({
                           key={n.id}
                           className="rounded-lg bg-surface-muted p-3 text-sm text-brand-gray"
                         >
-                          {new Date(n.createdAt).toLocaleDateString("ar-SA")} — {n.content}
+                          {formatArDate(n.createdAt)} — {n.content}
                         </li>
                       ))}
                     </ul>

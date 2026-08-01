@@ -15,6 +15,7 @@ import { prisma } from "@/lib/prisma";
 import { APPLICATION_STATUS_LABELS } from "@/lib/labels";
 import { beneficiaryCanSeeOpportunity } from "@/lib/opportunity-visibility";
 import { Briefcase, BookOpen, ClipboardList } from "lucide-react";
+import { formatArDate } from "@/lib/datetime-local";
 
 export const dynamic = "force-dynamic";
 
@@ -213,7 +214,7 @@ export default async function BeneficiaryDashboardPage() {
                 </span>
                 <span className="text-brand-gray">
                   {app.opportunity.title} —{" "}
-                  {new Date(app.appliedAt).toLocaleDateString("ar-SA")}
+                  {formatArDate(app.appliedAt)}
                 </span>
               </li>
             ))}
