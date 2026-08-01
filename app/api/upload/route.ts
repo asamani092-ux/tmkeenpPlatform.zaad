@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { savePdfFile } from "@/lib/storage";
+import { checkRateLimit, checkHourlyRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   try {
@@ -15,10 +16,25 @@ export async function POST(request: Request) {
 
     const subdir = kind === "certificate" ? "certificates" : "cv";
 
-    // Registration allows unauthenticated upload before account exists
+    // Registration allows unauthenticated upload before account exists —
+    // rate-limited per IP to prevent anonymous disk-fill abuse.
     const isRegister = form.get("context") === "register";
     if (!isRegister && !session) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
+    }
+    if (isRegister && !session) {
+      const ip =
+        request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+        "local";
+      if (
+        !checkRateLimit(`upload:register:${ip}`) ||
+        !checkHourlyRateLimit(`upload:register:hourly:${ip}`, 10)
+      ) {
+        return NextResponse.json(
+          { error: "محاولات رفع كثيرة — حاول لاحقاً" },
+          { status: 429 }
+        );
+      }
     }
 
     if (session && session.role !== "BENEFICIARY" && session.role !== "ADMIN") {

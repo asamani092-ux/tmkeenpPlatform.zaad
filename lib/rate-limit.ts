@@ -3,6 +3,17 @@ const store = new Map<string, { count: number; resetAt: number }>();
 const WINDOW_MS = 60_000;
 const MAX_ATTEMPTS = 10;
 const HOURLY_WINDOW_MS = 60 * 60 * 1000;
+const SWEEP_INTERVAL_MS = 10 * 60 * 1000;
+
+/** Evict expired entries so the map cannot grow unboundedly — amortized O(1). */
+let lastSweepAt = Date.now();
+function sweepExpired(now: number): void {
+  if (now - lastSweepAt < SWEEP_INTERVAL_MS) return;
+  lastSweepAt = now;
+  for (const [key, entry] of store) {
+    if (now > entry.resetAt) store.delete(key);
+  }
+}
 
 /** Simple in-memory rate limit — O(1) time, O(1) space */
 export function checkRateLimit(key: string): boolean {
@@ -20,6 +31,7 @@ function checkRateLimitWindow(
   maxAttempts: number
 ): boolean {
   const now = Date.now();
+  sweepExpired(now);
   const entry = store.get(key);
 
   if (!entry || now > entry.resetAt) {
