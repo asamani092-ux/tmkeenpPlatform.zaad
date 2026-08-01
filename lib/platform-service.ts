@@ -346,22 +346,6 @@ export async function updateSession(data: {
 
   const newStatus = data.status ?? existing.status;
 
-  await prisma.session.update({
-    where: { id: data.sessionId },
-    data: {
-      ...(date ? { date } : {}),
-      ...(data.notes !== undefined ? { notes: data.notes.trim() } : {}),
-      ...(data.status ? { status: data.status } : {}),
-      ...(rating != null ? { commitmentRating: rating } : {}),
-      ...(data.meetingLink !== undefined
-        ? { meetingLink: data.meetingLink.trim() || null }
-        : {}),
-      ...(data.location !== undefined
-        ? { location: data.location.trim() || null }
-        : {}),
-    },
-  });
-
   const ratingApplies =
     rating != null &&
     (newStatus === "COMPLETED" ||
@@ -369,15 +353,44 @@ export async function updateSession(data: {
       existing.status === "COMPLETED" ||
       existing.status === "ATTENDED");
 
-  if (ratingApplies && existing.commitmentRating == null) {
-    await prisma.user.update({
-      where: { id: existing.beneficiaryId },
+  await prisma.$transaction(async (tx) => {
+    // Atomic first-rating gate: claim the null slot so concurrent
+    // attend calls cannot double-increment the commitment score.
+    let firstRating = false;
+    if (ratingApplies) {
+      const claim = await tx.session.updateMany({
+        where: { id: data.sessionId, commitmentRating: null },
+        data: { commitmentRating: rating },
+      });
+      firstRating = claim.count === 1;
+    }
+
+    await tx.session.update({
+      where: { id: data.sessionId },
       data: {
-        commitmentScore: { increment: rating * 4 },
-        commitmentLevel: { increment: rating * 4 },
+        ...(date ? { date } : {}),
+        ...(data.notes !== undefined ? { notes: data.notes.trim() } : {}),
+        ...(data.status ? { status: data.status } : {}),
+        ...(rating != null ? { commitmentRating: rating } : {}),
+        ...(data.meetingLink !== undefined
+          ? { meetingLink: data.meetingLink.trim() || null }
+          : {}),
+        ...(data.location !== undefined
+          ? { location: data.location.trim() || null }
+          : {}),
       },
     });
-  }
+
+    if (firstRating && rating != null) {
+      await tx.user.update({
+        where: { id: existing.beneficiaryId },
+        data: {
+          commitmentScore: { increment: rating * 4 },
+          commitmentLevel: { increment: rating * 4 },
+        },
+      });
+    }
+  });
 
   return { success: true };
 }
@@ -1418,14 +1431,36 @@ export async function reviewApplication(data: {
     return { success: false, error: "تمت مراجعة هذا التقديم مسبقاً" };
   }
 
-  await prisma.application.update({
-    where: { id: data.applicationId },
-    data: {
-      status: data.status,
-      reviewNote: data.reviewNote?.trim() || null,
-      reviewedAt: new Date(),
-    },
+  const isTrainingAccept =
+    data.status === "ACCEPTED" &&
+    app.opportunity.type === "TRAINING" &&
+    app.beneficiary.stage === "GUIDANCE";
+
+  // Atomic review: PENDING guard + pendingStage in one transaction so
+  // concurrent admins cannot double-review or clobber a pending stage.
+  const reviewed = await prisma.$transaction(async (tx) => {
+    const updated = await tx.application.updateMany({
+      where: { id: data.applicationId, status: "PENDING" },
+      data: {
+        status: data.status,
+        reviewNote: data.reviewNote?.trim() || null,
+        reviewedAt: new Date(),
+      },
+    });
+    if (updated.count === 0) return false;
+
+    if (isTrainingAccept) {
+      await tx.user.updateMany({
+        where: { id: app.beneficiaryId, pendingStage: null },
+        data: { pendingStage: "TRAINING" },
+      });
+    }
+    return true;
   });
+
+  if (!reviewed) {
+    return { success: false, error: "تمت مراجعة هذا التقديم مسبقاً" };
+  }
 
   const statusLabel = data.status === "ACCEPTED" ? "مقبول" : "مرفوض";
   const acceptDetailsSoon =
@@ -1454,15 +1489,7 @@ export async function reviewApplication(data: {
     })
   );
 
-  if (
-    data.status === "ACCEPTED" &&
-    app.opportunity.type === "TRAINING" &&
-    app.beneficiary.stage === "GUIDANCE"
-  ) {
-    await prisma.user.update({
-      where: { id: app.beneficiaryId },
-      data: { pendingStage: "TRAINING" },
-    });
+  if (isTrainingAccept) {
     await createNotification(
       app.beneficiaryId,
       "توصية بالانتقال للتدريب",
