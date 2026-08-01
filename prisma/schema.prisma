@@ -105,6 +105,9 @@ model User {
   notifications    InAppNotification[]
   passwordResetTokens PasswordResetToken[]
   createdAt        DateTime @default(now())
+
+  @@index([guideId])
+  @@index([role, stage])
 }
 
 model PasswordResetToken {
@@ -140,6 +143,8 @@ model InAppNotification {
   message   String
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
 }
 
 model Note {
@@ -150,6 +155,9 @@ model Note {
   guide         User     @relation("GuideNotes", fields: [guideId], references: [id])
   content       String
   createdAt     DateTime @default(now())
+
+  @@index([beneficiaryId])
+  @@index([guideId])
 }
 
 model Session {
@@ -165,6 +173,9 @@ model Session {
   location          String?
   commitmentRating  Int?
   createdAt         DateTime      @default(now())
+
+  @@index([beneficiaryId])
+  @@index([guideId])
 }
 
 model Task {
@@ -177,6 +188,9 @@ model Task {
   description   String?
   isCompleted   Boolean  @default(false)
   createdAt     DateTime @default(now())
+
+  @@index([beneficiaryId])
+  @@index([guideId])
 }
 
 model CareerPlan {
@@ -273,4 +287,6 @@ model Application {
   appliedAt     DateTime          @default(now())
 
   @@unique([beneficiaryId, opportunityId])
+  @@index([opportunityId])
+  @@index([status])
 }
