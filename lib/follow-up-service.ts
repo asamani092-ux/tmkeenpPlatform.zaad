@@ -439,8 +439,23 @@ export async function getFollowUpFormForBeneficiary(beneficiaryId: string) {
   return { user, activeMonth, questions, records: user.followUps };
 }
 
-/** Backfill 6-month records for beneficiaries already in FOLLOW_UP without a program — O(6n) */
-export async function backfillFollowUpProgram(): Promise<{ updated: number }> {
+/** Backfill throttle: at most once per interval per server instance. */
+const BACKFILL_INTERVAL_MS = 10 * 60 * 1000;
+let lastBackfillAt = 0;
+
+/**
+ * Backfill 6-month records for beneficiaries already in FOLLOW_UP without a
+ * program. Throttled to O(1) on hot paths; full run O(6n) atomic per user.
+ */
+export async function backfillFollowUpProgram(
+  options: { force?: boolean } = {}
+): Promise<{ updated: number; skipped: boolean }> {
+  const now = Date.now();
+  if (!options.force && now - lastBackfillAt < BACKFILL_INTERVAL_MS) {
+    return { updated: 0, skipped: true };
+  }
+  lastBackfillAt = now;
+
   const users = await prisma.user.findMany({
     where: {
       role: "BENEFICIARY",
@@ -452,30 +467,32 @@ export async function backfillFollowUpProgram(): Promise<{ updated: number }> {
 
   for (const u of users) {
     const startedAt = u.stageEnteredAt;
-    await prisma.user.update({
-      where: { id: u.id },
-      data: {
-        followUpProgramStatus: "ACTIVE",
-        followUpProgramStartedAt: startedAt,
-      },
-    });
-    for (let month = 1; month <= 6; month++) {
-      const { opensAt, dueAt } = computeMonthWindow(startedAt, month);
-      await prisma.followUp.upsert({
-        where: { beneficiaryId_month: { beneficiaryId: u.id, month } },
-        create: {
-          beneficiaryId: u.id,
-          month,
-          status: "PENDING",
-          opensAt,
-          dueAt,
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: u.id },
+        data: {
+          followUpProgramStatus: "ACTIVE",
+          followUpProgramStartedAt: startedAt,
         },
-        update: { opensAt, dueAt },
-      });
-    }
+      }),
+      ...[1, 2, 3, 4, 5, 6].map((month) => {
+        const { opensAt, dueAt } = computeMonthWindow(startedAt, month);
+        return prisma.followUp.upsert({
+          where: { beneficiaryId_month: { beneficiaryId: u.id, month } },
+          create: {
+            beneficiaryId: u.id,
+            month,
+            status: "PENDING",
+            opensAt,
+            dueAt,
+          },
+          update: { opensAt, dueAt },
+        });
+      }),
+    ]);
   }
 
-  return { updated: users.length };
+  return { updated: users.length, skipped: false };
 }
 
 /**
