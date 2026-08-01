@@ -146,10 +146,10 @@ export default function AdminOpportunityList({ opportunities: initial }: Props) 
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="min-w-0 flex-1 font-bold text-primary">{opp.title}</h3>
                     <div className="flex shrink-0 gap-1">
-                      <button type="button" onClick={() => setEditingId(opp.id)} className="rounded p-1 text-primary hover:bg-surface-muted">
+                      <button type="button" onClick={() => setEditingId(opp.id)} aria-label="تعديل الفرصة" title="تعديل" className="rounded p-1 text-primary hover:bg-surface-muted">
                         <Pencil className="h-4 w-4" />
                       </button>
-                      <button type="button" onClick={() => handleDelete(opp.id)} disabled={pending} className="rounded p-1 text-red-600 hover:bg-red-50">
+                      <button type="button" onClick={() => handleDelete(opp.id)} disabled={pending} aria-label="حذف الفرصة" title="حذف" className="rounded p-1 text-red-600 hover:bg-red-50">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>

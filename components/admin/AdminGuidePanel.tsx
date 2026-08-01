@@ -134,6 +134,8 @@ export default function AdminGuidePanel({ guides: initial, beneficiariesByGuideI
                 <button
                   type="button"
                   onClick={() => openEdit(g)}
+                  aria-label="تعديل المرشد"
+                  title="تعديل"
                   className="rounded p-1 text-primary hover:bg-surface-muted"
                 >
                   <Pencil className="h-4 w-4" />
@@ -142,6 +144,8 @@ export default function AdminGuidePanel({ guides: initial, beneficiariesByGuideI
                   type="button"
                   onClick={() => handleDeleteClick(g.id)}
                   disabled={pending}
+                  aria-label="حذف المرشد"
+                  title="حذف"
                   className={`rounded px-2 py-1 text-xs font-semibold ${
                     confirmDeleteId === g.id
                       ? "bg-red-600 text-white"

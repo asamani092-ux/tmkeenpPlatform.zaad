@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import SubmitButton from "@/components/ui/SubmitButton";
 import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
+import { useSyncFromProps } from "@/lib/use-sync-from-props";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { APPLICATION_STATUS_LABELS } from "@/lib/labels";
 import { CheckCircle, XCircle } from "lucide-react";
@@ -23,12 +24,14 @@ type Props = {
 
 export default function AdminApplicationsPanel({ applications: initial }: Props) {
   const router = useRouter();
-  const [rows, setRows] = useState(initial);
-  const [pending, startTransition] = useTransition();
+  const [rows, setRows] = useSyncFromProps(initial);
+  /** Per-row in-flight id so one click doesn't disable every row — O(1). */
+  const [pendingId, setPendingId] = useState<string | null>(null);
   const [reviewNote, setReviewNote] = useState<Record<string, string>>({});
 
-  function review(id: string, status: "ACCEPTED" | "REJECTED") {
-    startTransition(async () => {
+  async function review(id: string, status: "ACCEPTED" | "REJECTED") {
+    setPendingId(id);
+    try {
       const res = await fetch(`/api/applications/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -46,7 +49,11 @@ export default function AdminApplicationsPanel({ applications: initial }: Props)
           : "تم رفض التقديم وإشعار المستفيد"
       );
       router.refresh();
-    });
+    } catch {
+      toastError("حدث خطأ في الاتصال — حاول مرة أخرى");
+    } finally {
+      setPendingId(null);
+    }
   }
 
   const pendingRows = rows.filter((r) => r.status === "PENDING");
@@ -107,7 +114,8 @@ export default function AdminApplicationsPanel({ applications: initial }: Props)
           <div className="flex w-full min-w-[9.5rem] flex-col gap-2 sm:min-w-0 sm:flex-row sm:flex-wrap sm:justify-start">
             <SubmitButton
               type="button"
-              loading={pending}
+              loading={pendingId === a.id}
+              disabled={pendingId !== null && pendingId !== a.id}
               onClick={() => review(a.id, "ACCEPTED")}
               className="btn-primary w-full !px-3 !py-2 text-sm sm:w-auto sm:!px-2 sm:!py-1 sm:text-xs"
             >
@@ -116,7 +124,8 @@ export default function AdminApplicationsPanel({ applications: initial }: Props)
             </SubmitButton>
             <SubmitButton
               type="button"
-              loading={pending}
+              loading={pendingId === a.id}
+              disabled={pendingId !== null && pendingId !== a.id}
               onClick={() => review(a.id, "REJECTED")}
               className="w-full !border-2 !border-red-600 !bg-white !px-3 !py-2 text-sm !text-red-700 hover:!bg-red-50 sm:w-auto sm:!px-2 sm:!py-1 sm:text-xs"
             >
@@ -151,4 +160,4 @@ export default function AdminApplicationsPanel({ applications: initial }: Props)
     </div>
   );
 }
-
+
