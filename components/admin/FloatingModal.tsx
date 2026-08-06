@@ -23,16 +23,16 @@ export default function FloatingModal({ title, onClose, children, wide }: Props)
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4"
-      style={{ background: "var(--tmkeen-overlay)", zIndex: "var(--z-modal)" }}
+      className="modal-overlay !items-end !p-0 sm:!items-center sm:!p-4"
+      style={{ zIndex: "var(--z-modal)" }}
       onClick={onClose}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-2xl border-0 bg-surface text-start shadow-xl sm:mx-4 sm:max-h-[90vh] sm:rounded-xl sm:border-2 sm:border-surface-border ${
-          wide ? "sm:max-w-2xl" : "sm:max-w-lg"
+        className={`modal-panel card flex max-h-[92dvh] flex-col overflow-hidden !rounded-t-2xl !border-0 !p-0 sm:!rounded-xl sm:!border-2 ${
+          wide ? "wide sm:!max-w-2xl" : "sm:!max-w-lg"
         }`}
         onClick={(e) => e.stopPropagation()}
       >
@@ -46,7 +46,7 @@ export default function FloatingModal({ title, onClose, children, wide }: Props)
           <button
             type="button"
             onClick={onClose}
-            className="ms-auto shrink-0 rounded-lg p-1.5 text-brand-gray hover:bg-surface-muted"
+            className="ms-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-brand-gray hover:bg-surface-muted"
             aria-label="إغلاق"
           >
             <X className="h-5 w-5" />

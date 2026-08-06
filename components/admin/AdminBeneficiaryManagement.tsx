@@ -13,6 +13,8 @@ import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { CheckCircle, ExternalLink, FileText, Trash2 } from "lucide-react";
+import StatusBadge from "@/components/ui/StatusBadge";
+import AlertBox from "@/components/ui/AlertBox";
 
 export type ManagedBeneficiary = {
   id: string;
@@ -263,7 +265,7 @@ export default function AdminBeneficiaryManagement({
         <>
           {STAGE_LABELS[b.stage]}
           {b.pendingStage && (
-            <span className="ms-1 block text-xs font-semibold text-red-800">
+            <span className="badge-danger ms-1 block">
               طلب: {STAGE_LABELS[b.pendingStage]}
             </span>
           )}
@@ -344,9 +346,9 @@ export default function AdminBeneficiaryManagement({
       header: "السيرة الذاتية",
       render: (b) =>
         b.cvUrl ? (
-          <span className="text-xs font-semibold text-green-700">مرفقة</span>
+          <StatusBadge tone="success">مرفقة</StatusBadge>
         ) : (
-          <span className="text-xs font-semibold text-red-600">غير مرفقة</span>
+          <StatusBadge tone="danger">غير مرفقة</StatusBadge>
         ),
     },
     {
@@ -360,11 +362,8 @@ export default function AdminBeneficiaryManagement({
             e.stopPropagation();
             handleDeleteClick(b.id);
           }}
-          className={`inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold ${
-            confirmDeleteId === b.id
-              ? "bg-red-600 text-white"
-              : "text-red-600 hover:bg-red-50"
-          }`}
+          className="btn-danger-ghost !min-h-0 !px-2 !py-1.5"
+          data-confirm={confirmDeleteId === b.id ? "true" : undefined}
           title={confirmDeleteId === b.id ? "اضغط مجدداً للتأكيد" : "حذف المستفيد"}
         >
           <Trash2 className="h-3.5 w-3.5" />
@@ -501,7 +500,7 @@ export default function AdminBeneficiaryManagement({
                 <span className="font-semibold text-primary">المرحلة: </span>
                 {STAGE_LABELS[selected.stage]}
                 {selected.pendingStage && (
-                  <span className="ms-2 rounded bg-yellow-100 px-2 py-0.5 text-xs font-semibold text-red-900">
+                  <span className="badge-warning ms-2">
                     طلب معلّق: {STAGE_LABELS[selected.pendingStage]}
                   </span>
                 )}
@@ -510,11 +509,8 @@ export default function AdminBeneficiaryManagement({
                 type="button"
                 disabled={pending}
                 onClick={() => handleDeleteClick(selected.id)}
-                className={`inline-flex shrink-0 items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold ${
-                  confirmDeleteId === selected.id
-                    ? "bg-red-600 text-white"
-                    : "border border-red-200 text-red-700 hover:bg-red-50"
-                }`}
+                className="btn-danger-ghost shrink-0 !min-h-0 !px-3 !py-1.5"
+                data-confirm={confirmDeleteId === selected.id ? "true" : undefined}
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 {confirmDeleteId === selected.id ? "تأكيد الحذف؟" : "حذف المستفيد"}
@@ -677,44 +673,49 @@ export default function AdminBeneficiaryManagement({
               </div>
             )}
 
-            <div className="card-section space-y-2">
+            <div className="card-section space-y-3">
               <h4 className="flex items-center gap-2 font-bold text-primary">
                 <FileText className="h-4 w-4" />
                 الملفات المرفقة
               </h4>
-              {selected.cvUrl ? (
-                <a
-                  href={selected.cvUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-primary inline-flex !px-4 !py-2 text-sm"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  عرض السيرة الذاتية
-                </a>
-              ) : (
-                <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-800">
-                  لا يوجد سيرة ذاتية مرفقة
-                </span>
-              )}
-              {parseCertificateLinks(selected.certificatesUrls).length > 0 ? (
-                <ul className="space-y-1">
-                  {parseCertificateLinks(selected.certificatesUrls).map((url, i) => (
-                    <li key={url}>
+              {(() => {
+                const certLinks = parseCertificateLinks(selected.certificatesUrls);
+                const linkClass =
+                  "btn-primary inline-flex items-center gap-2 !px-4 !py-2 text-sm";
+                return (
+                  <div className="flex flex-wrap gap-2">
+                    {selected.cvUrl ? (
                       <a
-                        href={url}
+                        href={selected.cvUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm font-semibold text-primary hover:underline"
+                        className={linkClass}
                       >
-                        شهادة {i + 1}
+                        <ExternalLink className="h-4 w-4" />
+                        السيرة الذاتية
                       </a>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-brand-gray">لا توجد شهادات مرفقة</p>
-              )}
+                    ) : (
+                      <StatusBadge tone="danger">لا توجد سيرة ذاتية</StatusBadge>
+                    )}
+                    {certLinks.length > 0 ? (
+                      certLinks.map((url, i) => (
+                        <a
+                          key={url}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={linkClass}
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          {certLinks.length > 1 ? `شهادة ${i + 1}` : "الشهادة"}
+                        </a>
+                      ))
+                    ) : (
+                      <StatusBadge tone="danger">لا توجد شهادة</StatusBadge>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
 
             {selected.professionalRecommendations && (
@@ -727,13 +728,15 @@ export default function AdminBeneficiaryManagement({
             )}
 
             {selected.stage === "PENDING_APPROVAL" && (
-              <div className="card-section space-y-3 border-2 border-amber-200 bg-amber-50/40">
-                <h4 className="font-bold text-primary">اعتماد التسجيل</h4>
-                <p className="text-sm text-brand-gray">
-                  1. اختر المرشد المناسب للمستفيد
-                  <br />
-                  2. اضغط «اعتماد التسجيل» لإكمال العملية ونقله إلى مرحلة الإرشاد
-                </p>
+              <div className="card-section space-y-3">
+                <AlertBox tone="warning">
+                  <p className="font-bold">اعتماد التسجيل</p>
+                  <p className="mt-1">
+                    1. اختر المرشد المناسب للمستفيد
+                    <br />
+                    2. اضغط «اعتماد التسجيل» لإكمال العملية ونقله إلى مرحلة الإرشاد
+                  </p>
+                </AlertBox>
                 <div>
                   <label className="label-field">إسناد المرشد</label>
                   <select
@@ -751,9 +754,7 @@ export default function AdminBeneficiaryManagement({
                   </select>
                 </div>
                 {!selected.guideId && (
-                  <p className="text-xs font-semibold text-amber-900">
-                    يجب إسناد مرشد قبل اعتماد التسجيل
-                  </p>
+                  <AlertBox tone="warning">يجب إسناد مرشد قبل اعتماد التسجيل</AlertBox>
                 )}
                 <button
                   type="button"
@@ -772,4 +773,4 @@ export default function AdminBeneficiaryManagement({
     </>
   );
 }
-
+

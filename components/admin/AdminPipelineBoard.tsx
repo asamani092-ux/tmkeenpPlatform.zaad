@@ -180,7 +180,7 @@ export default function AdminPipelineBoard({
                 <p className="text-sm font-bold text-primary">{STAGE_LABELS[stage]}</p>
                 <p className="mt-2 text-3xl font-bold text-primary">{count}</p>
                 {pendingCount > 0 && (
-                  <p className="mt-1 text-xs font-semibold text-red-800">
+                  <p className="mt-1 text-xs font-semibold text-[color:var(--danger-text)]">
                     {pendingCount} طلب معلّق
                   </p>
                 )}
@@ -190,7 +190,7 @@ export default function AdminPipelineBoard({
           <button
             type="button"
             onClick={() => setOpenView("pending-requests")}
-            className="rounded-xl border-2 border-red-200 bg-red-50/50 p-4 text-start transition hover:border-primary"
+            className="rounded-xl border-2 border-[color:var(--danger-border)] bg-[color:var(--danger-surface)] p-4 text-start transition hover:border-primary"
           >
             <p className="text-sm font-bold text-primary">طلبات معلّقة</p>
             <p className="mt-2 text-3xl font-bold text-primary">{pendingTotal}</p>
@@ -201,7 +201,7 @@ export default function AdminPipelineBoard({
       {openView && (
         <FloatingModal title={modalTitle} onClose={() => setOpenView(null)} wide>
           {openView === "PENDING_APPROVAL" && modalList.length > 0 && (
-            <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+            <p className="mb-4 rounded-lg border alert-box alert-box--warning">
               مستفيدون جدد بانتظار الاعتماد — اضغط «اعتماد» لإسناد مرشد وتأكيد الاعتماد، أو «عرض
               الملف» للتفاصيل الكاملة.
             </p>
@@ -279,7 +279,7 @@ export default function AdminPipelineBoard({
                     </p>
                   )}
                   {b.pendingStage && (
-                    <p className="mt-2 inline-block rounded bg-yellow-100 px-2 py-1 text-xs font-semibold text-red-900">
+                    <p className="mt-2 inline-block badge-warning">
                       طلب: {STAGE_LABELS[b.pendingStage]}
                     </p>
                   )}
@@ -393,7 +393,7 @@ export default function AdminPipelineBoard({
                 ))}
               </select>
               {guides.length === 0 && (
-                <p className="mt-1 text-xs font-semibold text-amber-900">
+                <p className="mt-1 text-xs font-semibold text-[color:var(--warning-text)]">
                   لا يوجد مرشدون — أضف مرشداً من تبويب إدارة المرشدين أولاً.
                 </p>
               )}

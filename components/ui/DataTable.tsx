@@ -58,7 +58,7 @@ export default function DataTable<T>({
   return (
     <div>
       <table
-        className={`w-full text-sm ${cardsOnMobile ? "zad-table-cards" : ""}`}
+        className={`tmkeen-table w-full text-sm ${cardsOnMobile ? "zad-table-cards" : ""}`}
         style={{ minWidth }}
       >
         <thead className="bg-primary/5 text-primary">

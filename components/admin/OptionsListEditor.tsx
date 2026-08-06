@@ -44,7 +44,7 @@ export default function OptionsListEditor({
             <button
               type="button"
               onClick={() => removeAt(index)}
-              className="shrink-0 text-red-600"
+              className="btn-danger-ghost !min-h-0 shrink-0 !p-1"
               aria-label="حذف الخيار"
             >
               <Trash2 className="h-4 w-4" />

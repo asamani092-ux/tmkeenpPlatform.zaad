@@ -64,30 +64,117 @@ body {
     @apply border-0 bg-transparent px-0 py-0 text-start;
   }
 
-  .input-field-auth {
+  /* حقول المصادقة = نفس عقد .input-field */
+  .input-field-auth,
+  .auth-field .input-field {
     width: 100%;
-    border-radius: var(--radius-md);
-    border: var(--border-hairline) solid var(--border-subtle);
-    background: transparent;
-    padding: var(--space-3) var(--space-4);
+    border-radius: var(--tmkeen-radius-lg);
+    border: var(--border-hairline) solid var(--border-default);
+    background: var(--surface-raised);
+    padding: 0.75rem 1rem;
     text-align: start;
-    color: var(--text-secondary);
+    color: var(--tmkeen-brand-gray);
     outline: none;
     transition: border-color var(--duration-fast) var(--ease-standard),
       box-shadow var(--duration-fast) var(--ease-standard);
   }
-  .input-field-auth:focus {
-    border-color: var(--border-focus);
-    box-shadow: var(--shadow-focus);
+  .input-field-auth:focus,
+  .auth-field .input-field:focus {
+    border-color: var(--tmkeen-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--tmkeen-primary) 20%, transparent);
   }
 
   .card-auth {
-    border-radius: var(--radius-xl);
-    border: 0;
-    background: var(--surface-raised);
-    padding: var(--space-6);
+    border-radius: var(--tmkeen-radius-xl);
+    border: 2px solid var(--tmkeen-surface-border);
+    background: var(--tmkeen-surface);
+    padding: 1.5rem;
     text-align: start;
     box-shadow: var(--shadow-sm);
+  }
+
+  /* شارات/تنبيهات/خطر — توكنات فقط فوق عقد الحزمة */
+  .badge-success {
+    display: inline-block;
+    border-radius: 9999px;
+    background: var(--tmkeen-success-bg);
+    padding: 0.125rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--tmkeen-success);
+  }
+
+  .btn-danger-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    border-radius: var(--radius-lg);
+    border: var(--border-hairline) solid transparent;
+    background: transparent;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--danger-text);
+    cursor: pointer;
+    min-height: var(--touch-min);
+  }
+  .btn-danger-ghost:hover {
+    background: var(--danger-surface);
+  }
+  .btn-danger-ghost[data-confirm="true"],
+  .btn-danger-solid {
+    background: var(--danger-solid);
+    color: var(--text-inverse);
+    border-color: var(--danger-solid);
+  }
+  .btn-danger-solid:hover {
+    background: var(--danger-text);
+  }
+
+  .alert-box {
+    border-radius: var(--radius-lg);
+    border: var(--border-thin) solid var(--border-subtle);
+    padding: var(--space-3);
+    font-size: var(--text-xs);
+    text-align: start;
+  }
+  .alert-box--warning {
+    border-color: var(--warning-border);
+    background: var(--warning-surface);
+    color: var(--warning-text);
+  }
+  .alert-box--danger {
+    border-color: var(--danger-border);
+    background: var(--danger-surface);
+    color: var(--danger-text);
+  }
+  .alert-box--success {
+    border-color: var(--success-border);
+    background: var(--success-surface);
+    color: var(--success-text);
+  }
+  .alert-box--info {
+    border-color: var(--info-border);
+    background: var(--info-surface);
+    color: var(--info-text);
+  }
+
+  .status-dot {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: var(--neutral-400);
+  }
+  .status-dot--success {
+    background: var(--success-solid);
+  }
+  .status-dot--warning {
+    background: var(--warning-solid);
+  }
+  .status-dot--danger {
+    background: var(--danger-solid);
   }
 
   /* سلوك الجوال: عمود على الشاشات الضيقة (تفصيل فوق عقد الحزمة) */

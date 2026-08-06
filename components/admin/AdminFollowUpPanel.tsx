@@ -16,6 +16,8 @@ import {
 } from "@/lib/labels";
 import type { FollowUpProgramStatus } from "@/generated/prisma/client";
 import { Bell, Eye, ExternalLink, Pause, Play, StopCircle } from "lucide-react";
+import AlertBox from "@/components/ui/AlertBox";
+import StatusBadge from "@/components/ui/StatusBadge";
 
 type FollowUp = {
   id: string;
@@ -63,18 +65,18 @@ function MonthProgress({ records }: { records: FollowUp[] }) {
     <div className="flex gap-1">
       {[1, 2, 3, 4, 5, 6].map((m) => {
         const r = records.find((x) => x.month === m);
-        const color =
+        const tone =
           r?.status === "COMPLETED"
-            ? "bg-green-600"
+            ? "status-dot status-dot--success"
             : r?.status === "MISSED"
-              ? "bg-red-500"
+              ? "status-dot status-dot--danger"
               : r
-                ? "bg-yellow-400"
-                : "bg-surface-border";
+                ? "status-dot status-dot--warning"
+                : "status-dot";
         return (
           <span
             key={m}
-            className={`inline-block h-2.5 w-2.5 rounded-full ${color}`}
+            className={tone}
             title={`شهر ${m}`}
           />
         );
@@ -547,13 +549,11 @@ export default function AdminFollowUpPanel({
             )}
 
             {monthGapMessage(selected.records) && (
-              <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                {monthGapMessage(selected.records)}
-              </div>
+              <AlertBox tone="warning">{monthGapMessage(selected.records)}</AlertBox>
             )}
 
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] text-sm">
+              <table className="tmkeen-table w-full min-w-[720px] text-sm">
                 <thead className="bg-primary/5 text-primary">
                   <tr>
                     <th className="px-3 py-2 text-start">الشهر</th>
@@ -572,17 +572,17 @@ export default function AdminFollowUpPanel({
                         <td className="px-3 py-2 font-medium">شهر {month}</td>
                         <td className="px-3 py-2">
                           {record ? (
-                            <span
-                              className={
+                            <StatusBadge
+                              tone={
                                 record.status === "MISSED"
-                                  ? "font-semibold text-red-600"
+                                  ? "danger"
                                   : record.status === "COMPLETED"
-                                    ? "font-semibold text-green-700"
-                                    : undefined
+                                    ? "success"
+                                    : "brand"
                               }
                             >
                               {statusLabel(record.status)}
-                            </span>
+                            </StatusBadge>
                           ) : (
                             <span className="text-brand-gray">بلا سجل</span>
                           )}
@@ -735,15 +735,15 @@ export default function AdminFollowUpPanel({
           onClose={() => setModalKind(null)}
         >
           <div className="space-y-4 text-start">
-            <div className="rounded-lg border-2 border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+            <AlertBox tone="warning">
               تحذير: سيتم إغلاق برنامج المتابعة رسمياً. لن تُرسل نماذج أو تذكيرات
               جديدة. يمكنك استئناف المتابعة لاحقاً إذا رغبت بذلك.
-            </div>
+            </AlertBox>
             {programIncomplete && (
-              <div className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-900">
+              <AlertBox tone="danger">
                 تنبيه: لم تكتمل جميع أشهر المتابعة ({progressSummary(selected.records)}).
                 الإنهاء المبكر يتطلب سبباً واضحاً وسيُشعر المستفيد بالبريد.
-              </div>
+              </AlertBox>
             )}
             <FieldRow label="سبب الإنهاء (إلزامي)" htmlFor="end-reason" align="start">
               <textarea

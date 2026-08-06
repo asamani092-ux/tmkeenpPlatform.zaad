@@ -168,11 +168,8 @@ export default function AdminGuidePanel({ guides: initial, beneficiariesByGuideI
                   disabled={pending}
                   aria-label="حذف المرشد"
                   title="حذف"
-                  className={`rounded px-2 py-1 text-xs font-semibold ${
-                    confirmDeleteId === g.id
-                      ? "bg-red-600 text-white"
-                      : "text-red-600 hover:bg-red-50"
-                  }`}
+                  className="btn-danger-ghost !min-h-0 !px-2 !py-1 text-xs"
+                  data-confirm={confirmDeleteId === g.id ? "true" : undefined}
                 >
                   {confirmDeleteId === g.id ? (
                     <>

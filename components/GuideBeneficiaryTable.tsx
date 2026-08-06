@@ -915,7 +915,7 @@ export default function GuideBeneficiaryTable({
                   <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-brand-gray">
                     <span>المرحلة: {STAGE_LABELS[selected.stage]}</span>
                     {selected.pendingStage && (
-                      <span className="rounded bg-yellow-100 px-2 py-0.5 text-xs font-semibold text-red-900">
+                      <span className="badge-warning">
                         طلب معلّق: {STAGE_LABELS[selected.pendingStage]}
                       </span>
                     )}
@@ -1051,7 +1051,7 @@ export default function GuideBeneficiaryTable({
                               عرض السيرة الذاتية المرفقة
                             </a>
                           ) : (
-                            <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-800">
+                            <span className="badge-danger">
                               لا يوجد سيرة ذاتية - يرجى طلبها من المستفيد
                             </span>
                           )
@@ -1275,7 +1275,7 @@ export default function GuideBeneficiaryTable({
 
                               <button type="button" onClick={() => startEditSession(s)} className="text-primary" title={guideCopy.editSession}><Pencil className="h-4 w-4" /></button>
 
-                              <button type="button" onClick={() => handleDeleteSession(s.id)} className="text-red-600" title={guideCopy.deleteSession}><Trash2 className="h-4 w-4" /></button>
+                              <button type="button" onClick={() => handleDeleteSession(s.id)} className="btn-danger-ghost !min-h-0 !p-1" title={guideCopy.deleteSession}><Trash2 className="h-4 w-4" /></button>
 
                             </div>
                             )}
@@ -1362,7 +1362,7 @@ export default function GuideBeneficiaryTable({
                         {!readOnly && (
                         <div className="flex gap-1">
                           <button type="button" onClick={() => startEditTask(t)} className="text-primary" title={guideCopy.editTask}><Pencil className="h-4 w-4" /></button>
-                          <button type="button" onClick={() => handleDeleteTask(t.id)} className="text-red-600" title={guideCopy.deleteTask}><Trash2 className="h-4 w-4" /></button>
+                          <button type="button" onClick={() => handleDeleteTask(t.id)} className="btn-danger-ghost !min-h-0 !p-1" title={guideCopy.deleteTask}><Trash2 className="h-4 w-4" /></button>
                         </div>
                         )}
                         <div className="text-start">

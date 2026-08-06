@@ -178,7 +178,7 @@ export default function FollowUpFormTemplateModal({
               <button
                 type="button"
                 onClick={() => setQuestions((prev) => prev.filter((_, idx) => idx !== i))}
-                className="text-red-600"
+                className="btn-danger-ghost !min-h-0"
               >
                 <Trash2 className="h-4 w-4" />
               </button>

@@ -80,5 +80,7 @@ export function getFormFieldErrors(form: HTMLFormElement): Record<string, string
 }
 
 export function inputInvalidClass(hasError: boolean): string {
-  return hasError ? "border-red-800 ring-2 ring-red-800/25" : "";
+  return hasError
+    ? "border-[color:var(--danger-solid)] shadow-[var(--shadow-focus)]"
+    : "";
 }

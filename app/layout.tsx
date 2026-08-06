@@ -21,8 +21,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl">
-      <body className="zad-root min-h-screen font-sans antialiased">
+    <html lang="ar" dir="rtl" className="zad-root">
+      <body className="page-shell min-h-screen font-sans antialiased">
         <AppToaster />
         {children}
       </body>
