@@ -620,44 +620,51 @@ export default function AdminBeneficiaryManagement({
               </div>
             )}
 
-            <div className="card-section space-y-2">
+            <div className="card-section space-y-3">
               <h4 className="flex items-center gap-2 font-bold text-primary">
                 <FileText className="h-4 w-4" />
                 الملفات المرفقة
               </h4>
-              {selected.cvUrl ? (
-                <a
-                  href={selected.cvUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-primary inline-flex !px-4 !py-2 text-sm"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  عرض السيرة الذاتية
-                </a>
-              ) : (
-                <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-800">
-                  لا يوجد سيرة ذاتية مرفقة
-                </span>
-              )}
-              {parseCertificateLinks(selected.certificatesUrls).length > 0 ? (
-                <ul className="space-y-1">
-                  {parseCertificateLinks(selected.certificatesUrls).map((url, i) => (
-                    <li key={url}>
+              {(() => {
+                const certLinks = parseCertificateLinks(selected.certificatesUrls);
+                const linkClass =
+                  "btn-primary inline-flex items-center gap-2 !px-4 !py-2 text-sm";
+                const missingClass =
+                  "inline-flex items-center rounded-lg bg-red-100 px-4 py-2 text-sm font-semibold text-red-800";
+                return (
+                  <div className="flex flex-wrap gap-2">
+                    {selected.cvUrl ? (
                       <a
-                        href={url}
+                        href={selected.cvUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm font-semibold text-primary hover:underline"
+                        className={linkClass}
                       >
-                        شهادة {i + 1}
+                        <ExternalLink className="h-4 w-4" />
+                        السيرة الذاتية
                       </a>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-brand-gray">لا توجد شهادات مرفقة</p>
-              )}
+                    ) : (
+                      <span className={missingClass}>لا توجد سيرة ذاتية</span>
+                    )}
+                    {certLinks.length > 0 ? (
+                      certLinks.map((url, i) => (
+                        <a
+                          key={url}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={linkClass}
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          {certLinks.length > 1 ? `شهادة ${i + 1}` : "الشهادة"}
+                        </a>
+                      ))
+                    ) : (
+                      <span className={missingClass}>لا توجد شهادة</span>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
 
             {selected.professionalRecommendations && (
