@@ -39,6 +39,12 @@
 | `DATABASE_URL` | من خدمة PostgreSQL |
 | `SESSION_SECRET` | `openssl rand -base64 32` |
 | `NEXT_PUBLIC_APP_URL` | `http://91.98.234.130.nip.io` (HTTP) أو `https://...` لاحقاً |
+
+> **تخزين دائم إلزامي للمرفقات:** في Coolify → التطبيق → **Persistent Storage** أضف
+> Volume على المسار `/app/uploads`. بدونه تُمسح ملفات CV/الشهادات وإعدادات
+> `senderEmail` مع **كل Redeploy** ويظهر للمدير «الملف غير موجود» رغم بقاء
+> الروابط في قاعدة البيانات. تحقق من الحالة من لوحة المدير → إعدادات النظام →
+> شارة «مخزن المرفقات».
 | `UPLOAD_DIR` | `/app/uploads` |
 
 > **HTTP (nip.io):** اضبط `NEXT_PUBLIC_APP_URL` بـ `http://` — الكوكيز تُفعّل `Secure` تلقائياً فقط مع `https://`.

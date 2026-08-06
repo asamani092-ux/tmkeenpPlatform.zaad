@@ -6,6 +6,7 @@ import {
   isValidEmail,
 } from "@/lib/system-settings";
 import { getSmtpPublicInfo } from "@/lib/mail";
+import { getStorageHealth } from "@/lib/storage-health";
 
 export async function GET() {
   const session = await getSession();
@@ -15,12 +16,14 @@ export async function GET() {
 
   const settings = await getSystemSettings();
   const smtp = getSmtpPublicInfo();
+  const storage = await getStorageHealth();
   return NextResponse.json({
     ...settings,
     smtpConfigured: smtp.configured,
     smtpHost: smtp.host,
     smtpPort: smtp.port,
     smtpUser: smtp.user,
+    storage,
   });
 }
 

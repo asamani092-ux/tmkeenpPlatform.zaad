@@ -6,6 +6,32 @@ import { prisma } from "@/lib/prisma";
 
 type Params = { params: Promise<{ path: string[] }> };
 
+/** Browser navigations get a readable Arabic page instead of raw JSON — O(1). */
+function fileErrorResponse(
+  request: Request,
+  status: number,
+  title: string,
+  detail: string
+): NextResponse {
+  const wantsHtml = request.headers.get("accept")?.includes("text/html");
+  if (!wantsHtml) {
+    return NextResponse.json({ error: title }, { status });
+  }
+  const html = `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title></head>
+<body style="font-family:Tajawal,Tahoma,Arial,sans-serif;background:#f5f5f5;color:#3c3a3b;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0;padding:16px;text-align:center">
+<div style="background:#fff;border:1px solid #d2d0d1;border-radius:14px;padding:32px;max-width:28rem">
+<h1 style="color:#7b1e3a;font-size:20px;margin:0 0 8px">${title}</h1>
+<p style="font-size:14px;line-height:1.8;margin:0">${detail}</p>
+</div>
+</body></html>`;
+  return new NextResponse(html, {
+    status,
+    headers: { "Content-Type": "text/html; charset=utf-8" },
+  });
+}
+
 function normalizeFileRelativePath(url: string): string | null {
   const trimmed = url.trim();
   if (!trimmed) return null;
@@ -55,7 +81,7 @@ async function guideAllowedPaths(guideId: string): Promise<Set<string>> {
   return paths;
 }
 
-export async function GET(_request: Request, { params }: Params) {
+export async function GET(request: Request, { params }: Params) {
   try {
     const { path: segments } = await params;
     const relative = segments.join("/");
@@ -66,7 +92,12 @@ export async function GET(_request: Request, { params }: Params) {
 
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
+      return fileErrorResponse(
+        request,
+        401,
+        "غير مصرح",
+        "سجّل الدخول ثم أعد فتح الملف."
+      );
     }
 
     if (session.role === "ADMIN") {
@@ -99,7 +130,13 @@ export async function GET(_request: Request, { params }: Params) {
         },
       });
     } catch {
-      return NextResponse.json({ error: "الملف غير موجود" }, { status: 404 });
+      console.warn("[files] missing on disk:", relative, "→", fullPath);
+      return fileErrorResponse(
+        request,
+        404,
+        "الملف غير موجود",
+        "الرابط سليم لكن الملف غير موجود على مخزن الخادم — غالباً فُقد لعدم ربط مجلد الرفع بتخزين دائم قبل آخر نشر. اطلب من المستفيد إعادة رفع الملف بعد تفعيل التخزين الدائم."
+      );
     }
   } catch {
     return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });

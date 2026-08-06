@@ -14,6 +14,13 @@ export default function AdminSystemSettings() {
   const [smtpUser, setSmtpUser] = useState<string | null>(null);
   const [smtpHost, setSmtpHost] = useState<string | null>(null);
   const [smtpPort, setSmtpPort] = useState<number | null>(null);
+  const [storage, setStorage] = useState<{
+    dir: string;
+    exists: boolean;
+    writable: boolean;
+    cvCount: number;
+    certificatesCount: number;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [pending, startTransition] = useTransition();
 
@@ -30,6 +37,9 @@ export default function AdminSystemSettings() {
             ? data.smtpPort
             : null
         );
+        if (data.storage && typeof data.storage === "object") {
+          setStorage(data.storage);
+        }
       })
       .catch(() => toastError("فشل تحميل الإعدادات"))
       .finally(() => setLoading(false));
@@ -105,6 +115,33 @@ export default function AdminSystemSettings() {
             </p>
           ) : null}
         </div>
+
+        {storage ? (
+          <div
+            className={`space-y-1 rounded-lg px-4 py-3 text-sm ${
+              storage.exists && storage.writable
+                ? "bg-secondary/10 text-primary"
+                : "bg-amber-50 text-amber-900"
+            }`}
+          >
+            <p>
+              مخزن المرفقات:{" "}
+              {storage.exists && storage.writable
+                ? "جاهز"
+                : storage.exists
+                  ? "موجود لكن غير قابل للكتابة"
+                  : "المجلد غير موجود"}
+            </p>
+            <p className="text-xs opacity-90" dir="ltr">
+              {storage.dir} · CV: {storage.cvCount} · شهادات: {storage.certificatesCount}
+            </p>
+            <p className="text-xs">
+              مهم: اربط هذا المجلد بتخزين دائم في Coolify (Persistent Storage →
+              /app/uploads) وإلا تُفقد المرفقات مع كل إعادة نشر ويظهر «الملف غير
+              موجود».
+            </p>
+          </div>
+        ) : null}
 
         {loading ? (
           <p className="text-sm text-brand-gray">جاري التحميل...</p>
