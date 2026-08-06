@@ -1,20 +1,24 @@
 @import url("https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap");
+/* نظام الزاد الموحّد — المصدر الوحيد للتوكنات والمكوّنات الأساسية */
+@import "@zaad/design-system/tokens.css";
+@import "@zaad/design-system/components.css" layer(components);
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* أسماء قديمة مستخدمة محلياً — تشتق من توكنات النظام حصراً */
 :root {
-  --background: #f5f5f5;
-  --foreground: #706f6f;
-  --primary: #8b1538;
-  --secondary: #f2b824;
+  --background: var(--surface-base);
+  --foreground: var(--text-secondary);
+  --primary: var(--brand-primary);
+  --secondary: var(--brand-secondary);
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: "Tajawal", Tahoma, Arial, sans-serif;
+  font-family: var(--font-arabic);
   direction: rtl;
   text-align: start;
 }
@@ -37,41 +41,19 @@ body {
   }
 }
 
+/* تحسينات المنصة فوق مكوّنات النظام — نفس طبقة components لتفوز بالترتيب */
 @layer components {
-  .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-red-800 px-6 py-3 text-start font-semibold text-white transition hover:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-800 focus:ring-offset-2;
+  /* تركيز مرئي موحّد للأزرار غير المغطاة في حزمة النظام */
+  .btn-recommend:focus-visible,
+  .btn-register:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus);
   }
 
-  .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-surface-border bg-surface px-6 py-3 text-start font-semibold text-brand-gray transition hover:bg-surface-muted focus:outline-none focus:ring-2 focus:ring-surface-border focus:ring-offset-2;
-  }
-
-  .btn-recommend {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-yellow-500 px-6 py-3 text-start font-semibold text-red-900 transition hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2;
-  }
-
-  .btn-register {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-[rgb(250_204_21)] px-6 py-3 text-start font-semibold text-red-900 transition hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-[rgb(250_204_21)] focus:ring-offset-2;
-  }
-
-  .card {
-    @apply rounded-xl border-2 border-surface-border bg-surface p-6 text-start shadow-sm;
-  }
-
-  .card-section {
-    @apply rounded-xl border-2 border-primary/20 bg-surface p-5 text-start shadow-sm;
-  }
-
-  .input-field {
-    @apply w-full rounded-lg border border-surface-border bg-surface px-4 py-3 text-start text-brand-gray outline-none transition focus:border-red-800 focus:ring-2 focus:ring-red-800/20;
-  }
-
-  .label-field {
-    @apply mb-2 block text-start text-sm font-semibold text-brand-gray;
-  }
-
-  .field-cell {
-    @apply rounded-lg border-2 border-primary/20 bg-surface px-3 py-2.5 text-start sm:px-4 sm:py-3;
+  /* Tabs segmented — تركيز مرئي وحالة نشطة من التوكنات */
+  .tab-bar button:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus);
   }
 
   .auth-field {
@@ -83,44 +65,63 @@ body {
   }
 
   .input-field-auth {
-    @apply w-full rounded-lg border border-surface-border bg-transparent px-4 py-3 text-start text-brand-gray outline-none transition focus:border-red-800 focus:ring-2 focus:ring-red-800/20;
+    width: 100%;
+    border-radius: var(--radius-md);
+    border: var(--border-hairline) solid var(--border-subtle);
+    background: transparent;
+    padding: var(--space-3) var(--space-4);
+    text-align: start;
+    color: var(--text-secondary);
+    outline: none;
+    transition: border-color var(--duration-fast) var(--ease-standard),
+      box-shadow var(--duration-fast) var(--ease-standard);
+  }
+  .input-field-auth:focus {
+    border-color: var(--border-focus);
+    box-shadow: var(--shadow-focus);
   }
 
   .card-auth {
-    @apply rounded-xl border-0 bg-surface p-6 text-start shadow-sm;
+    border-radius: var(--radius-xl);
+    border: 0;
+    background: var(--surface-raised);
+    padding: var(--space-6);
+    text-align: start;
+    box-shadow: var(--shadow-sm);
   }
 
+  /* سلوك الجوال: عمود على الشاشات الضيقة (تفصيل فوق عقد الحزمة) */
   .field-cell-row {
-    @apply flex flex-col items-stretch gap-1 text-start sm:flex-row sm:items-center sm:gap-3;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-1);
+    text-align: start;
+  }
+  @media (min-width: 640px) {
+    .field-cell-row {
+      flex-direction: row;
+      align-items: center;
+      gap: var(--space-3);
+    }
   }
 
   .field-cell-row.field-cell-row--inline {
-    @apply flex-row flex-nowrap items-center gap-3;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: var(--space-3);
   }
 
-  .field-cell-label {
-    @apply shrink-0 text-sm font-semibold text-brand-gray sm:min-w-[9rem];
-  }
-
-  .field-cell-value {
-    @apply min-w-0 flex-1 break-words text-start font-medium text-primary;
-  }
-
-  /* LTR single-line values (email/phone): never ellipsis mid-address on desktop */
+  /* LTR single-line values (email/phone): never ellipsis mid-address */
   .field-cell-row--inline .field-cell-value {
-    @apply shrink overflow-x-auto;
-  }
-
-  .field-cell-control {
-    @apply w-full min-w-0 flex-1;
+    flex-shrink: 1;
+    overflow-x: auto;
   }
 
   .field-cell-control .input-field {
-    @apply w-full min-w-0 border-surface-border;
-  }
-
-  .field-grid {
-    @apply grid gap-3 sm:grid-cols-2;
+    width: 100%;
+    min-width: 0;
   }
 
   table {
@@ -135,5 +136,69 @@ body {
   [dir="ltr"].input-field {
     direction: ltr;
     text-align: left;
+  }
+
+  /* Skeleton — عقد 1.12: يطابق أبعاد المحتوى، حركة من التوكنات */
+  .zad-skeleton {
+    display: block;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(
+      90deg,
+      var(--surface-sunken) 25%,
+      var(--border-subtle) 50%,
+      var(--surface-sunken) 75%
+    );
+    background-size: 200% 100%;
+    animation: zad-skeleton-shimmer 1.4s var(--ease-standard) infinite;
+  }
+  @keyframes zad-skeleton-shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+
+  /* DataTable ← بطاقات على الشاشات الضيقة (عقد 3.1) */
+  @media (max-width: 767px) {
+    .zad-table-cards thead {
+      display: none;
+    }
+    .zad-table-cards,
+    .zad-table-cards tbody {
+      display: block;
+      min-width: 0 !important;
+    }
+    .zad-table-cards tbody tr {
+      display: block;
+      margin-block-end: var(--space-3);
+      border: var(--border-hairline) solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      background: var(--surface-raised);
+      padding: var(--space-2) var(--space-3);
+      box-shadow: var(--shadow-xs);
+    }
+    .zad-table-cards tbody td {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-3);
+      padding: var(--space-2) 0;
+      border-block-start: var(--border-hairline) dashed var(--border-subtle);
+    }
+    .zad-table-cards tbody td:first-child {
+      border-block-start: 0;
+    }
+    .zad-table-cards tbody td::before {
+      content: attr(data-label);
+      flex-shrink: 0;
+      font-size: var(--text-2xs);
+      font-weight: var(--weight-bold);
+      color: var(--text-muted);
+    }
+    .zad-table-cards tbody td[data-label=""]::before {
+      content: none;
+    }
   }
 }

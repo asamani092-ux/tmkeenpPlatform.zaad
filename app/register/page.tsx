@@ -4,6 +4,7 @@ import { useState } from "react";
 import FullPageLink from "@/components/FullPageLink";
 import Navbar from "@/components/Navbar";
 import FieldRow from "@/components/ui/FieldRow";
+import PdfDropzone from "@/components/ui/PdfDropzone";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastError, toastSuccess } from "@/lib/toast";
 import { useFormFieldErrors } from "@/hooks/useFormFieldErrors";
@@ -262,35 +263,29 @@ export default function RegisterPage() {
                 label={registerCopy.cvLabel}
                 htmlFor="cv"
                 variant="auth"
+                align="start"
                 error={fieldError("cv")}
               >
-                <input
+                <PdfDropzone
                   id="cv"
-                  name="cv"
-                  type="file"
-                  accept=".pdf,application/pdf"
-                  required
-                  className="input-field-auth"
-                  onChange={(e) => setCvFile(e.target.files?.[0] ?? null)}
+                  file={cvFile}
+                  onFile={setCvFile}
+                  hint={registerCopy.cvHint}
                 />
-                <p className="mt-1 text-xs text-brand-gray">{registerCopy.cvHint}</p>
               </FieldRow>
               <FieldRow
                 label={registerCopy.certificatesLabel}
                 htmlFor="certificates"
                 variant="auth"
+                align="start"
                 error={fieldError("certificates")}
               >
-                <input
+                <PdfDropzone
                   id="certificates"
-                  name="certificates"
-                  type="file"
-                  accept=".pdf,application/pdf"
-                  required
-                  className="input-field-auth"
-                  onChange={(e) => setCertFile(e.target.files?.[0] ?? null)}
+                  file={certFile}
+                  onFile={setCertFile}
+                  hint={registerCopy.certificatesHint}
                 />
-                <p className="mt-1 text-xs text-brand-gray">{registerCopy.certificatesHint}</p>
               </FieldRow>
 
               <SubmitButton loading={pending} className="btn-primary w-full">

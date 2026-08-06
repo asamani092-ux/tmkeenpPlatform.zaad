@@ -23,7 +23,8 @@ export default function FloatingModal({ title, onClose, children, wide }: Props)
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4"
+      style={{ background: "var(--tmkeen-overlay)", zIndex: "var(--z-modal)" }}
       onClick={onClose}
     >
       <div

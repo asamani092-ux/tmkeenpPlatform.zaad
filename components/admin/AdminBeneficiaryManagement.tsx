@@ -412,10 +412,66 @@ export default function AdminBeneficiaryManagement({
                 ))}
               </select>
             </label>
-            <p className="text-xs text-brand-gray sm:ms-auto">
+            <p className="text-xs text-brand-gray sm:ms-auto" aria-live="polite">
               المعروض: {filteredRows.length} / {rows.length}
             </p>
           </div>
+
+          {(searchQuery.trim() || stageFilter !== "ALL") && (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("");
+                  setStageFilter("ALL");
+                }}
+                className="min-h-[44px] rounded-lg px-3 py-2 text-xs font-bold"
+                style={{ color: "var(--text-brand)" }}
+              >
+                مسح الكل
+              </button>
+              {searchQuery.trim() && (
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold"
+                  style={{
+                    background: "var(--primary-50)",
+                    color: "var(--text-brand)",
+                    border: "var(--border-hairline) solid var(--border-subtle)",
+                  }}
+                >
+                  <button
+                    type="button"
+                    aria-label="إزالة مرشّح البحث"
+                    onClick={() => setSearchQuery("")}
+                    className="rounded-full leading-none"
+                  >
+                    ×
+                  </button>
+                  بحث: {searchQuery.trim()}
+                </span>
+              )}
+              {stageFilter !== "ALL" && (
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold"
+                  style={{
+                    background: "var(--primary-50)",
+                    color: "var(--text-brand)",
+                    border: "var(--border-hairline) solid var(--border-subtle)",
+                  }}
+                >
+                  <button
+                    type="button"
+                    aria-label="إزالة مرشّح المرحلة"
+                    onClick={() => setStageFilter("ALL")}
+                    className="rounded-full leading-none"
+                  >
+                    ×
+                  </button>
+                  المرحلة: {STAGE_LABELS[stageFilter]}
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         <DataTable
@@ -425,6 +481,7 @@ export default function AdminBeneficiaryManagement({
           minWidth="720px"
           emptyMessage="لا يوجد مستفيدون مطابقون للبحث أو الفلتر"
           onRowClick={setSelected}
+          pageSize={10}
         />
       </div>
 
