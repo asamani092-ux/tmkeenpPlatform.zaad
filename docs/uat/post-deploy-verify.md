@@ -11,9 +11,8 @@
 
 ## 0.1) حفظ بريد المرسل (إصلاح مسار الكتابة)
 
-`senderEmail` يُحفظ تحت `UPLOAD_DIR/data/system-settings.json` (مثلاً `/app/uploads/data/`).
-تأكد أن Coolify يوفّر volume دائم على `/app/uploads` وإلا يظهر «خطأ في الخادم» عند الحفظ.
-مرفقات CV/الشهادات تُحفظ في جدول `stored_files` ولا تعتمد على هذا المجلد.
+`senderEmail` يُحفظ في جدول PostgreSQL `app_settings`.
+مرفقات CV/الشهادات تُحفظ في جدول `stored_files`. كلاهما يصمد مع Redeploy.
 
 قائمة التحقق الحية: `/uat-checklist` → مجموعة «ما بعد النشر» أو Canvas
 `postdeploy-email-uat-tools-checklist`.

@@ -139,17 +139,8 @@ export default function AdminSystemSettings() {
                 ? ` · الإجمالي: ${storage.totalCount}`
                 : ""}
             </p>
-            <p className="text-xs opacity-90" dir="ltr">
-              مجلد الإعدادات: {storage.dir}
-              {storage.exists && storage.writable
-                ? " (قابل للكتابة)"
-                : storage.exists
-                  ? " (غير قابل للكتابة)"
-                  : " (غير موجود)"}
-            </p>
             <p className="text-xs">
-              المرفقات (CV/الشهادات) تُحفظ في PostgreSQL. مجلد الرفع يبقى لإعدادات
-              النظام فقط — يُفضّل ربطه بتخزين دائم في Coolify لـ senderEmail.
+              المرفقات وبريد المرسل يُحفظان في PostgreSQL — لا يُفقدان مع إعادة النشر.
             </p>
           </div>
         ) : null}

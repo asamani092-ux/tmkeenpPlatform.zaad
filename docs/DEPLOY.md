@@ -40,14 +40,11 @@
 | `SESSION_SECRET` | `openssl rand -base64 32` |
 | `NEXT_PUBLIC_APP_URL` | `http://91.98.234.130.nip.io` (HTTP) أو `https://...` لاحقاً |
 
-> **مرفقات CV/الشهادات:** تُحفظ في جدول PostgreSQL `stored_files` — **لا تُفقد مع
-> Redeploy**. الروابط تبقى `/api/files/...` كما هي. الملفات المرفوعة *قبل* هذا
-> التغيير وفُقدت من قرص الحاوية غير قابلة للاستعادة؛ يلزم إعادة الرفع من المستفيد.
->
-> **مجلد `/app/uploads`:** ما زال يُستخدم لإعدادات النظام (`senderEmail`). في Coolify
-> → Persistent Storage اربط Volume على `/app/uploads` حتى لا تُصفَّر إعدادات البريد
-> مع كل Redeploy. تحقق من شارة «مخزن المرفقات» في إعدادات المدير.
-| `UPLOAD_DIR` | `/app/uploads` |
+> **بيانات يجب ألا تعتمد على قرص الحاوية:** مرفقات PDF → جدول `stored_files`؛
+> بريد المرسل (`senderEmail`) → جدول `app_settings`. كلاهما في PostgreSQL ويصمدان مع
+> Redeploy. الملفات المرفوعة *قبل* تخزين المرفقات في القاعدة وفُقدت غير قابلة
+> للاستعادة — يلزم إعادة الرفع.
+| `UPLOAD_DIR` | اختياري / تراثي فقط (`/app/uploads`) |
 
 > **HTTP (nip.io):** اضبط `NEXT_PUBLIC_APP_URL` بـ `http://` — الكوكيز تُفعّل `Secure` تلقائياً فقط مع `https://`.
 | `SMTP_HOST` | Outlook: `smtp.office365.com` — أو Hostinger: `smtp.hostinger.com` |
@@ -65,20 +62,22 @@ GET https://YOUR_DOMAIN/api/cron/follow-up-reminders
 Authorization: Bearer YOUR_CRON_SECRET
 ```
 
+أو: `POST` مع رأس `x-cron-secret: YOUR_CRON_SECRET`.
+
 في Coolify: **Scheduled Tasks** → cron `0 8 * * *` (08:00 UTC يومياً).
 
-> يُشغَّل أيضاً عند تحميل لوحة المدير/المستفيد كـ fallback.
+> تذكيرات البريد الشهرية تعتمد على هذا الـ Cron فقط (إشعارات داخل اللوحة مسار منفصل).
 
 ### 4. Migrations (تلقائي)
 
 عند كل تشغيل للحاوية يُنفَّذ `npx prisma migrate deploy` تلقائياً عبر [`docker-entrypoint.sh`](../docker-entrypoint.sh) — **لا حاجة لـ Pre-deployment في Coolify**.
 
-(أول مرة فقط — seed يدوي عبر Terminal في Coolify: `npm run db:seed`)
+(بيئة تجريبية فقط: `ALLOW_PROD_SEED=1 npm run db:seed` — **يمسح بيانات المستخدمين**. ممنوع على قاعدة الإنتاج الحقيقية.)
 
 ### 5. Persistent Storage
 
-- Mount: `/app/uploads` → volume دائم (إعدادات النظام / `senderEmail`)
-- مرفقات PDF: جدول `stored_files` في PostgreSQL (لا تعتمد على الـ volume)
+- غير إلزامي للمرفقات أو `senderEmail` (كلاهما في PostgreSQL).
+- يمكن الإبقاء على `/app/uploads` اختيارياً لملفات تراثية على القرص إن وُجدت.
 
 ### 6. الشبكة
 
@@ -108,7 +107,7 @@ sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapf
 
 1. `https://tmkeen.alzaad.org.sa` — الصفحة الرئيسية
 2. `/login` — بعد seed (حساب admin من `prisma/seed.ts`)؛ زر عرض/إخفاء كلمة المرور موجود
-3. رفع CV — يتحقق من volume `/app/uploads`
+3. رفع CV — يظهر في لوحة المدير؛ الملف يُخدم من جدول `stored_files`
 4. Logs — لا أخطاء `DATABASE_URL is not set`
 
 ### 9. تفعيل البريد (SMTP) بعد نشر الكود

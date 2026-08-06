@@ -55,10 +55,6 @@ export async function PUT(request: Request) {
     return NextResponse.json({ success: true, senderEmail });
   } catch (err) {
     console.error("[system-settings PUT]", err);
-    const message =
-      err instanceof Error && /EACCES|EROFS|EPERM/i.test(err.message)
-        ? "تعذّر حفظ الإعدادات على الخادم — تحقق من صلاحية مجلد الرفع (UPLOAD_DIR)"
-        : "خطأ في الخادم";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
   }
 }

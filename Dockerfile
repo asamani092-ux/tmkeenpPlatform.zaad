@@ -43,8 +43,7 @@ RUN chmod +x /app/docker-entrypoint.sh
 USER nextjs
 EXPOSE 3000
 
-# إعدادات النظام (senderEmail) — اربطه بتخزين دائم في Coolify.
-# مرفقات PDF تُحفظ في PostgreSQL (stored_files) ولا تعتمد على هذا المجلد.
+# تراثي فقط — المرفقات وsenderEmail في PostgreSQL (stored_files / app_settings).
 VOLUME ["/app/uploads"]
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
