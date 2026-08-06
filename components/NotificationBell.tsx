@@ -17,6 +17,7 @@ export default function NotificationBell() {
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [unread, setUnread] = useState(0);
   const [loadError, setLoadError] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -31,6 +32,8 @@ export default function NotificationBell() {
       setLoadError(false);
     } catch {
       setLoadError(true);
+    } finally {
+      setLoaded(true);
     }
   }, []);
 
@@ -90,7 +93,7 @@ export default function NotificationBell() {
       >
         <Bell className="h-5 w-5" />
         {unread > 0 && (
-          <span className="absolute -left-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-800 px-1 text-[10px] font-bold text-white">
+          <span className="absolute -start-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[color:var(--danger-solid)] px-1 text-[10px] font-bold text-white">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
@@ -99,7 +102,7 @@ export default function NotificationBell() {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute start-0 top-full z-50 mt-2 w-80 max-w-[min(20rem,calc(100vw-1.5rem))] rounded-xl border border-surface-border bg-surface p-3 text-right shadow-lg">
+          <div className="absolute start-0 top-full z-50 mt-2 w-80 max-w-[min(20rem,calc(100vw-1.5rem))] rounded-xl border border-surface-border bg-surface p-3 text-start shadow-lg">
             <div className="mb-2 flex items-center justify-between">
               <button
                 type="button"
@@ -111,7 +114,14 @@ export default function NotificationBell() {
               <h3 className="font-bold text-primary">الإشعارات</h3>
             </div>
             <ul className="max-h-72 space-y-2 overflow-y-auto">
-              {loadError ? (
+              {!loaded ? (
+                <li role="status" aria-live="polite" className="space-y-2 p-1">
+                  <span className="sr-only">جارٍ تحميل الإشعارات</span>
+                  {[0, 1, 2].map((i) => (
+                    <span key={i} className="zad-skeleton block h-14 w-full" />
+                  ))}
+                </li>
+              ) : loadError ? (
                 <li className="py-4 text-center text-sm text-brand-gray">
                   تعذر تحميل الإشعارات
                   <button

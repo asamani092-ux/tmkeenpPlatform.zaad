@@ -22,9 +22,7 @@ export default function FieldRow({
   const cellClass =
     variant === "auth" ? "auth-field" : variant === "plain" ? "field-plain" : "field-cell";
   const invalidClass = error
-    ? variant === "auth" || variant === "plain"
-      ? ""
-      : "[&_.input-field]:border-red-800 [&_.input-field]:ring-2 [&_.input-field]:ring-red-800/25"
+    ? "[&_.input-field]:border-[color:var(--danger-solid)] [&_.input-field]:shadow-[var(--shadow-focus)]"
     : "";
   /* Auth mobile: stretch so label is full-width RTL-start; desktop keeps side-by-side */
   const rowAlign =
@@ -48,7 +46,7 @@ export default function FieldRow({
           htmlFor={htmlFor}
           className={
             variant === "plain"
-              ? "w-full text-start text-sm font-semibold text-primary"
+              ? "label-field mb-0 w-full text-start text-[color:var(--text-brand)]"
               : `field-cell-label${
                   variant === "auth" ? " w-full text-start sm:w-auto" : ""
                 }`
@@ -61,7 +59,15 @@ export default function FieldRow({
           dir={ltr ? "ltr" : undefined}
         >
           {children}
-          {error && <p className="mt-1 text-xs font-medium text-red-800">{error}</p>}
+          {error && (
+            <p
+              className="mt-1 text-xs font-medium"
+              style={{ color: "var(--danger-text)" }}
+              role="alert"
+            >
+              {error}
+            </p>
+          )}
         </div>
       </div>
     </div>
