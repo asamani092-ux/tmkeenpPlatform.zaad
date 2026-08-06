@@ -40,7 +40,14 @@ export default function CommitmentTracker({
         </div>
         <span className="text-2xl font-bold text-primary">{clamped}%</span>
       </div>
-      <div className="h-3 overflow-hidden rounded-full bg-surface-muted">
+      <div
+        role="progressbar"
+        aria-valuenow={clamped}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={beneficiaryCopy.commitmentScore}
+        className="h-3 overflow-hidden rounded-full bg-surface-muted"
+      >
         <div
           className="h-full rounded-full bg-gradient-to-l from-secondary to-primary transition-all"
           style={{ width: `${clamped}%` }}

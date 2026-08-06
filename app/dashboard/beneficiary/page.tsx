@@ -8,6 +8,7 @@ import BeneficiaryGuideSummaryCard from "@/components/beneficiary/BeneficiaryGui
 import BeneficiaryProfileCard from "@/components/beneficiary/BeneficiaryProfileCard";
 import FollowUpMonthForm from "@/components/beneficiary/FollowUpMonthForm";
 import VerticalStageTimeline from "@/components/beneficiary/VerticalStageTimeline";
+import EmptyState from "@/components/ui/EmptyState";
 import { getFollowUpFormForBeneficiary } from "@/lib/follow-up-service";
 import { getDashboardPath } from "@/lib/auth";
 import { getSession } from "@/lib/session";
@@ -159,6 +160,17 @@ export default async function BeneficiaryDashboardPage() {
 
   const opportunitiesSection = (
     <section id="opportunities-section" className="space-y-6">
+      {trainingOpportunities.length === 0 &&
+        employmentOpportunities.length === 0 && (
+          <div className="card">
+            <EmptyState
+              icon={BookOpen}
+              title="لا توجد فرص متاحة حالياً"
+              body="ستظهر الفرص التدريبية والوظيفية هنا فور إتاحتها من الإدارة أو ترشيحها من مرشدك."
+            />
+          </div>
+        )}
+
       {trainingOpportunities.length > 0 && (
         <div className="card">
           <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-primary">
