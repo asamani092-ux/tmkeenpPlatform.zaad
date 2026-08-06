@@ -15,11 +15,14 @@ export default function AdminSystemSettings() {
   const [smtpHost, setSmtpHost] = useState<string | null>(null);
   const [smtpPort, setSmtpPort] = useState<number | null>(null);
   const [storage, setStorage] = useState<{
+    backend?: string;
+    dbOk?: boolean;
     dir: string;
     exists: boolean;
     writable: boolean;
     cvCount: number;
     certificatesCount: number;
+    totalCount?: number;
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [pending, startTransition] = useTransition();
@@ -119,26 +122,34 @@ export default function AdminSystemSettings() {
         {storage ? (
           <div
             className={`space-y-1 rounded-lg px-4 py-3 text-sm ${
-              storage.exists && storage.writable
+              storage.dbOk !== false
                 ? "bg-secondary/10 text-primary"
                 : "bg-amber-50 text-amber-900"
             }`}
           >
             <p>
               مخزن المرفقات:{" "}
-              {storage.exists && storage.writable
-                ? "جاهز"
-                : storage.exists
-                  ? "موجود لكن غير قابل للكتابة"
-                  : "المجلد غير موجود"}
+              {storage.dbOk !== false
+                ? "قاعدة البيانات (جاهز — لا يُفقد مع Redeploy)"
+                : "تعذّر الوصول لجدول المرفقات في القاعدة"}
+            </p>
+            <p className="text-xs opacity-90">
+              CV: {storage.cvCount} · شهادات: {storage.certificatesCount}
+              {typeof storage.totalCount === "number"
+                ? ` · الإجمالي: ${storage.totalCount}`
+                : ""}
             </p>
             <p className="text-xs opacity-90" dir="ltr">
-              {storage.dir} · CV: {storage.cvCount} · شهادات: {storage.certificatesCount}
+              مجلد الإعدادات: {storage.dir}
+              {storage.exists && storage.writable
+                ? " (قابل للكتابة)"
+                : storage.exists
+                  ? " (غير قابل للكتابة)"
+                  : " (غير موجود)"}
             </p>
             <p className="text-xs">
-              مهم: اربط هذا المجلد بتخزين دائم في Coolify (Persistent Storage →
-              /app/uploads) وإلا تُفقد المرفقات مع كل إعادة نشر ويظهر «الملف غير
-              موجود».
+              المرفقات (CV/الشهادات) تُحفظ في PostgreSQL. مجلد الرفع يبقى لإعدادات
+              النظام فقط — يُفضّل ربطه بتخزين دائم في Coolify لـ senderEmail.
             </p>
           </div>
         ) : null}

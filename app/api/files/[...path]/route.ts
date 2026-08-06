@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
-import fs from "fs/promises";
 import { getSession } from "@/lib/session";
-import { resolveStoredFile } from "@/lib/storage";
+import {
+  parseStoredFileKey,
+  readStoredFileFromDb,
+  readStoredFileFromDisk,
+} from "@/lib/storage";
 import { prisma } from "@/lib/prisma";
 
 type Params = { params: Promise<{ path: string[] }> };
@@ -85,8 +88,7 @@ export async function GET(request: Request, { params }: Params) {
   try {
     const { path: segments } = await params;
     const relative = segments.join("/");
-    const fullPath = resolveStoredFile(relative);
-    if (!fullPath) {
+    if (!parseStoredFileKey(relative)) {
       return NextResponse.json({ error: "مسار غير صالح" }, { status: 400 });
     }
 
@@ -120,24 +122,36 @@ export async function GET(request: Request, { params }: Params) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
     }
 
-    try {
-      const data = await fs.readFile(fullPath);
-      return new NextResponse(data, {
+    const fromDb = await readStoredFileFromDb(relative);
+    if (fromDb) {
+      return new NextResponse(new Uint8Array(fromDb.data), {
+        headers: {
+          "Content-Type": fromDb.mimeType || "application/pdf",
+          "Content-Disposition": `inline; filename="${fromDb.filename}"`,
+          "Cache-Control": "private, max-age=3600",
+        },
+      });
+    }
+
+    // Legacy fallback: files written to disk before DB storage
+    const fromDisk = await readStoredFileFromDisk(relative);
+    if (fromDisk) {
+      return new NextResponse(new Uint8Array(fromDisk), {
         headers: {
           "Content-Type": "application/pdf",
           "Content-Disposition": `inline; filename="${segments.at(-1) ?? "file.pdf"}"`,
           "Cache-Control": "private, max-age=3600",
         },
       });
-    } catch {
-      console.warn("[files] missing on disk:", relative, "→", fullPath);
-      return fileErrorResponse(
-        request,
-        404,
-        "الملف غير موجود",
-        "الرابط سليم لكن الملف غير موجود على مخزن الخادم — غالباً فُقد لعدم ربط مجلد الرفع بتخزين دائم قبل آخر نشر. اطلب من المستفيد إعادة رفع الملف بعد تفعيل التخزين الدائم."
-      );
     }
+
+    console.warn("[files] missing in DB and on disk:", relative);
+    return fileErrorResponse(
+      request,
+      404,
+      "الملف غير موجود",
+      "الرابط موجود لكن محتوى الملف غير محفوظ في قاعدة البيانات (غالباً رُفع قبل تفعيل التخزين في القاعدة وفُقد مع إعادة نشر). اطلب من المستفيد إعادة رفع الملف."
+    );
   } catch {
     return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
   }

@@ -40,11 +40,13 @@
 | `SESSION_SECRET` | `openssl rand -base64 32` |
 | `NEXT_PUBLIC_APP_URL` | `http://91.98.234.130.nip.io` (HTTP) أو `https://...` لاحقاً |
 
-> **تخزين دائم إلزامي للمرفقات:** في Coolify → التطبيق → **Persistent Storage** أضف
-> Volume على المسار `/app/uploads`. بدونه تُمسح ملفات CV/الشهادات وإعدادات
-> `senderEmail` مع **كل Redeploy** ويظهر للمدير «الملف غير موجود» رغم بقاء
-> الروابط في قاعدة البيانات. تحقق من الحالة من لوحة المدير → إعدادات النظام →
-> شارة «مخزن المرفقات».
+> **مرفقات CV/الشهادات:** تُحفظ في جدول PostgreSQL `stored_files` — **لا تُفقد مع
+> Redeploy**. الروابط تبقى `/api/files/...` كما هي. الملفات المرفوعة *قبل* هذا
+> التغيير وفُقدت من قرص الحاوية غير قابلة للاستعادة؛ يلزم إعادة الرفع من المستفيد.
+>
+> **مجلد `/app/uploads`:** ما زال يُستخدم لإعدادات النظام (`senderEmail`). في Coolify
+> → Persistent Storage اربط Volume على `/app/uploads` حتى لا تُصفَّر إعدادات البريد
+> مع كل Redeploy. تحقق من شارة «مخزن المرفقات» في إعدادات المدير.
 | `UPLOAD_DIR` | `/app/uploads` |
 
 > **HTTP (nip.io):** اضبط `NEXT_PUBLIC_APP_URL` بـ `http://` — الكوكيز تُفعّل `Secure` تلقائياً فقط مع `https://`.
@@ -75,7 +77,8 @@ Authorization: Bearer YOUR_CRON_SECRET
 
 ### 5. Persistent Storage
 
-- Mount: `/app/uploads` → volume دائم (مرفقات/CV)
+- Mount: `/app/uploads` → volume دائم (إعدادات النظام / `senderEmail`)
+- مرفقات PDF: جدول `stored_files` في PostgreSQL (لا تعتمد على الـ volume)
 
 ### 6. الشبكة
 

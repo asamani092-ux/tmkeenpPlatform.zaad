@@ -43,8 +43,8 @@ RUN chmod +x /app/docker-entrypoint.sh
 USER nextjs
 EXPOSE 3000
 
-# المرفقات وإعدادات النظام تعيش هنا — يجب ربطه بتخزين دائم في Coolify
-# (Persistent Storage → /app/uploads) وإلا تُمسح الملفات مع كل Redeploy.
+# إعدادات النظام (senderEmail) — اربطه بتخزين دائم في Coolify.
+# مرفقات PDF تُحفظ في PostgreSQL (stored_files) ولا تعتمد على هذا المجلد.
 VOLUME ["/app/uploads"]
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]

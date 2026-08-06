@@ -13,6 +13,7 @@
 
 `senderEmail` يُحفظ تحت `UPLOAD_DIR/data/system-settings.json` (مثلاً `/app/uploads/data/`).
 تأكد أن Coolify يوفّر volume دائم على `/app/uploads` وإلا يظهر «خطأ في الخادم» عند الحفظ.
+مرفقات CV/الشهادات تُحفظ في جدول `stored_files` ولا تعتمد على هذا المجلد.
 
 قائمة التحقق الحية: `/uat-checklist` → مجموعة «ما بعد النشر» أو Canvas
 `postdeploy-email-uat-tools-checklist`.
