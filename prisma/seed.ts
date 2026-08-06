@@ -14,6 +14,15 @@ const prisma = new PrismaClient({
 const SEED_PASSWORD = "Zaad@2024";
 
 async function main() {
+  if (
+    process.env.NODE_ENV === "production" &&
+    process.env.ALLOW_PROD_SEED !== "1"
+  ) {
+    throw new Error(
+      "رفض seed على الإنتاج — اضبط ALLOW_PROD_SEED=1 فقط لبيئة تجريبية فارغة عن قصد"
+    );
+  }
+
   await prisma.application.deleteMany();
   await prisma.inAppNotification.deleteMany();
   await prisma.opportunityTarget.deleteMany();

@@ -290,3 +290,29 @@ model Application {
   @@index([opportunityId])
   @@index([status])
 }
+
+/** PDF attachments (CV / certificates) — survives container redeploy */
+model StoredFile {
+  id        String   @id @default(cuid())
+  subdir    String
+  filename  String
+  mimeType  String   @default("application/pdf")
+  size      Int
+  data      Bytes
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([subdir, filename])
+  @@index([subdir])
+  @@map("stored_files")
+}
+
+/** Durable key/value settings (senderEmail, etc.) — not container disk */
+model AppSetting {
+  key       String   @id
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("app_settings")
+}
