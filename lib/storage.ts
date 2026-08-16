@@ -5,8 +5,22 @@ import { randomUUID } from "crypto";
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_MIME = ["application/pdf"];
 
+/**
+ * Persistent storage root — Coolify must mount a volume here.
+ * Prefer APP_STORAGE, then UPLOAD_DIR; production default /app/storage.
+ * Time O(1), Space O(1).
+ */
 export function getUploadDir(): string {
-  return process.env.UPLOAD_DIR?.trim() || path.join(process.cwd(), "uploads");
+  const fromEnv =
+    process.env.APP_STORAGE?.trim() || process.env.UPLOAD_DIR?.trim();
+  if (fromEnv) return fromEnv;
+  if (process.env.NODE_ENV === "production") return "/app/storage";
+  return path.join(process.cwd(), "storage");
+}
+
+/** Evidence / attachments subdirs under storage — O(1) */
+export function getEvidenceDir(): string {
+  return path.join(getUploadDir(), "evidence");
 }
 
 /** Validate PDF upload — O(1) */
@@ -20,7 +34,7 @@ export function validatePdfFile(file: File): string | null {
   return null;
 }
 
-/** Save PDF to disk — O(1) time, O(1) space */
+/** Save PDF to persistent storage — O(n) file bytes */
 export async function savePdfFile(
   file: File,
   subdir: "cv" | "certificates"
@@ -30,6 +44,8 @@ export async function savePdfFile(
 
   const dir = path.join(getUploadDir(), subdir);
   await fs.mkdir(dir, { recursive: true });
+  // Keep evidence tree ready for ops checks / future proof packs
+  await fs.mkdir(getEvidenceDir(), { recursive: true });
 
   const safeName = `${randomUUID()}.pdf`;
   const fullPath = path.join(dir, safeName);

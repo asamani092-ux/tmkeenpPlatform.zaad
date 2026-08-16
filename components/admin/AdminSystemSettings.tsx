@@ -136,9 +136,10 @@ export default function AdminSystemSettings() {
               {storage.dir} · CV: {storage.cvCount} · شهادات: {storage.certificatesCount}
             </p>
             <p className="text-xs">
-              مهم: اربط هذا المجلد بتخزين دائم في Coolify (Persistent Storage →
-              /app/uploads) وإلا تُفقد المرفقات مع كل إعادة نشر ويظهر «الملف غير
-              موجود».
+              مهم: اربط في Coolify Persistent Storage —
+              السيرفر `/data/tmkeen/storage` → الحاوية `/app/storage` —
+              وإلا تُفقد المرفقات مع كل إعادة نشر. نفّذ
+              scripts/check-storage-persistence.sh داخل الحاوية حتى تظهر «ثابت».
             </p>
           </div>
         ) : null}

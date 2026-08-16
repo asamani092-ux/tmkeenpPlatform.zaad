@@ -28,7 +28,7 @@ ENV HOSTNAME=0.0.0.0
 
 RUN addgroup -S nodejs && adduser -S nextjs -G nodejs \
   && npm install -g prisma@7.8.0 \
-  && mkdir -p uploads/data \
+  && mkdir -p /app/storage/evidence /app/storage/cv /app/storage/certificates /app/storage/data \
   && chown -R nextjs:nodejs /app
 
 COPY --from=builder /app/public ./public
@@ -38,14 +38,19 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder --chown=nextjs:nodejs /app/generated ./generated
 COPY --chown=nextjs:nodejs docker-entrypoint.sh /app/docker-entrypoint.sh
-RUN chmod +x /app/docker-entrypoint.sh
+COPY --chown=nextjs:nodejs scripts/check-storage-persistence.sh /app/scripts/check-storage-persistence.sh
+RUN chmod +x /app/docker-entrypoint.sh /app/scripts/check-storage-persistence.sh
 
 USER nextjs
 EXPOSE 3000
 
-# المرفقات وإعدادات النظام تعيش هنا — يجب ربطه بتخزين دائم في Coolify
-# (Persistent Storage → /app/uploads) وإلا تُمسح الملفات مع كل Redeploy.
-VOLUME ["/app/uploads"]
+# إلزامي في Coolify: Persistent Storage
+#   مسار السيرفر: /data/tmkeen/storage
+#   مسار الحاوية: /app/storage
+# بدون الربط تُمسح المرفقات/الشواهد مع كل Redeploy — لا تكتفِ بـ mkdir.
+ENV APP_STORAGE=/app/storage
+ENV UPLOAD_DIR=/app/storage
+VOLUME ["/app/storage"]
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["node", "server.js"]

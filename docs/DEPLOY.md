@@ -40,12 +40,16 @@
 | `SESSION_SECRET` | `openssl rand -base64 32` |
 | `NEXT_PUBLIC_APP_URL` | `http://91.98.234.130.nip.io` (HTTP) أو `https://...` لاحقاً |
 
-> **تخزين دائم إلزامي للمرفقات:** في Coolify → التطبيق → **Persistent Storage** أضف
-> Volume على المسار `/app/uploads`. بدونه تُمسح ملفات CV/الشهادات وإعدادات
-> `senderEmail` مع **كل Redeploy** ويظهر للمدير «الملف غير موجود» رغم بقاء
-> الروابط في قاعدة البيانات. تحقق من الحالة من لوحة المدير → إعدادات النظام →
-> شارة «مخزن المرفقات».
-| `UPLOAD_DIR` | `/app/uploads` |
+> **تخزين دائم إلزامي للمرفقات/الشواهد:** في Coolify → التطبيق → **Persistent Storage**:
+> - مسار السيرفر: `/data/tmkeen/storage`
+> - مسار الحاوية: `/app/storage`
+>
+> بدونه تُمسح ملفات CV/الشهادات وإعدادات `senderEmail` مع **كل Redeploy**.
+> لا تكتفِ بـ `mkdir` داخل الحاوية. بعد الربط وإعادة النشر نفّذ من Terminal:
+> `APP_STORAGE=/app/storage sh /app/scripts/check-storage-persistence.sh`
+> حتى تظهر: **ثابت**. تحقق أيضاً من شارة «مخزن المرفقات» في إعدادات المدير.
+| `APP_STORAGE` | `/app/storage` |
+| `UPLOAD_DIR` | `/app/storage` (توافق خلفي؛ يُفضّل مطابقة `APP_STORAGE`) |
 
 > **HTTP (nip.io):** اضبط `NEXT_PUBLIC_APP_URL` بـ `http://` — الكوكيز تُفعّل `Secure` تلقائياً فقط مع `https://`.
 | `SMTP_HOST` | Outlook: `smtp.office365.com` — أو Hostinger: `smtp.hostinger.com` |
@@ -73,9 +77,21 @@ Authorization: Bearer YOUR_CRON_SECRET
 
 (أول مرة فقط — seed يدوي عبر Terminal في Coolify: `npm run db:seed`)
 
-### 5. Persistent Storage
+### 5. Persistent Storage (إلزامي قبل الجاهزية)
 
-- Mount: `/app/uploads` → volume دائم (مرفقات/CV)
+| | |
+|---|---|
+| مسار السيرفر | `/data/tmkeen/storage` |
+| مسار الحاوية | `/app/storage` |
+
+بعد الربط وإعادة النشر:
+
+```bash
+mkdir -p /app/storage/evidence && chmod 750 /app/storage /app/storage/evidence
+APP_STORAGE=/app/storage sh /app/scripts/check-storage-persistence.sh
+```
+
+النتيجة المطلوبة: **ثابت** + مخرجات `findmnt`.
 
 ### 6. الشبكة
 
@@ -105,7 +121,7 @@ sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapf
 
 1. `https://tmkeen.alzaad.org.sa` — الصفحة الرئيسية
 2. `/login` — بعد seed (حساب admin من `prisma/seed.ts`)؛ زر عرض/إخفاء كلمة المرور موجود
-3. رفع CV — يتحقق من volume `/app/uploads`
+3. رفع CV + فحص الثبات: `APP_STORAGE=/app/storage sh /app/scripts/check-storage-persistence.sh` → ثابت
 4. Logs — لا أخطاء `DATABASE_URL is not set`
 
 ### 9. تفعيل البريد (SMTP) بعد نشر الكود
