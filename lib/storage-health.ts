@@ -8,6 +8,8 @@ export type StorageHealth = {
   writable: boolean;
   cvCount: number;
   certificatesCount: number;
+  /** Heuristic only — definitive check is scripts/check-storage-persistence.sh in the container. */
+  persistenceHint: "unknown" | "likely-ephemeral" | "configured-path";
 };
 
 async function countPdfFiles(dir: string): Promise<number> {
@@ -52,5 +54,17 @@ export async function getStorageHealth(): Promise<StorageHealth> {
     countPdfFiles(path.join(dir, "certificates")),
   ]);
 
-  return { dir, exists, writable, cvCount, certificatesCount };
+  const persistenceHint: StorageHealth["persistenceHint"] =
+    dir === "/app/storage" || dir.startsWith("/data/")
+      ? "configured-path"
+      : "unknown";
+
+  return {
+    dir,
+    exists,
+    writable,
+    cvCount,
+    certificatesCount,
+    persistenceHint,
+  };
 }

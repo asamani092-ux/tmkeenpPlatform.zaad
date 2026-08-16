@@ -26,9 +26,13 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
+# entrypoint يعمل كـ root أولاً لـ chown على Volume كوليفاي ثم ينتقل إلى nextjs
 RUN addgroup -S nodejs && adduser -S nextjs -G nodejs \
+  && apk add --no-cache util-linux su-exec \
   && npm install -g prisma@7.8.0 \
-  && mkdir -p uploads/data \
+  && mkdir -p /app/uploads/evidence /app/uploads/cv /app/uploads/certificates /app/uploads/data \
+  && mkdir -p /app/storage/evidence /app/storage/cv /app/storage/certificates /app/storage/data \
+  && mkdir -p /app/scripts \
   && chown -R nextjs:nodejs /app
 
 COPY --from=builder /app/public ./public
@@ -37,14 +41,21 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder --chown=nextjs:nodejs /app/generated ./generated
-COPY --chown=nextjs:nodejs docker-entrypoint.sh /app/docker-entrypoint.sh
-RUN chmod +x /app/docker-entrypoint.sh
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+COPY scripts/check-storage-persistence.sh /app/check-storage-persistence.sh
+COPY scripts/check-storage-persistence.sh /app/scripts/check-storage-persistence.sh
+RUN chmod +x /app/docker-entrypoint.sh \
+  /app/check-storage-persistence.sh \
+  /app/scripts/check-storage-persistence.sh
 
-USER nextjs
+# لا USER nextjs هنا — entrypoint يعمل chown ثم su-exec nextjs
 EXPOSE 3000
 
-# المرفقات وإعدادات النظام تعيش هنا — يجب ربطه بتخزين دائم في Coolify
-# (Persistent Storage → /app/uploads) وإلا تُمسح الملفات مع كل Redeploy.
+# Coolify Persistent Storage (Destination يجب أن يطابق UPLOAD_DIR):
+#   Source: /data/tmkeen/storage
+#   Destination: /app/uploads
+ENV APP_STORAGE=/app/uploads
+ENV UPLOAD_DIR=/app/uploads
 VOLUME ["/app/uploads"]
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
