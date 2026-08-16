@@ -84,14 +84,30 @@ Authorization: Bearer YOUR_CRON_SECRET
 | مسار السيرفر | `/data/tmkeen/storage` |
 | مسار الحاوية | `/app/storage` |
 
-بعد الربط وإعادة النشر:
+فحص الثبات بعد النشر:
 
 ```bash
-mkdir -p /app/storage/evidence && chmod 750 /app/storage /app/storage/evidence
-APP_STORAGE=/app/storage sh /app/scripts/check-storage-persistence.sh
+# بعد دمج/نشر فرع التخزين:
+sh /app/check-storage-persistence.sh
+
+# أو الآن فوراً (بدون الملف) — الصق في Coolify Terminal:
+APP_STORAGE="${APP_STORAGE:-/app/storage}"
+echo "=== فحص: $APP_STORAGE ==="
+if [ ! -d "$APP_STORAGE" ]; then
+  echo "النتيجة: غير ثابت — المجلد غير موجود"
+elif grep -E "[[:space:]]${APP_STORAGE}([[:space:]]|$)" /proc/mounts >/dev/null 2>&1 \
+  || (command -v mountpoint >/dev/null && mountpoint -q "$APP_STORAGE"); then
+  echo "النتيجة: ثابت"
+  grep -E "[[:space:]]${APP_STORAGE}([[:space:]]|$)" /proc/mounts || true
+  findmnt -T "$APP_STORAGE" 2>/dev/null || true
+else
+  echo "النتيجة: غير ثابت — سيُستبدل عند إعادة النشر"
+  findmnt -T "$APP_STORAGE" 2>/dev/null || true
+  grep -i storage /proc/mounts || true
+fi
 ```
 
-النتيجة المطلوبة: **ثابت** + مخرجات `findmnt`.
+النتيجة المطلوبة: **ثابت** + مخرجات `findmnt` أو `/proc/mounts`.
 
 ### 6. الشبكة
 
