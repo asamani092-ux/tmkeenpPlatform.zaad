@@ -27,8 +27,10 @@ ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
 RUN addgroup -S nodejs && adduser -S nextjs -G nodejs \
+  && apk add --no-cache util-linux \
   && npm install -g prisma@7.8.0 \
   && mkdir -p /app/storage/evidence /app/storage/cv /app/storage/certificates /app/storage/data \
+  && mkdir -p /app/scripts \
   && chown -R nextjs:nodejs /app
 
 COPY --from=builder /app/public ./public
@@ -38,8 +40,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder --chown=nextjs:nodejs /app/generated ./generated
 COPY --chown=nextjs:nodejs docker-entrypoint.sh /app/docker-entrypoint.sh
+COPY --chown=nextjs:nodejs scripts/check-storage-persistence.sh /app/check-storage-persistence.sh
 COPY --chown=nextjs:nodejs scripts/check-storage-persistence.sh /app/scripts/check-storage-persistence.sh
-RUN chmod +x /app/docker-entrypoint.sh /app/scripts/check-storage-persistence.sh
+RUN chmod +x /app/docker-entrypoint.sh \
+  /app/check-storage-persistence.sh \
+  /app/scripts/check-storage-persistence.sh
 
 USER nextjs
 EXPOSE 3000
@@ -48,6 +53,7 @@ EXPOSE 3000
 #   مسار السيرفر: /data/tmkeen/storage
 #   مسار الحاوية: /app/storage
 # بدون الربط تُمسح المرفقات/الشواهد مع كل Redeploy — لا تكتفِ بـ mkdir.
+# فحص بعد النشر: sh /app/check-storage-persistence.sh
 ENV APP_STORAGE=/app/storage
 ENV UPLOAD_DIR=/app/storage
 VOLUME ["/app/storage"]
