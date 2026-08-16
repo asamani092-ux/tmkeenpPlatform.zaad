@@ -12,10 +12,10 @@ const ALLOWED_MIME = ["application/pdf"];
  */
 export function getUploadDir(): string {
   const fromEnv =
-    process.env.APP_STORAGE?.trim() || process.env.UPLOAD_DIR?.trim();
+    process.env.UPLOAD_DIR?.trim() || process.env.APP_STORAGE?.trim();
   if (fromEnv) return fromEnv;
-  if (process.env.NODE_ENV === "production") return "/app/storage";
-  return path.join(process.cwd(), "storage");
+  if (process.env.NODE_ENV === "production") return "/app/uploads";
+  return path.join(process.cwd(), "uploads");
 }
 
 /** Evidence / attachments subdirs under storage — O(1) */
