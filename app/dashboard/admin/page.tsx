@@ -12,6 +12,8 @@ import type { BulkExportSection } from "@/lib/export-table";
 import { Briefcase, GraduationCap, LayoutDashboard, Users } from "lucide-react";
 import { formatArDate } from "@/lib/datetime-local";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminDashboardPage() {
   const session = await getSession();
   if (!session) redirect("/login");

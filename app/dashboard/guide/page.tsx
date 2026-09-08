@@ -7,6 +7,8 @@ import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { Users } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 function parseCourseIds(raw: string): string[] {
   try {
     const parsed = JSON.parse(raw);
