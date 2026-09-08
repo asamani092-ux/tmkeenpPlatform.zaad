@@ -102,7 +102,7 @@ export default function AdminBeneficiaryAssign({ beneficiaries: initial, guides 
               <td className="px-4 py-3">
                 {STAGE_LABELS[b.stage]}
                 {b.pendingStage && (
-                  <span className="ms-1 block text-xs font-semibold text-red-800">
+                  <span className="badge-danger ms-1 block">
                     طلب: {STAGE_LABELS[b.pendingStage]}
                   </span>
                 )}

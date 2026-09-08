@@ -58,7 +58,7 @@ function ResetPasswordForm() {
 
   if (!token) {
     return (
-      <div className="card-auth text-center">
+      <div className="card text-center">
         <p className="text-brand-gray">{resetPasswordCopy.invalidToken}</p>
         <Link href="/forgot-password" className="mt-4 inline-block text-primary hover:underline">
           طلب رابط جديد
@@ -68,7 +68,7 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="card-auth">
+    <div className="card">
       <div className="mb-6 flex items-center gap-3">
         <KeyRound className="h-8 w-8 text-primary" />
         <div>
@@ -85,7 +85,7 @@ function ResetPasswordForm() {
             type="password"
             required
             minLength={6}
-            className="input-field-auth"
+            className="input-field"
             dir="ltr"
             autoComplete="new-password"
           />
@@ -97,7 +97,7 @@ function ResetPasswordForm() {
             type="password"
             required
             minLength={6}
-            className="input-field-auth"
+            className="input-field"
             dir="ltr"
             autoComplete="new-password"
           />

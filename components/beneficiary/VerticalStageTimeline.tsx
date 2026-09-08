@@ -24,7 +24,7 @@ function StageDot({
 }) {
   if (isComplete) {
     return (
-      <span className="relative z-10 flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-red-900">
+      <span className="relative z-10 flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-[color:var(--text-brand)]">
         <Check className="h-3.5 w-3.5" />
       </span>
     );
@@ -64,7 +64,10 @@ export default function VerticalStageTimeline({ currentStage, stageEnteredAt }: 
       </div>
 
       {/* Mobile: fixed horizontal row — no scroll; tighter gaps on small widths */}
-      <ol className="flex w-full items-start justify-between gap-0 lg:hidden">
+      <ol
+        aria-label="خطوات مسار التمكين"
+        className="flex w-full items-start justify-between gap-0 lg:hidden"
+      >
         {STAGE_ORDER.map((stage, index) => {
           const isComplete = index < currentIndex;
           const isCurrent = index === currentIndex;

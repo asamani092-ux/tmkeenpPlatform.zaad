@@ -96,8 +96,10 @@ export default function AdminSystemSettings() {
         </p>
 
         <div
-          className={`space-y-1 rounded-lg px-4 py-3 text-sm ${
-            smtpConfigured ? "bg-secondary/10 text-primary" : "bg-amber-50 text-amber-900"
+          className={`space-y-1 text-sm ${
+            smtpConfigured
+              ? "alert-box alert-box--success"
+              : "alert-box alert-box--warning"
           }`}
         >
           <p>البريد: {smtpConfigured ? "مفعّل" : "غير مفعّل"}</p>

@@ -66,7 +66,7 @@ function LoginForm() {
   }
 
   return (
-    <div className="card-auth">
+    <div className="card">
       <div className="mb-6 flex items-center gap-3">
         <LogIn className="h-8 w-8 text-primary" />
         <h1 className="text-2xl font-bold text-primary">تسجيل الدخول</h1>
@@ -86,7 +86,7 @@ function LoginForm() {
             type="email"
             autoComplete="username"
             required
-            className="input-field-auth"
+            className="input-field"
             placeholder="email@example.com"
             dir="ltr"
           />
@@ -99,7 +99,7 @@ function LoginForm() {
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               required
-              className="input-field-auth pe-11"
+              className="input-field pe-11"
               placeholder="••••••••"
               dir="ltr"
             />

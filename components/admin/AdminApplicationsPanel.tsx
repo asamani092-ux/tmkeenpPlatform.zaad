@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import SubmitButton from "@/components/ui/SubmitButton";
 import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
 import { useSyncFromProps } from "@/lib/use-sync-from-props";
@@ -28,6 +29,7 @@ export default function AdminApplicationsPanel({ applications: initial }: Props)
   /** Per-row in-flight id so one click doesn't disable every row — O(1). */
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [reviewNote, setReviewNote] = useState<Record<string, string>>({});
+  const [rejectTarget, setRejectTarget] = useState<ApplicationRow | null>(null);
 
   async function review(id: string, status: "ACCEPTED" | "REJECTED") {
     setPendingId(id);
@@ -126,8 +128,14 @@ export default function AdminApplicationsPanel({ applications: initial }: Props)
               type="button"
               loading={pendingId === a.id}
               disabled={pendingId !== null && pendingId !== a.id}
-              onClick={() => review(a.id, "REJECTED")}
-              className="w-full !border-2 !border-red-600 !bg-white !px-3 !py-2 text-sm !text-red-700 hover:!bg-red-50 sm:w-auto sm:!px-2 sm:!py-1 sm:text-xs"
+              onClick={() => setRejectTarget(a)}
+              className="w-full !px-3 !py-2 text-sm sm:w-auto sm:!px-2 sm:!py-1 sm:text-xs"
+              style={{
+                border: "var(--border-thick) solid var(--danger-solid)",
+                background: "var(--surface-raised)",
+                color: "var(--danger-text)",
+                borderRadius: "var(--radius-md)",
+              }}
             >
               <XCircle className="inline h-4 w-4 sm:h-3 sm:w-3" />
               رفض
@@ -156,6 +164,27 @@ export default function AdminApplicationsPanel({ applications: initial }: Props)
         rowKey={(a) => a.id}
         minWidth="800px"
         emptyMessage="لا توجد تقديمات بانتظار المراجعة"
+        pageSize={10}
+      />
+
+      <ConfirmDialog
+        open={rejectTarget !== null}
+        title="رفض التقديم"
+        body={
+          rejectTarget
+            ? `سيتم رفض تقديم «${rejectTarget.beneficiary.name}» على «${rejectTarget.opportunity.title}» وإشعاره بالبريد والواجهة.`
+            : undefined
+        }
+        confirmLabel="تأكيد الرفض"
+        variant="destructive"
+        loading={pendingId !== null}
+        onConfirm={() => {
+          if (!rejectTarget) return;
+          const id = rejectTarget.id;
+          setRejectTarget(null);
+          review(id, "REJECTED");
+        }}
+        onClose={() => setRejectTarget(null)}
       />
     </div>
   );

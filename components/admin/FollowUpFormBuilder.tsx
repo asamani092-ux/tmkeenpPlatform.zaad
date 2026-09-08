@@ -198,7 +198,7 @@ export default function FollowUpFormBuilder() {
                     type="button"
                     onClick={() => handleDelete(q.id)}
                     disabled={pending}
-                    className="shrink-0 text-red-600"
+                    className="btn-danger-ghost !min-h-0 shrink-0 !p-1"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>

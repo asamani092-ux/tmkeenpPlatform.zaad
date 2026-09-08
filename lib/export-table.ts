@@ -72,12 +72,12 @@ export function printTablePdf(title: string, headers: string[], rows: string[][]
     .join("");
   w.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>${title}</title>
 <style>
-body{font-family:Tahoma,Arial,sans-serif;padding:24px;direction:rtl;color:#333}
-h1{color:#8b1538;font-size:20px;margin-bottom:16px}
+body{font-family:Tajawal,Tahoma,Arial,sans-serif;padding:24px;direction:rtl;color:#3c3a3b}
+h1{color:#7b1e3a;font-size:20px;margin-bottom:16px}
 table{width:100%;border-collapse:collapse}
-th,td{border:1px solid #ccc;padding:10px;text-align:right;font-size:13px}
-th{background:#8b1538;color:#fff}
-tr:nth-child(even){background:#f9f9f9}
+th,td{border:1px solid #d2d0d1;padding:10px;text-align:right;font-size:13px}
+th{background:#7b1e3a;color:#fff}
+tr:nth-child(even){background:#f5f5f5}
 </style></head><body>
 <h1>${title}</h1>
 <table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>

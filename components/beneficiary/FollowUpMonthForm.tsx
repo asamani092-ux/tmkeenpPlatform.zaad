@@ -68,7 +68,7 @@ export default function FollowUpMonthForm({ activeMonth, questions, records }: P
     return (
       <section id={`follow-up-month-${activeMonth}`} className="card">
         <h2 className="mb-2 text-xl font-bold text-primary">متابعة — الشهر {activeMonth}</h2>
-        <p className="text-green-700">تم إرسال نموذج هذا الشهر بنجاح.</p>
+        <p className="badge-success">تم إرسال نموذج هذا الشهر بنجاح.</p>
       </section>
     );
   }

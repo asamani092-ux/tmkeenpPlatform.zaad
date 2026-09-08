@@ -4,10 +4,12 @@ import { useState, useTransition } from "react";
 import { useSyncFromProps } from "@/lib/use-sync-from-props";
 import { useRouter } from "next/navigation";
 import FloatingModal from "@/components/admin/FloatingModal";
+import AvatarGroup from "@/components/ui/AvatarGroup";
+import EmptyState from "@/components/ui/EmptyState";
 import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastSuccess, toastError } from "@/lib/toast";
-import { Pencil, Trash2, UserPlus } from "lucide-react";
+import { Pencil, Trash2, UserPlus, Users } from "lucide-react";
 
 type Guide = {
   id: string;
@@ -113,6 +115,20 @@ export default function AdminGuidePanel({ guides: initial, beneficiariesByGuideI
         </button>
       </div>
 
+      {guides.length === 0 && (
+        <EmptyState
+          icon={Users}
+          title="لا يوجد مرشدون بعد"
+          body="أضف أول مرشد ليمكن إسناد المستفيدين إليه."
+          action={
+            <button type="button" onClick={openAdd} className="btn-primary !px-4 !py-2 text-sm">
+              <UserPlus className="h-4 w-4" />
+              إضافة مرشد
+            </button>
+          }
+        />
+      )}
+
       <ul className="space-y-2">
         {guides.map((g) => (
           <li key={g.id} className="rounded-lg border border-surface-border p-3">
@@ -122,13 +138,19 @@ export default function AdminGuidePanel({ guides: initial, beneficiariesByGuideI
                 <p className="text-xs text-brand-gray" dir="ltr">
                   {g.email}
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setViewBeneficiariesGuide(g)}
-                  className="btn-primary mt-2 !bg-red-800 !px-3 !py-1.5 text-xs"
-                >
-                  عرض المستفيدين ({g.beneficiaryCount})
-                </button>
+                <div className="mt-2 flex flex-wrap items-center gap-3">
+                  <AvatarGroup
+                    names={(beneficiariesByGuideId[g.id] ?? []).map((b) => b.name)}
+                    size="sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setViewBeneficiariesGuide(g)}
+                    className="btn-primary !px-3 !py-1.5 text-xs"
+                  >
+                    عرض المستفيدين ({g.beneficiaryCount})
+                  </button>
+                </div>
               </div>
               <div className="flex shrink-0 gap-1">
                 <button
@@ -146,11 +168,8 @@ export default function AdminGuidePanel({ guides: initial, beneficiariesByGuideI
                   disabled={pending}
                   aria-label="حذف المرشد"
                   title="حذف"
-                  className={`rounded px-2 py-1 text-xs font-semibold ${
-                    confirmDeleteId === g.id
-                      ? "bg-red-600 text-white"
-                      : "text-red-600 hover:bg-red-50"
-                  }`}
+                  className="btn-danger-ghost !min-h-0 !px-2 !py-1 text-xs"
+                  data-confirm={confirmDeleteId === g.id ? "true" : undefined}
                 >
                   {confirmDeleteId === g.id ? (
                     <>

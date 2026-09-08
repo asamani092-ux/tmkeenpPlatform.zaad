@@ -98,7 +98,7 @@ export default function CareerPlanChecklist({ tasks: initial }: Props) {
                   disabled={pending}
                   onClick={() => handleToggle(task.id, true)}
                   aria-pressed={false}
-                  className="flex shrink-0 items-center gap-2 rounded-full bg-red-800 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-red-900"
+                  className="btn-primary !rounded-full !px-4 !py-2 text-xs"
                 >
                   <CircleCheck className="h-4 w-4" aria-hidden />
                   أتممت المهمة
