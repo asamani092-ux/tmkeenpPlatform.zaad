@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { OPPORTUNITY_STATUS_LABELS } from "@/lib/labels";
 import { Pencil, Trash2 } from "lucide-react";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { useSyncFromProps } from "@/lib/use-sync-from-props";
@@ -30,19 +31,28 @@ export default function AdminOpportunityList({ opportunities: initial }: Props) 
   const [opportunities, setOpportunities] = useSyncFromProps(initial);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  async function handleDelete(id: string) {
-    if (!confirm("حذف هذه الفرصة؟")) return;
+  /** عقد 1.10 ConfirmDialog destructive بدل window.confirm — O(1). */
+  function handleDelete(id: string) {
+    setDeleteTargetId(id);
+  }
+
+  function confirmDelete() {
+    const id = deleteTargetId;
+    if (!id) return;
     startTransition(async () => {
       const res = await fetch(`/api/opportunities/${id}`, { method: "DELETE" });
       const data = await res.json();
       if (!res.ok) {
         setMessage(data.error || "فشل الحذف");
+        setDeleteTargetId(null);
         return;
       }
       setOpportunities((prev) => prev.filter((o) => o.id !== id));
       setMessage("تم الحذف");
+      setDeleteTargetId(null);
       router.refresh();
     });
   }
@@ -175,6 +185,17 @@ export default function AdminOpportunityList({ opportunities: initial }: Props) 
           ))}
         </ul>
       )}
+
+      <ConfirmDialog
+        open={deleteTargetId !== null}
+        title="حذف الفرصة"
+        body="سيتم حذف الفرصة نهائياً مع إيقاف ظهورها للمستفيدين. لا يمكن التراجع."
+        confirmLabel="حذف نهائي"
+        variant="destructive"
+        loading={pending}
+        onConfirm={confirmDelete}
+        onClose={() => setDeleteTargetId(null)}
+      />
     </div>
   );
 }

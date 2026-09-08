@@ -21,22 +21,24 @@ export default function GuideBeneficiaryTabs({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
+      <div role="tablist" aria-label="قوائم المستفيدين" className="tab-bar max-w-xl">
         <button
           type="button"
+          role="tab"
+          aria-selected={tab === "active"}
+          data-active={tab === "active"}
           onClick={() => setTab("active")}
-          className={`rounded-lg px-4 py-2 text-sm font-semibold ${
-            tab === "active" ? "bg-primary text-white" : "bg-surface-muted text-brand-gray"
-          }`}
+          className="min-h-[44px] text-sm"
         >
           المستفيدون النشطون ({activeBeneficiaries.length})
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected={tab === "previous"}
+          data-active={tab === "previous"}
           onClick={() => setTab("previous")}
-          className={`rounded-lg px-4 py-2 text-sm font-semibold ${
-            tab === "previous" ? "bg-primary text-white" : "bg-surface-muted text-brand-gray"
-          }`}
+          className="min-h-[44px] text-sm"
         >
           المستفيدون السابقون ({previousBeneficiaries.length})
         </button>

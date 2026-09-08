@@ -872,6 +872,7 @@ export default function GuideBeneficiaryTable({
           minWidth="880px"
           emptyMessage="لا يوجد مستفيدون في مرحلة الإرشاد حالياً"
           onRowClick={openBeneficiary}
+          pageSize={10}
         />
 
       </div>

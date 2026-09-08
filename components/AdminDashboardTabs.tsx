@@ -202,16 +202,21 @@ export default function AdminDashboardTabs({
   return (
     <div className="space-y-6">
       <div className="-mx-1 overflow-x-auto px-1">
-        <div className="flex min-w-max gap-2 rounded-xl bg-surface p-1 shadow-sm sm:min-w-0 sm:flex-wrap">
+        <div
+          role="tablist"
+          aria-label="أقسام لوحة المدير"
+          className="tab-bar min-w-max sm:min-w-0"
+        >
           {tabs.map(({ id, label, shortLabel, icon: Icon }) => (
             <button
               key={id}
               type="button"
+              role="tab"
+              aria-selected={tab === id}
+              data-active={tab === id}
               onClick={() => setTab(id)}
               title={label}
-              className={`flex min-w-[4.5rem] shrink-0 items-center justify-center gap-1.5 rounded-lg px-2.5 py-2.5 text-xs font-semibold transition sm:min-w-[100px] sm:flex-1 sm:gap-2 sm:px-2 sm:py-3 sm:text-sm ${
-                tab === id ? "bg-primary text-white" : "text-brand-gray hover:bg-surface-muted"
-              }`}
+              className="flex min-h-[44px] min-w-[4.5rem] shrink-0 items-center justify-center gap-1.5 text-xs focus-visible:outline-none sm:min-w-[100px] sm:flex-1 sm:gap-2 sm:text-sm"
             >
               <Icon className="h-4 w-4 shrink-0" />
               <span className="sm:hidden">{shortLabel}</span>

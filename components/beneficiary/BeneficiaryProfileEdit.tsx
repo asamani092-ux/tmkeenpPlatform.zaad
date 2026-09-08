@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import SubmitButton from "@/components/ui/SubmitButton";
 import FieldRow from "@/components/ui/FieldRow";
+import PdfDropzone from "@/components/ui/PdfDropzone";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { uploadPdfFile } from "@/lib/upload-client";
 import { beneficiaryCopy, registerCopy } from "@/lib/copy/ar";
@@ -88,7 +89,10 @@ export default function BeneficiaryProfileEdit({ profile }: Props) {
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "var(--tmkeen-overlay)", zIndex: "var(--z-modal)" }}
+        >
           <div
             className="card max-h-[90vh] w-full max-w-lg overflow-y-auto shadow-xl"
             onClick={(e) => e.stopPropagation()}
@@ -128,32 +132,22 @@ export default function BeneficiaryProfileEdit({ profile }: Props) {
               <FieldRow label="الميول المهنية" htmlFor="careerInterests" align="start">
                 <textarea id="careerInterests" name="careerInterests" defaultValue={profile.careerInterests} rows={2} className="input-field resize-none" />
               </FieldRow>
-              <FieldRow label={registerCopy.cvLabel} htmlFor="cv">
-                <div>
-                  <input
-                    id="cv"
-                    type="file"
-                    accept=".pdf"
-                    className="input-field"
-                    onChange={(e) => setCvFile(e.target.files?.[0] ?? null)}
-                  />
-                  {profile.cvUrl && !cvFile && (
-                    <p className="mt-1 text-xs text-brand-gray">السيرة الحالية مرفقة</p>
-                  )}
-                  <p className="mt-1 text-xs text-brand-gray">{registerCopy.cvHint}</p>
-                </div>
+              <FieldRow label={registerCopy.cvLabel} htmlFor="cv" align="start">
+                <PdfDropzone
+                  id="cv"
+                  file={cvFile}
+                  onFile={setCvFile}
+                  hint={registerCopy.cvHint}
+                  currentLabel={profile.cvUrl ? "السيرة الحالية مرفقة" : undefined}
+                />
               </FieldRow>
-              <FieldRow label={registerCopy.certificatesLabel} htmlFor="certificates">
-                <div>
-                  <input
-                    id="certificates"
-                    type="file"
-                    accept=".pdf"
-                    className="input-field"
-                    onChange={(e) => setCertFile(e.target.files?.[0] ?? null)}
-                  />
-                  <p className="mt-1 text-xs text-brand-gray">{registerCopy.certificatesHint}</p>
-                </div>
+              <FieldRow label={registerCopy.certificatesLabel} htmlFor="certificates" align="start">
+                <PdfDropzone
+                  id="certificates"
+                  file={certFile}
+                  onFile={setCertFile}
+                  hint={registerCopy.certificatesHint}
+                />
               </FieldRow>
               <SubmitButton loading={pending} className="btn-primary w-full">
                 حفظ التعديلات
