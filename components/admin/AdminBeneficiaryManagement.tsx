@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Stage } from "@/generated/prisma/client";
 import { STAGE_LABELS, STAGE_ORDER } from "@/lib/stages";
 import FloatingModal from "@/components/admin/FloatingModal";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
 import DetailRow from "@/components/ui/DetailRow";
 import FieldGrid from "@/components/ui/FieldGrid";
@@ -64,6 +65,7 @@ export default function AdminBeneficiaryManagement({
   const [selected, setSelected] = useState<ManagedBeneficiary | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [stageFilter, setStageFilter] = useState<Stage | "ALL">("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [pending, startTransition] = useTransition();
@@ -160,18 +162,23 @@ export default function AdminBeneficiaryManagement({
     });
   }
 
-  /** Dual confirm: arm button, then browser confirm — O(1) */
+  /** Dual confirm: arm button, then in-app dialog — O(1) */
   function handleDeleteClick(beneficiaryId: string) {
     if (confirmDeleteId !== beneficiaryId) {
       setConfirmDeleteId(beneficiaryId);
       return;
     }
-    const target = rows.find((b) => b.id === beneficiaryId);
-    const label = target?.name ?? "هذا المستفيد";
-    if (!window.confirm(`تأكيد نهائي: حذف «${label}» نهائياً؟ لا يمكن التراجع.`)) {
-      setConfirmDeleteId(null);
-      return;
-    }
+    setDeleteDialogOpen(true);
+  }
+
+  function cancelDeleteDialog() {
+    setDeleteDialogOpen(false);
+    setConfirmDeleteId(null);
+  }
+
+  function confirmDeleteFinal() {
+    if (!confirmDeleteId) return;
+    const beneficiaryId = confirmDeleteId;
     startTransition(async () => {
       const res = await fetch(`/api/admin/beneficiaries/${beneficiaryId}`, {
         method: "DELETE",
@@ -179,11 +186,13 @@ export default function AdminBeneficiaryManagement({
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         toastError(data.error || "فشل الحذف");
+        setDeleteDialogOpen(false);
         setConfirmDeleteId(null);
         return;
       }
       setRows((prev) => prev.filter((b) => b.id !== beneficiaryId));
       setSelected((s) => (s?.id === beneficiaryId ? null : s));
+      setDeleteDialogOpen(false);
       setConfirmDeleteId(null);
       setEditMode(false);
       toastSuccess("تم حذف المستفيد");
@@ -435,6 +444,7 @@ export default function AdminBeneficiaryManagement({
             setSelected(null);
             setEditMode(false);
             setConfirmDeleteId(null);
+            setDeleteDialogOpen(false);
           }}
           wide
         >
@@ -712,6 +722,19 @@ export default function AdminBeneficiaryManagement({
           </div>
         </FloatingModal>
       )}
+
+      <ConfirmDialog
+        open={deleteDialogOpen && Boolean(confirmDeleteId)}
+        title="تأكيد الحذف النهائي"
+        message={`هل أنت متأكد من حذف «${
+          rows.find((b) => b.id === confirmDeleteId)?.name ?? "هذا المستفيد"
+        }» نهائياً؟ لا يمكن التراجع عن هذا الإجراء.`}
+        confirmLabel="حذف نهائي"
+        cancelLabel="إلغاء"
+        pending={pending}
+        onConfirm={confirmDeleteFinal}
+        onCancel={cancelDeleteDialog}
+      />
     </>
   );
 }
