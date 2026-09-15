@@ -15,7 +15,9 @@ COPY --from=deps /app/generated ./generated
 COPY . .
 ENV DATABASE_URL="postgresql://build:build@localhost:5432/build?schema=public"
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_OPTIONS=--max-old-space-size=3072
+# Keep heap under typical Coolify VPS RAM — 3072 triggers OOM (exit 255, no Next error)
+ENV NODE_OPTIONS=--max-old-space-size=1536
+ENV NEXT_PRIVATE_MAX_WORKER_THREADS=1
 RUN npm run build
 
 # Lean runtime — standalone only (not full node_modules) to keep export under disk limits
@@ -26,11 +28,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-# entrypoint يعمل كـ root أولاً لـ chown على Volume كوليفاي ثم ينتقل إلى nextjs
-# prisma CLI only (no dotenv — prisma.config.ts loads .env without that package)
+# Lightweight setup only — defer prisma CLI install until AFTER builder
+# so it does not compete with `next build` for RAM/disk
 RUN addgroup -S nodejs && adduser -S nextjs -G nodejs \
   && apk add --no-cache util-linux su-exec \
-  && npm install -g prisma@7.8.0 --no-fund --no-audit \
   && mkdir -p /app/uploads/evidence /app/uploads/cv /app/uploads/certificates /app/uploads/data \
   && mkdir -p /app/storage/evidence /app/storage/cv /app/storage/certificates /app/storage/data \
   && mkdir -p /app/scripts \
@@ -45,7 +46,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/generated ./generated
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 COPY scripts/check-storage-persistence.sh /app/check-storage-persistence.sh
 COPY scripts/check-storage-persistence.sh /app/scripts/check-storage-persistence.sh
-RUN chmod +x /app/docker-entrypoint.sh \
+
+# Serialized after builder: install prisma CLI for migrate deploy in entrypoint
+RUN npm install -g prisma@7.8.0 --no-fund --no-audit \
+  && chmod +x /app/docker-entrypoint.sh \
   /app/check-storage-persistence.sh \
   /app/scripts/check-storage-persistence.sh
 
