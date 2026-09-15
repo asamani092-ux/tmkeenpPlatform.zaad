@@ -7,6 +7,7 @@ type Props = {
   disabled?: boolean;
   children: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties;
   type?: "submit" | "button" | "reset";
   onClick?: () => void;
 };
@@ -16,6 +17,7 @@ export default function SubmitButton({
   disabled = false,
   children,
   className = "btn-primary w-full",
+  style,
   type = "submit",
   onClick,
 }: Props) {
@@ -23,7 +25,9 @@ export default function SubmitButton({
     <button
       type={type}
       disabled={disabled || loading}
+      aria-busy={loading || undefined}
       onClick={onClick}
+      style={style}
       className={`inline-flex items-center justify-center gap-2 ${className}`}
     >
       {loading && <Loader2 className="h-4 w-4 animate-spin" />}

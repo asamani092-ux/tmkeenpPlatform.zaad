@@ -64,7 +64,10 @@ export default function VerticalStageTimeline({ currentStage, stageEnteredAt }: 
       </div>
 
       {/* Mobile: fixed horizontal row — no scroll; tighter gaps on small widths */}
-      <ol className="flex w-full items-start justify-between gap-0 lg:hidden">
+      <ol
+        aria-label="خطوات مسار التمكين"
+        className="flex w-full items-start justify-between gap-0 lg:hidden"
+      >
         {STAGE_ORDER.map((stage, index) => {
           const isComplete = index < currentIndex;
           const isCurrent = index === currentIndex;

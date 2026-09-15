@@ -1,87 +1,104 @@
 "use client";
 
-import { useEffect, useId } from "react";
+import FloatingModal from "@/components/admin/FloatingModal";
+import SubmitButton from "@/components/ui/SubmitButton";
+import { AlertTriangle } from "lucide-react";
 
 type Props = {
   open: boolean;
   title: string;
-  message: string;
+  /** Preferred copy prop (design-system callers). */
+  body?: string;
+  /** Alias used by beneficiary delete flow on master. */
+  message?: string;
   confirmLabel?: string;
   cancelLabel?: string;
+  variant?: "confirm" | "destructive";
+  loading?: boolean;
+  /** Alias for loading. */
   pending?: boolean;
   onConfirm: () => void;
-  onCancel: () => void;
+  onClose?: () => void;
+  /** Alias for onClose. */
+  onCancel?: () => void;
 };
 
 /**
- * In-app destructive confirm — replaces window.confirm.
+ * Confirm / destructive dialog — supports both design-system props
+ * (body/loading/onClose) and master aliases (message/pending/onCancel).
  * Time O(1), Space O(1).
  */
 export default function ConfirmDialog({
   open,
   title,
+  body,
   message,
-  confirmLabel = "تأكيد الحذف",
+  confirmLabel = "تأكيد",
   cancelLabel = "إلغاء",
+  variant = "confirm",
+  loading = false,
   pending = false,
   onConfirm,
+  onClose,
   onCancel,
 }: Props) {
-  const titleId = useId();
-  const descId = useId();
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !pending) onCancel();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open, pending, onCancel]);
-
   if (!open) return null;
 
+  const text = body ?? message ?? "";
+  const busy = loading || pending;
+  const close = onClose ?? onCancel ?? (() => undefined);
+  const destructive = variant === "destructive" || Boolean(message);
+
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
-      role="presentation"
-      onClick={() => {
-        if (!pending) onCancel();
-      }}
-    >
-      <div
-        role="alertdialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        aria-describedby={descId}
-        className="w-full max-w-md rounded-t-2xl border-0 bg-surface p-5 text-start shadow-xl sm:rounded-xl sm:border-2 sm:border-surface-border"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h3 id={titleId} className="text-lg font-bold text-primary">
-          {title}
-        </h3>
-        <p id={descId} className="mt-2 text-sm text-brand-gray">
-          {message}
-        </p>
-        <div className="mt-5 flex flex-wrap justify-end gap-2">
+    <FloatingModal title={title} onClose={() => {
+      if (!busy) close();
+    }}>
+      <div className="space-y-4 text-start">
+        {text ? (
+          <div
+            className="flex items-start gap-3 rounded-lg px-3 py-2 text-sm"
+            style={
+              destructive
+                ? {
+                    background: "var(--danger-surface)",
+                    color: "var(--danger-text)",
+                    border: "var(--border-hairline) solid var(--danger-border)",
+                  }
+                : {
+                    background: "var(--surface-sunken)",
+                    color: "var(--text-secondary)",
+                  }
+            }
+          >
+            {destructive ? (
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+            ) : null}
+            <p>{text}</p>
+          </div>
+        ) : null}
+        <div className="flex gap-2">
+          <SubmitButton
+            loading={busy}
+            onClick={onConfirm}
+            className="btn-primary flex-1 !py-2.5 text-sm"
+            style={
+              destructive
+                ? { background: "var(--danger-solid)" }
+                : undefined
+            }
+          >
+            {busy ? "جاري التنفيذ..." : confirmLabel}
+          </SubmitButton>
           <button
             type="button"
-            disabled={pending}
-            onClick={onCancel}
-            className="btn-secondary !px-4 !py-2 text-sm"
+            onClick={close}
+            disabled={busy}
+            className="btn-secondary flex-1 !py-2.5 text-sm disabled:opacity-60"
           >
             {cancelLabel}
           </button>
-          <button
-            type="button"
-            disabled={pending}
-            onClick={onConfirm}
-            className="inline-flex items-center justify-center rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-800 disabled:opacity-60"
-          >
-            {pending ? "جاري الحذف..." : confirmLabel}
-          </button>
         </div>
       </div>
-    </div>
+    </FloatingModal>
   );
 }

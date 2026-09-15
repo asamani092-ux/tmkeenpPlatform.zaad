@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import FloatingModal from "@/components/admin/FloatingModal";
 import BeneficiaryAccountEdit from "@/components/beneficiary/BeneficiaryAccountEdit";
 import FieldRow from "@/components/ui/FieldRow";
+import PdfDropzone from "@/components/ui/PdfDropzone";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { uploadPdfFile } from "@/lib/upload-client";
@@ -152,28 +153,16 @@ export default function BeneficiaryEditModal({ profile, open, onClose }: Props) 
               className="input-field resize-none"
             />
           </FieldRow>
-          <FieldRow label={registerCopy.cvLabel} htmlFor="modal-cv">
-            <div>
-              <input
-                id="modal-cv"
-                type="file"
-                accept=".pdf"
-                className="input-field"
-                onChange={(e) => setCvFile(e.target.files?.[0] ?? null)}
-              />
-              {profile.cvUrl && !cvFile && (
-                <p className="mt-1 text-xs text-brand-gray">السيرة الحالية مرفقة</p>
-              )}
-            </div>
-          </FieldRow>
-          <FieldRow label={registerCopy.certificatesLabel} htmlFor="modal-cert">
-            <input
-              id="modal-cert"
-              type="file"
-              accept=".pdf"
-              className="input-field"
-              onChange={(e) => setCertFile(e.target.files?.[0] ?? null)}
+          <FieldRow label={registerCopy.cvLabel} htmlFor="modal-cv" align="start">
+            <PdfDropzone
+              id="modal-cv"
+              file={cvFile}
+              onFile={setCvFile}
+              currentLabel={profile.cvUrl ? "السيرة الحالية مرفقة" : undefined}
             />
+          </FieldRow>
+          <FieldRow label={registerCopy.certificatesLabel} htmlFor="modal-cert" align="start">
+            <PdfDropzone id="modal-cert" file={certFile} onFile={setCertFile} />
           </FieldRow>
           <SubmitButton loading={pending} className="btn-primary w-full !py-2 text-sm">
             حفظ التعديلات

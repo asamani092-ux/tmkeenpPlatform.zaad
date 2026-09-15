@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl">
-      <body className="min-h-screen font-sans antialiased">
+      <body className="zad-root min-h-screen font-sans antialiased">
         <AppToaster />
         {children}
       </body>

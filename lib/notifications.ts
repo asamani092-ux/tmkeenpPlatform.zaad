@@ -11,10 +11,10 @@ export async function createNotification(
   });
 }
 
-/** O(a) where a = admin count */
+/** O(a) where a = staff admin count (system + supervisors) */
 export async function notifyAdmins(title: string, message: string) {
   const admins = await prisma.user.findMany({
-    where: { role: "ADMIN" },
+    where: { role: { in: ["ADMIN", "SYSTEM_ADMIN"] } },
     select: { id: true },
   });
   if (admins.length === 0) return;
@@ -61,7 +61,7 @@ export async function markAllNotificationsRead(userId: string) {
 /** O(n) beneficiaries in FOLLOW_UP — creates admin reminders for 1/3/6 month milestones */
 export async function syncFollowUpRemindersForAdmin() {
   const admins = await prisma.user.findMany({
-    where: { role: "ADMIN" },
+    where: { role: { in: ["ADMIN", "SYSTEM_ADMIN"] } },
     select: { id: true },
   });
   if (admins.length === 0) return;

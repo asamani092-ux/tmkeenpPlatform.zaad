@@ -17,6 +17,7 @@ export default function NotificationBell() {
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [unread, setUnread] = useState(0);
   const [loadError, setLoadError] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -31,6 +32,8 @@ export default function NotificationBell() {
       setLoadError(false);
     } catch {
       setLoadError(true);
+    } finally {
+      setLoaded(true);
     }
   }, []);
 
@@ -111,7 +114,14 @@ export default function NotificationBell() {
               <h3 className="font-bold text-primary">الإشعارات</h3>
             </div>
             <ul className="max-h-72 space-y-2 overflow-y-auto">
-              {loadError ? (
+              {!loaded ? (
+                <li role="status" aria-live="polite" className="space-y-2 p-1">
+                  <span className="sr-only">جارٍ تحميل الإشعارات</span>
+                  {[0, 1, 2].map((i) => (
+                    <span key={i} className="zad-skeleton block h-14 w-full" />
+                  ))}
+                </li>
+              ) : loadError ? (
                 <li className="py-4 text-center text-sm text-brand-gray">
                   تعذر تحميل الإشعارات
                   <button

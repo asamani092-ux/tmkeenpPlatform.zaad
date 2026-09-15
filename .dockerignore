@@ -6,7 +6,6 @@ node_modules
 uploads
 .cursor
 .github
-Design_system_f
 **/node_modules
 *.log
 coverage

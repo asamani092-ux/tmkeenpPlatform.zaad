@@ -14,6 +14,7 @@ export async function verifyPassword(
 
 export function getDashboardPath(role: Role): string {
   switch (role) {
+    case "SYSTEM_ADMIN":
     case "ADMIN":
       return "/dashboard/admin";
     case "GUIDE":

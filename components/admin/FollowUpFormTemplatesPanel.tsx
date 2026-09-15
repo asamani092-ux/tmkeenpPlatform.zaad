@@ -8,6 +8,7 @@ import FollowUpFormTemplateCard, {
 import FollowUpFormTemplateModal from "@/components/admin/FollowUpFormTemplateModal";
 import FollowUpFormPreview from "@/components/admin/FollowUpFormPreview";
 import FloatingModal from "@/components/admin/FloatingModal";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { Plus } from "lucide-react";
 
@@ -18,6 +19,7 @@ export default function FollowUpFormTemplatesPanel() {
   const [modalMode, setModalMode] = useState<"create" | "edit" | null>(null);
   const [editing, setEditing] = useState<FollowUpFormTemplate | null>(null);
   const [preview, setPreview] = useState<FollowUpFormTemplate | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   async function loadTemplates() {
@@ -33,9 +35,16 @@ export default function FollowUpFormTemplatesPanel() {
   }, []);
 
   function handleDelete(id: string) {
-    if (!confirm("حذف هذا النموذج؟")) return;
+    setDeleteTargetId(id);
+  }
+
+  /** عقد 1.10 ConfirmDialog destructive بدل window.confirm — O(1). */
+  function confirmDelete() {
+    const id = deleteTargetId;
+    if (!id) return;
     startTransition(async () => {
       const res = await fetch(`/api/follow-up-form/templates/${id}`, { method: "DELETE" });
+      setDeleteTargetId(null);
       if (!res.ok) {
         toastError("فشل الحذف");
         return;
@@ -69,7 +78,16 @@ export default function FollowUpFormTemplatesPanel() {
       </div>
 
       {loading ? (
-        <p className="text-sm text-brand-gray">جاري التحميل...</p>
+        <div role="status" aria-live="polite" className="grid gap-3 sm:grid-cols-2">
+          <span className="sr-only">جارٍ التحميل</span>
+          {[0, 1].map((i) => (
+            <div key={i} className="space-y-2 rounded-lg border border-surface-border p-4">
+              <span className="zad-skeleton h-4 w-2/3" />
+              <span className="zad-skeleton h-3 w-1/2" />
+              <span className="zad-skeleton h-3 w-full" />
+            </div>
+          ))}
+        </div>
       ) : templates.length === 0 ? (
         <p className="text-sm text-brand-gray">لا توجد نماذج محفوظة بعد</p>
       ) : (
@@ -116,6 +134,17 @@ export default function FollowUpFormTemplatesPanel() {
           />
         </FloatingModal>
       )}
+
+      <ConfirmDialog
+        open={deleteTargetId !== null}
+        title="حذف نموذج المتابعة"
+        body="سيتم حذف النموذج وأسئلته. الأشهر المرتبطة به ستفقد أسئلتها. لا يمكن التراجع."
+        confirmLabel="حذف نهائي"
+        variant="destructive"
+        loading={pending}
+        onConfirm={confirmDelete}
+        onClose={() => setDeleteTargetId(null)}
+      />
 
       {pending && <p className="text-xs text-brand-gray">جاري المعالجة...</p>}
     </div>

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { isPlatformStaff } from "@/lib/roles";
 import {
   parseTemplateMonths,
   serializeTemplate,
@@ -8,7 +9,7 @@ import {
 
 export async function GET() {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
 
@@ -26,7 +27,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
 

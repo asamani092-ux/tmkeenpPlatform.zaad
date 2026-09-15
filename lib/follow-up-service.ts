@@ -11,6 +11,7 @@ import {
 import type { ActionResult } from "@/lib/platform-service";
 import type { Prisma } from "@/generated/prisma/client";
 import { getQuestionsForMonth } from "@/lib/follow-up-form-templates";
+import { isPlatformStaff } from "@/lib/roles";
 
 export async function initializeFollowUpProgram(beneficiaryId: string): Promise<void> {
   const startedAt = new Date();
@@ -195,7 +196,7 @@ export async function submitFollowUpForm(
 
 export async function completeFollowUpProgram(beneficiaryId: string): Promise<ActionResult> {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
@@ -235,7 +236,7 @@ export async function withdrawFollowUpProgram(
   reason?: string
 ): Promise<ActionResult> {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
@@ -269,7 +270,7 @@ export async function pauseFollowUp(
   reason: string
 ): Promise<ActionResult> {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
@@ -311,7 +312,7 @@ export async function pauseFollowUp(
 /** Admin resumes follow-up program from PAUSED or COMPLETED — O(1) */
 export async function resumeFollowUp(beneficiaryId: string): Promise<ActionResult> {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
@@ -353,7 +354,7 @@ export async function endFollowUp(
   reason: string
 ): Promise<ActionResult> {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
@@ -504,7 +505,7 @@ export async function sendManualFollowUpReminder(
   beneficiaryId: string
 ): Promise<ActionResult> {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
@@ -604,7 +605,7 @@ export async function sendManualFollowUpReminder(
 
 export async function getFollowUpSubmission(beneficiaryId: string, month: number) {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return null;
   }
 

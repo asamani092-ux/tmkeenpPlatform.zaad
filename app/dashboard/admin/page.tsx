@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import AdminDashboardTabs from "@/components/AdminDashboardTabs";
 import AdminBulkExport from "@/components/admin/AdminBulkExport";
 import { getDashboardPath } from "@/lib/auth";
+import { isPlatformStaff, isSystemAdmin } from "@/lib/roles";
 import { getSession } from "@/lib/session";
 import { withPrismaRetry } from "@/lib/prisma";
 import { backfillFollowUpProgram } from "@/lib/follow-up-service";
@@ -17,7 +18,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminDashboardPage() {
   const session = await getSession();
   if (!session) redirect("/login");
-  if (session.role !== "ADMIN") redirect(getDashboardPath(session.role));
+  if (!isPlatformStaff(session.role)) redirect(getDashboardPath(session.role));
 
   /** Heal FOLLOW_UP users missing ACTIVE status — throttled to O(1) per load. */
   await backfillFollowUpProgram();
@@ -32,6 +33,7 @@ export default async function AdminDashboardPage() {
     stageGroups,
     opportunities,
     guidesRaw,
+    supervisorsRaw,
     beneficiariesRaw,
     followUpsRaw,
     employedBeneficiaries,
@@ -62,6 +64,17 @@ export default async function AdminDashboardPage() {
         },
         orderBy: { createdAt: "desc" },
       }),
+    db.user.findMany({
+      where: { role: "ADMIN" },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        isActive: true,
+      },
+      orderBy: { createdAt: "desc" },
+    }),
       db.user.findMany({
         where: { role: "BENEFICIARY" },
         select: {
@@ -165,6 +178,14 @@ export default async function AdminDashboardPage() {
     employedCount: employedBeneficiaries.length,
     periodLabel: `تقرير الأثر — آخر 6 أشهر (من ${formatArDate(sixMonthsAgo)})`,
   };
+
+  const supervisors = supervisorsRaw.map((s) => ({
+    id: s.id,
+    name: s.name,
+    email: s.email,
+    phone: s.phone,
+    isActive: s.isActive,
+  }));
 
   const guides = guidesRaw.map((g) => ({
     id: g.id,
@@ -421,6 +442,8 @@ export default async function AdminDashboardPage() {
         </div>
 
         <AdminDashboardTabs
+        supervisors={supervisors}
+        canManageSupervisors={isSystemAdmin(session.role)}
           opportunities={opportunities}
           guides={guides}
           beneficiariesByGuideId={beneficiariesByGuideId}

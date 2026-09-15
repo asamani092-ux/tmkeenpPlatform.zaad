@@ -1,15 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { Role } from "@/generated/prisma/client";
+import { isPlatformStaff } from "@/lib/roles";
 
 const SESSION_COOKIE = "tmkeen_session";
 const ROLE_COOKIE = "tmkeen_role";
-
-const ROLE_PATHS: { prefix: string; role: Role }[] = [
-  { prefix: "/dashboard/admin", role: "ADMIN" },
-  { prefix: "/dashboard/guide", role: "GUIDE" },
-  { prefix: "/dashboard/beneficiary", role: "BENEFICIARY" },
-];
 
 function isUatChecklistAllowed(request: NextRequest): boolean {
   if (process.env.ENABLE_UAT_CHECKLIST === "true") return true;
@@ -23,6 +18,13 @@ function isUatChecklistAllowed(request: NextRequest): boolean {
     h === "[::1]" ||
     h.endsWith(".localhost")
   );
+}
+
+function dashboardFallback(role: Role | string): string {
+  if (isPlatformStaff(role)) return "/dashboard/admin";
+  if (role === "GUIDE") return "/dashboard/guide";
+  if (role === "BENEFICIARY") return "/dashboard/beneficiary";
+  return "/login";
 }
 
 export function middleware(request: NextRequest) {
@@ -50,16 +52,14 @@ export function middleware(request: NextRequest) {
   }
 
   if (isDashboard && sessionId && role) {
-    for (const { prefix, role: required } of ROLE_PATHS) {
-      if (pathname.startsWith(prefix) && role !== required) {
-        const fallback =
-          role === "ADMIN"
-            ? "/dashboard/admin"
-            : role === "GUIDE"
-              ? "/dashboard/guide"
-              : "/dashboard/beneficiary";
-        return NextResponse.redirect(new URL(fallback, request.url));
-      }
+    if (pathname.startsWith("/dashboard/admin") && !isPlatformStaff(role)) {
+      return NextResponse.redirect(new URL(dashboardFallback(role), request.url));
+    }
+    if (pathname.startsWith("/dashboard/guide") && role !== "GUIDE") {
+      return NextResponse.redirect(new URL(dashboardFallback(role), request.url));
+    }
+    if (pathname.startsWith("/dashboard/beneficiary") && role !== "BENEFICIARY") {
+      return NextResponse.redirect(new URL(dashboardFallback(role), request.url));
     }
   }
 

@@ -62,7 +62,7 @@ export default function AdminPipelineBoard({
       onOpenBeneficiary(beneficiaryId);
       return;
     }
-    router.push(`/dashboard/admin?tab=management&beneficiary=${beneficiaryId}`);
+    router.push(`/dashboard/admin?tab=users&window=beneficiaries&beneficiary=${beneficiaryId}`);
   }
 
   function openApproveModal(b: PipelineBeneficiary) {

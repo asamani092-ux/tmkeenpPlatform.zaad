@@ -23,9 +23,10 @@ export default function SlideOver({ open, onClose, title, children }: Props) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50">
+    <div className="fixed inset-0" style={{ zIndex: "var(--z-drawer)" }}>
       <div
-        className="absolute inset-0 bg-black/40 transition-opacity"
+        className="absolute inset-0 transition-opacity"
+        style={{ background: "var(--tmkeen-overlay)" }}
         onClick={onClose}
         aria-hidden
       />

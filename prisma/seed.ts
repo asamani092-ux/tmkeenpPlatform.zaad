@@ -33,6 +33,17 @@ async function main() {
       email: "admin@alzaad.org",
       phone: "0500000001",
       password: passwordHash,
+      role: "SYSTEM_ADMIN",
+      stage: "PENDING_APPROVAL",
+    },
+  });
+
+  await prisma.user.create({
+    data: {
+      name: "مشرف المنصة",
+      email: "supervisor@alzaad.org",
+      phone: "0500000003",
+      password: passwordHash,
       role: "ADMIN",
       stage: "PENDING_APPROVAL",
     },
