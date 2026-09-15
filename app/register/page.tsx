@@ -316,11 +316,14 @@ export default function RegisterPage() {
                   autoComplete="one-time-code"
                   maxLength={6}
                   value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  className="input-field-auth tracking-[0.3em]"
-                  placeholder="000000"
+                  onChange={(e) =>
+                    setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                  }
+                  className="input-field-auth text-center font-mono text-xl tracking-[0.35em]"
+                  placeholder="------"
                   dir="ltr"
                   required
+                  autoFocus
                 />
               </FieldRow>
               <SubmitButton loading={pending} className="btn-primary w-full">

@@ -238,7 +238,7 @@ export default function AdminDashboardTabs({
               data-active={tab === id}
               onClick={() => setTab(id)}
               title={label}
-              className="flex min-h-[44px] min-w-[4.5rem] shrink-0 items-center justify-center gap-1.5 text-xs focus-visible:outline-none sm:min-w-[100px] sm:flex-1 sm:gap-2 sm:text-sm"
+              className="flex min-h-[44px] min-w-[4.5rem] shrink-0 items-center justify-center gap-1.5 px-2 text-xs focus-visible:outline-none sm:min-w-[100px] sm:flex-1 sm:gap-2 sm:text-sm"
             >
               <Icon className="h-4 w-4 shrink-0" />
               <span className="sm:hidden">{shortLabel}</span>
