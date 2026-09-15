@@ -117,9 +117,22 @@ export default function AdminSupervisorsPanel({
       </div>
 
       {!canManage && (
-        <p className="text-sm text-brand-gray">
-          عرض فقط — إضافة وتعديل وحذف المشرفين متاح لمدير النظام فقط.
-        </p>
+        <div
+          className="rounded-lg px-3 py-2 text-sm"
+          style={{
+            background: "var(--warning-surface, #fef3c7)",
+            color: "var(--warning-text, #854d0e)",
+            border: "1px solid var(--warning-border, #fde68a)",
+          }}
+          role="status"
+        >
+          عرض فقط — يلزم حساب <strong>مدير النظام</strong> لإضافة أو تعديل أو حذف
+          المشرفين. إن كنت المدير، سجّل الدخول بـ{" "}
+          <span dir="ltr" className="font-mono text-xs">
+            admin@alzaad.org
+          </span>
+          .
+        </div>
       )}
 
       {supervisors.length === 0 && (

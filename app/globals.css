@@ -50,10 +50,54 @@ body {
     box-shadow: var(--shadow-focus);
   }
 
-  /* Tabs segmented — تركيز مرئي وحالة نشطة من التوكنات */
+  /*
+   * Tabs segmented — طبقة أمان فوق حزمة الزاد.
+   * تضمن الشكل والحالة النشطة حتى لو تأخر تحميل components.css.
+   * Time O(1) selectors; Space O(1).
+   */
+  .tab-bar {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: var(--space-2, 0.5rem);
+    border-radius: var(--radius-xl, var(--tmkeen-radius-xl, 1.25rem));
+    background: var(--surface-raised, var(--tmkeen-surface, #fff));
+    padding: var(--space-1, 0.25rem);
+    box-shadow: var(--shadow-xs, 0 1px 2px rgb(0 0 0 / 0.05));
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tab-bar button {
+    flex: 1 0 auto;
+    min-width: 4.5rem;
+    min-height: 44px;
+    border-radius: var(--radius-lg, var(--tmkeen-radius-lg, 0.875rem));
+    padding: 0.75rem 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-muted, var(--tmkeen-brand-gray, #777375));
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  .tab-bar button[data-active="true"],
+  .tab-bar button[aria-selected="true"],
+  .tab-bar button.active {
+    background: var(--brand-primary, var(--tmkeen-primary, #7b1e3a));
+    color: #fff;
+  }
   .tab-bar button:focus-visible {
     outline: none;
     box-shadow: var(--shadow-focus);
+  }
+  @media (min-width: 640px) {
+    .tab-bar {
+      flex-wrap: wrap;
+      overflow-x: visible;
+    }
+    .tab-bar button {
+      min-width: 100px;
+    }
   }
 
   .auth-field {
@@ -66,28 +110,35 @@ body {
 
   .input-field-auth {
     width: 100%;
-    border-radius: var(--radius-md);
-    border: var(--border-hairline) solid var(--border-subtle);
-    background: transparent;
-    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md, 0.625rem);
+    border: var(--border-thin, 1.5px) solid var(--border-subtle, #d2d0d1);
+    background: var(--surface-base, #fff);
+    padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
     text-align: start;
-    color: var(--text-secondary);
+    color: var(--text-secondary, #4e4b4d);
+    font-size: var(--text-sm, 0.9375rem);
+    line-height: var(--leading-normal, 1.6);
     outline: none;
-    transition: border-color var(--duration-fast) var(--ease-standard),
-      box-shadow var(--duration-fast) var(--ease-standard);
+    transition: border-color var(--duration-fast, 150ms) var(--ease-standard, ease),
+      box-shadow var(--duration-fast, 150ms) var(--ease-standard, ease);
   }
   .input-field-auth:focus {
-    border-color: var(--border-focus);
-    box-shadow: var(--shadow-focus);
+    border-color: var(--border-focus, var(--brand-primary, #7b1e3a));
+    box-shadow: var(--shadow-focus, 0 0 0 3px rgba(123, 30, 58, 0.2));
   }
 
   .card-auth {
-    border-radius: var(--radius-xl);
-    border: 0;
-    background: var(--surface-raised);
-    padding: var(--space-6);
+    border-radius: var(--radius-xl, 1.25rem);
+    border: var(--border-hairline, 1px) solid var(--border-subtle, #e8e8e8);
+    background: var(--surface-raised, #fff);
+    padding: var(--space-6, 1.5rem);
     text-align: start;
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-md, 0 4px 12px rgba(23, 16, 18, 0.1));
+  }
+  @media (min-width: 640px) {
+    .card-auth {
+      padding: var(--space-8, 2rem);
+    }
   }
 
   /* سلوك الجوال: عمود على الشاشات الضيقة (تفصيل فوق عقد الحزمة) */

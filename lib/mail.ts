@@ -4,6 +4,7 @@ type SendMailParams = {
   to: string;
   subject: string;
   text: string;
+  html?: string;
   from?: string;
 };
 
@@ -155,6 +156,7 @@ export async function sendMail(params: SendMailParams): Promise<boolean> {
     to: params.to,
     subject: params.subject,
     text: params.text,
+    ...(params.html ? { html: params.html } : {}),
     envelope: {
       from,
       to: params.to,

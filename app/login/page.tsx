@@ -138,12 +138,14 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-surface-muted">
+    <div className="flex min-h-screen flex-col bg-surface-muted">
       <Navbar showAuth={false} />
-      <main className="mx-auto max-w-md px-4 py-12">
-        <Suspense fallback={<div className="card h-64 animate-pulse" />}>
-          <LoginForm />
-        </Suspense>
+      <main className="flex flex-1 items-start justify-center px-4 py-10 sm:items-center sm:py-16">
+        <div className="w-full max-w-md">
+          <Suspense fallback={<div className="card-auth h-64 animate-pulse" />}>
+            <LoginForm />
+          </Suspense>
+        </div>
       </main>
     </div>
   );

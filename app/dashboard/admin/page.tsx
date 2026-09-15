@@ -22,6 +22,20 @@ export default async function AdminDashboardPage() {
 
   /** Heal FOLLOW_UP users missing ACTIVE status — throttled to O(1) per load. */
   await backfillFollowUpProgram();
+  /** Ensure a SYSTEM_ADMIN exists (seed email) when none — O(1). */
+  const { ensureSystemAdminExists } = await import("@/lib/ensure-system-admin");
+  await ensureSystemAdminExists();
+
+  /** Re-read role after possible promotion so UI gates stay accurate — O(1). */
+  const { prisma } = await import("@/lib/prisma");
+  const freshRole =
+    (
+      await prisma.user.findUnique({
+        where: { id: session.id },
+        select: { role: true },
+      })
+    )?.role ?? session.role;
+  const canManageSupervisors = isSystemAdmin(freshRole);
 
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
@@ -443,7 +457,7 @@ export default async function AdminDashboardPage() {
 
         <AdminDashboardTabs
         supervisors={supervisors}
-        canManageSupervisors={isSystemAdmin(session.role)}
+        canManageSupervisors={canManageSupervisors}
           opportunities={opportunities}
           guides={guides}
           beneficiariesByGuideId={beneficiariesByGuideId}

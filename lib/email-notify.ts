@@ -3,6 +3,7 @@ import fs from "fs/promises";
 import path from "path";
 
 import { sendMail, isSmtpConfigured } from "@/lib/mail";
+import { wrapArabicEmailHtml } from "@/lib/email-html";
 import { formatArDateTime } from "@/lib/datetime-local";
 
 
@@ -194,6 +195,7 @@ async function dispatch(from: string, emails: EmailPayload[]): Promise<void> {
         to: email.to,
         subject: email.subject,
         text: email.body,
+        html: wrapArabicEmailHtml(email.body, email.subject),
       });
       if (!ok) {
         throw new Error(`فشل إرسال البريد إلى ${email.to}`);
@@ -310,7 +312,8 @@ export async function sendRegistrationOtpEmail(params: {
         "",
         `الرمز: ${params.code}`,
         "",
-        "الرمز صالح لمدة 10 دقائق فقط.",
+        "أدخل هذا الرمز في صفحة التسجيل خلال 10 دقائق.",
+        "الرمز صالح لمرة واحدة فقط، ولا تشاركه مع أي شخص.",
         "إذا لم تطلب التسجيل، يمكنك تجاهل هذه الرسالة.",
         "",
         "مع تحيات فريق منصة تمكين",

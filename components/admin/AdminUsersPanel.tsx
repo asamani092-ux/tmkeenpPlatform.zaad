@@ -49,35 +49,48 @@ export default function AdminUsersPanel({
   openBeneficiaryId,
   onBeneficiaryOpened,
 }: Props) {
-  const windows: { id: UsersWindow; label: string }[] = [
-    { id: "supervisors", label: adminCopy.usersWindowSupervisors },
-    { id: "guides", label: adminCopy.usersWindowGuides },
-    { id: "beneficiaries", label: adminCopy.usersWindowBeneficiaries },
+  const windows: { id: UsersWindow; label: string; shortLabel: string }[] = [
+    {
+      id: "supervisors",
+      label: adminCopy.usersWindowSupervisors,
+      shortLabel: "مشرفون",
+    },
+    {
+      id: "guides",
+      label: adminCopy.usersWindowGuides,
+      shortLabel: "مرشدون",
+    },
+    {
+      id: "beneficiaries",
+      label: adminCopy.usersWindowBeneficiaries,
+      shortLabel: "مستفيدون",
+    },
   ];
 
   return (
     <div className="space-y-4">
-      <div
-        role="tablist"
-        aria-label="نوافذ المستخدمين"
-        className="flex flex-wrap gap-2"
-      >
-        {windows.map(({ id, label }) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={window === id}
-            onClick={() => onWindowChange(id)}
-            className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
-              window === id
-                ? "bg-primary text-white"
-                : "bg-surface-muted text-primary hover:bg-surface-border"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+      <div className="-mx-1 overflow-x-auto px-1">
+        <div
+          role="tablist"
+          aria-label="نوافذ المستخدمين"
+          className="tab-bar min-w-max sm:min-w-0"
+        >
+          {windows.map(({ id, label, shortLabel }) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={window === id}
+              data-active={window === id}
+              onClick={() => onWindowChange(id)}
+              title={label}
+              className="flex min-h-[44px] min-w-[4.5rem] shrink-0 items-center justify-center gap-1.5 text-xs focus-visible:outline-none sm:min-w-[100px] sm:flex-1 sm:text-sm"
+            >
+              <span className="sm:hidden">{shortLabel}</span>
+              <span className="hidden sm:inline">{label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {window === "supervisors" && (
