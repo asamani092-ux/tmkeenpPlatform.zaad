@@ -6,10 +6,11 @@ import {
   isValidEmail,
 } from "@/lib/system-settings";
 import { getSmtpPublicInfo } from "@/lib/mail";
+import { isPlatformStaff } from "@/lib/roles";
 
 export async function GET() {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
 
@@ -26,7 +27,7 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
 

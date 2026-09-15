@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
+import { isPlatformStaff } from "@/lib/roles";
 import { savePdfFile } from "@/lib/storage";
 import { checkRateLimit, checkHourlyRateLimit } from "@/lib/rate-limit";
 
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
       }
     }
 
-    if (session && session.role !== "BENEFICIARY" && session.role !== "ADMIN") {
+    if (session && session.role !== "BENEFICIARY" && !isPlatformStaff(session.role)) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
     }
 

@@ -74,7 +74,7 @@ export const UAT_GROUPS: UatToolGroup[] = [
         tool: "توجيه اللوحة",
         path: "/dashboard",
         checks:
-          "ADMIN/GUIDE/BENEFICIARY → المسار الصحيح؛ middleware يمنع تبادل الأدوار",
+          "SYSTEM_ADMIN/ADMIN/GUIDE/BENEFICIARY → المسار الصحيح؛ middleware يمنع تبادل الأدوار",
       },
     ],
   },
@@ -213,7 +213,7 @@ export const UAT_GROUPS: UatToolGroup[] = [
         id: "admin-dashboard",
         tool: "لوحة المدير",
         path: "/dashboard/admin",
-        checks: "بطاقات ملخص؛ admin@alzaad.org",
+        checks: "admin@alzaad.org = مدير النظام؛ supervisor@alzaad.org = مشرف",
       },
       {
         id: "admin-bulk-export",
@@ -346,7 +346,7 @@ export const UAT_GROUPS: UatToolGroup[] = [
         id: "email-02-admin-new-registration",
         tool: "② بريد المدير — مستفيد جديد",
         path: "بعد verify التسجيل",
-        checks: "كل حسابات ADMIN تستلم «تسجيل مستفيد جديد» مع الاسم والبريد",
+        checks: "كل حسابات ADMIN و SYSTEM_ADMIN تستلم «تسجيل مستفيد جديد» مع الاسم والبريد",
       },
       {
         id: "email-03-forgot-password",

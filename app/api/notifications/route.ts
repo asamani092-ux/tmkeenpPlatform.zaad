@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
+import { isPlatformStaff } from "@/lib/roles";
 import {
   listNotifications,
   getUnreadNotificationCount,
@@ -14,7 +15,7 @@ export async function GET() {
     return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
   }
 
-  if (session.role === "ADMIN") {
+  if (isPlatformStaff(session.role)) {
     try {
       await syncFollowUpRemindersForAdmin();
     } catch {

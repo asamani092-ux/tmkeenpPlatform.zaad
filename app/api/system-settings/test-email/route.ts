@@ -3,11 +3,12 @@ import { getSession } from "@/lib/session";
 import { getSystemSettings, isValidEmail } from "@/lib/system-settings";
 import { sendGenericEmail } from "@/lib/email-notify";
 import { describeSmtpError, getSmtpPublicInfo, isSmtpConfigured } from "@/lib/mail";
+import { isPlatformStaff } from "@/lib/roles";
 
 export async function POST(request: Request) {
   try {
     const session = await getSession();
-    if (!session || session.role !== "ADMIN") {
+    if (!session || !isPlatformStaff(session.role)) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
     }
 

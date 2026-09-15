@@ -3,10 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 
 import { getQuestionsForMonth } from "@/lib/follow-up-form-templates";
+import { isPlatformStaff } from "@/lib/roles";
 
 export async function GET(request: Request) {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
 
@@ -25,7 +26,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
 

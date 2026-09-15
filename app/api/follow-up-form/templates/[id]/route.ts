@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { isPlatformStaff } from "@/lib/roles";
 import {
   parseTemplateMonths,
   serializeTemplate,
@@ -10,7 +11,7 @@ type RouteParams = { params: Promise<{ id: string }> };
 
 export async function PATCH(request: Request, { params }: RouteParams) {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
 
@@ -78,7 +79,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
 export async function DELETE(_request: Request, { params }: RouteParams) {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
 

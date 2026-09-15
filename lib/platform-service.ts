@@ -20,6 +20,7 @@ import { sendSessionScheduledEmails } from "@/lib/email-notify";
 import { safeSendEmail } from "@/lib/safe-email";
 import { formatArDateTime } from "@/lib/datetime-local";
 import type { CareerPlanTask } from "@/lib/copy/ar";
+import { isPlatformStaff, isSystemAdmin } from "@/lib/roles";
 
 export type ActionResult = { success: true } | { success: false; error: string };
 
@@ -105,7 +106,7 @@ export async function registerBeneficiaryFromVerifiedPayload(
   const settings = await getSystemSettings();
   const { sendGenericEmail } = await import("@/lib/email-notify");
   const admins = await prisma.user.findMany({
-    where: { role: "ADMIN" },
+    where: { role: { in: ["ADMIN", "SYSTEM_ADMIN"] } },
     select: { email: true },
   });
   for (const admin of admins) {
@@ -544,7 +545,7 @@ export async function createOpportunity(data: {
   showToAll?: boolean;
 }): Promise<ActionResult> {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
@@ -584,7 +585,7 @@ export async function updateOpportunity(
   }>
 ): Promise<ActionResult> {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
@@ -613,7 +614,7 @@ export async function updateOpportunity(
 
 export async function deleteOpportunity(id: string): Promise<ActionResult> {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
@@ -631,7 +632,7 @@ export async function createGuide(data: {
   password: string;
 }): Promise<ActionResult> {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
@@ -664,7 +665,7 @@ export async function updateGuide(
   data: Partial<{ name: string; email: string; phone: string; password: string }>
 ): Promise<ActionResult> {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
@@ -690,7 +691,7 @@ export async function updateGuide(
 
 export async function deleteGuide(id: string): Promise<ActionResult> {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
@@ -714,7 +715,7 @@ export async function assignGuideToBeneficiary(data: {
   guideId: string | null;
 }): Promise<ActionResult> {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
@@ -746,7 +747,7 @@ export async function assignGuideToBeneficiary(data: {
  */
 export async function deleteBeneficiary(id: string): Promise<ActionResult> {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
@@ -779,7 +780,7 @@ export async function adminUpdateBeneficiary(
   }
 ): Promise<ActionResult> {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
@@ -863,7 +864,7 @@ export async function createFollowUp(data: {
   notes?: string;
 }): Promise<ActionResult> {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
@@ -903,7 +904,7 @@ export async function updateFollowUp(
   data: Partial<{ status: FollowUpStatus; notes: string }>
 ): Promise<ActionResult> {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
@@ -923,7 +924,7 @@ export async function updateFollowUp(
 
 export async function deleteFollowUp(id: string): Promise<ActionResult> {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
@@ -1058,7 +1059,7 @@ export async function setOpportunityTargets(
   beneficiaryIds: string[]
 ): Promise<ActionResult> {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
@@ -1250,7 +1251,7 @@ export async function approveRegistration(
   beneficiaryId: string
 ): Promise<ActionResult> {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
@@ -1305,7 +1306,7 @@ export async function approveStageTransition(
   beneficiaryId: string
 ): Promise<ActionResult & { stage?: string }> {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
@@ -1414,7 +1415,7 @@ export async function reviewApplication(data: {
   reviewNote?: string;
 }): Promise<ActionResult> {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
@@ -1497,6 +1498,136 @@ export async function reviewApplication(data: {
     );
   }
 
+  return { success: true };
+}
+
+/** List supervisors (ADMIN). Time O(n), Space O(n). */
+export async function listSupervisors(): Promise<
+  ActionResult & { supervisors?: { id: string; name: string; email: string; phone: string; isActive: boolean }[] }
+> {
+  const session = await getSession();
+  if (!session || !isPlatformStaff(session.role)) {
+    return { success: false, error: "غير مصرح" };
+  }
+
+  const supervisors = await prisma.user.findMany({
+    where: { role: "ADMIN" },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      isActive: true,
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return { success: true, supervisors };
+}
+
+/** Create supervisor (ADMIN only). System admin only. Time O(1), Space O(1). */
+export async function createAdmin(data: {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+}): Promise<ActionResult> {
+  const session = await getSession();
+  if (!session || !isSystemAdmin(session.role)) {
+    return { success: false, error: "غير مصرح" };
+  }
+
+  if (!data.name?.trim() || !data.email?.trim() || !data.phone?.trim() || !data.password) {
+    return { success: false, error: "جميع الحقول مطلوبة" };
+  }
+  if (data.password.length < 6) {
+    return { success: false, error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" };
+  }
+
+  const email = data.email.toLowerCase().trim();
+  if (!isValidEmailFormat(email)) {
+    return { success: false, error: "البريد الإلكتروني غير صالح" };
+  }
+
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) {
+    return { success: false, error: "البريد مسجل مسبقاً" };
+  }
+
+  await prisma.user.create({
+    data: {
+      name: data.name.trim(),
+      email,
+      phone: data.phone.trim(),
+      password: await hashPassword(data.password),
+      role: "ADMIN",
+      stage: "PENDING_APPROVAL",
+    },
+  });
+
+  return { success: true };
+}
+
+/** Update supervisor. System admin only. Time O(1), Space O(1). */
+export async function updateAdmin(
+  id: string,
+  data: Partial<{ name: string; email: string; phone: string; password: string; isActive: boolean }>
+): Promise<ActionResult> {
+  const session = await getSession();
+  if (!session || !isSystemAdmin(session.role)) {
+    return { success: false, error: "غير مصرح" };
+  }
+
+  const target = await prisma.user.findFirst({ where: { id, role: "ADMIN" } });
+  if (!target) {
+    return { success: false, error: "المشرف غير موجود" };
+  }
+
+  if (data.email !== undefined) {
+    const email = data.email.toLowerCase().trim();
+    if (!isValidEmailFormat(email)) {
+      return { success: false, error: "البريد الإلكتروني غير صالح" };
+    }
+    const clash = await prisma.user.findFirst({
+      where: { email, id: { not: id } },
+      select: { id: true },
+    });
+    if (clash) {
+      return { success: false, error: "البريد مسجل مسبقاً" };
+    }
+  }
+
+  if (data.password !== undefined && data.password.length > 0 && data.password.length < 6) {
+    return { success: false, error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" };
+  }
+
+  await prisma.user.update({
+    where: { id },
+    data: {
+      ...(data.name !== undefined ? { name: data.name.trim() } : {}),
+      ...(data.email !== undefined ? { email: data.email.toLowerCase().trim() } : {}),
+      ...(data.phone !== undefined ? { phone: data.phone.trim() } : {}),
+      ...(data.password ? { password: await hashPassword(data.password) } : {}),
+      ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
+    },
+  });
+
+  return { success: true };
+}
+
+/** Delete supervisor. System admin only. Time O(1), Space O(1). */
+export async function deleteAdmin(id: string): Promise<ActionResult> {
+  const session = await getSession();
+  if (!session || !isSystemAdmin(session.role)) {
+    return { success: false, error: "غير مصرح" };
+  }
+
+  const target = await prisma.user.findFirst({ where: { id, role: "ADMIN" } });
+  if (!target) {
+    return { success: false, error: "المشرف غير موجود" };
+  }
+
+  await prisma.user.delete({ where: { id } });
   return { success: true };
 }
 

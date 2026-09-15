@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import fs from "fs/promises";
 import { getSession } from "@/lib/session";
+import { isPlatformStaff } from "@/lib/roles";
 import { resolveStoredFile } from "@/lib/storage";
 import { prisma } from "@/lib/prisma";
 
@@ -69,7 +70,7 @@ export async function GET(_request: Request, { params }: Params) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
     }
 
-    if (session.role === "ADMIN") {
+    if (isPlatformStaff(session.role)) {
       // full access
     } else if (session.role === "GUIDE") {
       const allowed = await guideAllowedPaths(session.id);

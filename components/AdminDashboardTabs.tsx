@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import AdminOpportunitiesSection from "@/components/admin/AdminOpportunitiesSection";
-import AdminGuidePanel from "@/components/admin/AdminGuidePanel";
-import AdminBeneficiaryManagement from "@/components/admin/AdminBeneficiaryManagement";
+import AdminUsersPanel, { type UsersWindow } from "@/components/admin/AdminUsersPanel";
 import AdminFollowUpPanel from "@/components/admin/AdminFollowUpPanel";
 import AdminPipelineBoard from "@/components/admin/AdminPipelineBoard";
 import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
@@ -12,7 +11,7 @@ import AdminApplicationsPanel from "@/components/admin/AdminApplicationsPanel";
 import AdminImpactPanel, { type ImpactStats } from "@/components/admin/AdminImpactPanel";
 import { adminCopy } from "@/lib/copy/ar";
 import { Stage } from "@/generated/prisma/client";
-import { Briefcase, BarChart3, ClipboardList, Kanban, Settings, UserCog, UsersRound, FileCheck } from "lucide-react";
+import { Briefcase, BarChart3, ClipboardList, Kanban, Settings, UsersRound, FileCheck } from "lucide-react";
 import type { ManagedBeneficiary } from "@/components/admin/AdminBeneficiaryManagement";
 
 type Opportunity = {
@@ -79,6 +78,14 @@ type ApplicationRow = {
   opportunity: { id: string; title: string; type: string; provider: string };
 };
 
+type Supervisor = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  isActive: boolean;
+};
+
 type Props = {
   opportunities: Opportunity[];
   guides: Guide[];
@@ -97,9 +104,11 @@ type Props = {
   }[];
   applications: ApplicationRow[];
   impactStats: ImpactStats;
+  supervisors: Supervisor[];
+  canManageSupervisors: boolean;
 };
 
-type Tab = "pipeline" | "opportunities" | "guides" | "management" | "applications" | "followup" | "impact" | "settings";
+type Tab = "pipeline" | "opportunities" | "users" | "applications" | "followup" | "impact" | "settings";
 
 export default function AdminDashboardTabs({
   opportunities,
@@ -111,29 +120,47 @@ export default function AdminDashboardTabs({
   employedBeneficiaries,
   applications,
   impactStats,
+  supervisors,
+  canManageSupervisors,
 }: Props) {
   const searchParams = useSearchParams();
   const [tab, setTab] = useState<Tab>("pipeline");
   const [openBeneficiaryId, setOpenBeneficiaryId] = useState<string | null>(null);
+  const [usersWindow, setUsersWindow] = useState<UsersWindow>("supervisors");
 
   useEffect(() => {
     const tabParam = searchParams.get("tab");
     const validTabs: Tab[] = [
       "pipeline",
       "opportunities",
-      "guides",
-      "management",
+      "users",
       "applications",
       "followup",
       "impact",
       "settings",
     ];
-    if (tabParam && validTabs.includes(tabParam as Tab)) {
+    const windowParam = searchParams.get("window");
+    const validWindows: UsersWindow[] = ["supervisors", "guides", "beneficiaries"];
+
+    if (tabParam === "guides") {
+      setTab("users");
+      setUsersWindow("guides");
+    } else if (tabParam === "management") {
+      setTab("users");
+      setUsersWindow("beneficiaries");
+    } else if (tabParam && validTabs.includes(tabParam as Tab)) {
       setTab(tabParam as Tab);
     }
+
+    if (windowParam && validWindows.includes(windowParam as UsersWindow)) {
+      setUsersWindow(windowParam as UsersWindow);
+    }
+
     const beneficiaryId = searchParams.get("beneficiary");
     if (beneficiaryId) {
       setOpenBeneficiaryId(beneficiaryId);
+      setTab("users");
+      setUsersWindow("beneficiaries");
     }
   }, [searchParams]);
 
@@ -156,15 +183,9 @@ export default function AdminDashboardTabs({
       icon: ClipboardList,
     },
     {
-      id: "guides",
-      label: adminCopy.guidesTab,
-      shortLabel: adminCopy.guidesTabShort,
-      icon: UserCog,
-    },
-    {
-      id: "management",
-      label: adminCopy.managementTab,
-      shortLabel: adminCopy.managementTabShort,
+      id: "users",
+      label: adminCopy.usersTab,
+      shortLabel: adminCopy.usersTabShort,
       icon: UsersRound,
     },
     {
@@ -196,7 +217,8 @@ export default function AdminDashboardTabs({
   /** Open management modal without soft-nav URL race / stacked modals — O(1) */
   function openBeneficiaryFile(beneficiaryId: string) {
     setOpenBeneficiaryId(beneficiaryId);
-    setTab("management");
+    setTab("users");
+    setUsersWindow("beneficiaries");
   }
 
   return (
@@ -237,16 +259,16 @@ export default function AdminDashboardTabs({
       {tab === "opportunities" && (
         <AdminOpportunitiesSection opportunities={opportunities} />
       )}
-
-      {tab === "guides" && (
-        <AdminGuidePanel guides={guides} beneficiariesByGuideId={beneficiariesByGuideId} />
-      )}
-
-      {tab === "management" && (
-        <AdminBeneficiaryManagement
-          beneficiaries={managedBeneficiaries}
-          guides={guides.map((g) => ({ id: g.id, name: g.name }))}
-          initialOpenBeneficiaryId={openBeneficiaryId}
+      {tab === "users" && (
+        <AdminUsersPanel
+          window={usersWindow}
+          onWindowChange={setUsersWindow}
+          supervisors={supervisors}
+          canManageSupervisors={canManageSupervisors}
+          guides={guides}
+          beneficiariesByGuideId={beneficiariesByGuideId}
+          managedBeneficiaries={managedBeneficiaries}
+          openBeneficiaryId={openBeneficiaryId}
           onBeneficiaryOpened={() => setOpenBeneficiaryId(null)}
         />
       )}

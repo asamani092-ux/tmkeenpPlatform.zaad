@@ -469,7 +469,7 @@ export default function AdminFollowUpPanel({
           <div className="space-y-4 text-start">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <a
-                href={`/dashboard/admin?tab=management&beneficiary=${selected.id}`}
+                href={`/dashboard/admin?tab=users&window=beneficiaries&beneficiary=${selected.id}`}
                 className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
               >
                 <ExternalLink className="h-4 w-4" />
