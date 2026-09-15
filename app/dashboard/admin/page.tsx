@@ -22,20 +22,27 @@ export default async function AdminDashboardPage() {
 
   /** Heal FOLLOW_UP users missing ACTIVE status — throttled to O(1) per load. */
   await backfillFollowUpProgram();
-  /** Ensure a SYSTEM_ADMIN exists (seed email) when none — O(1). */
+  /** Ensure a SYSTEM_ADMIN exists (seed email) when none — O(1), soft-fail if enum missing. */
   const { ensureSystemAdminExists } = await import("@/lib/ensure-system-admin");
   await ensureSystemAdminExists();
 
   /** Re-read role after possible promotion so UI gates stay accurate — O(1). */
   const { prisma } = await import("@/lib/prisma");
-  const freshRole =
-    (
-      await prisma.user.findUnique({
-        where: { id: session.id },
-        select: { role: true },
-      })
-    )?.role ?? session.role;
-  const canManageSupervisors = isSystemAdmin(freshRole);
+  let canManageSupervisors = isSystemAdmin(session.role);
+  try {
+    const freshRole =
+      (
+        await prisma.user.findUnique({
+          where: { id: session.id },
+          select: { role: true },
+        })
+      )?.role ?? session.role;
+    canManageSupervisors = isSystemAdmin(freshRole);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!/SYSTEM_ADMIN|invalid input value for enum/i.test(message)) throw err;
+    console.warn("[admin page] role refresh skipped — SYSTEM_ADMIN enum missing");
+  }
 
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);

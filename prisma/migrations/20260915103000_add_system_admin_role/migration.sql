@@ -1,5 +1,3 @@
--- AlterEnum
-ALTER TYPE "Role" ADD VALUE 'SYSTEM_ADMIN';
-
--- Promote legacy seed admin to system admin (single account)
-UPDATE "User" SET role = 'SYSTEM_ADMIN' WHERE email = 'admin@alzaad.org' AND role = 'ADMIN';
+-- AlterEnum only. PostgreSQL cannot use a newly added enum value in the
+-- same transaction as ADD VALUE (Prisma wraps each migration in a txn).
+ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'SYSTEM_ADMIN';
