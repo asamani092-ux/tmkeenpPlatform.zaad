@@ -1,5 +1,5 @@
--- Ensure seed system admin exists when no SYSTEM_ADMIN row is present.
--- Idempotent: does nothing if a SYSTEM_ADMIN already exists.
+-- Promote seed admin after SYSTEM_ADMIN enum value is committed.
+-- Idempotent: no-op when a SYSTEM_ADMIN row already exists.
 UPDATE "User"
 SET role = 'SYSTEM_ADMIN'
 WHERE email = 'admin@alzaad.org'
