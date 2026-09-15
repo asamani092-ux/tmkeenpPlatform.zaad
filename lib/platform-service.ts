@@ -104,7 +104,19 @@ export async function registerBeneficiaryFromVerifiedPayload(
   );
 
   const settings = await getSystemSettings();
-  const { sendGenericEmail } = await import("@/lib/email-notify");
+  const { sendGenericEmail, sendRegistrationReceivedEmail } = await import(
+    "@/lib/email-notify"
+  );
+
+  // Confirm to the beneficiary (OTP already worked — this is the "registered" notice).
+  await safeSendEmail("register confirm beneficiary", () =>
+    sendRegistrationReceivedEmail({
+      to: created.email,
+      name: created.name,
+      senderEmail: settings.senderEmail,
+    })
+  );
+
   const admins = await prisma.user.findMany({
     where: { role: { in: ["ADMIN", "SYSTEM_ADMIN"] } },
     select: { email: true },
@@ -1282,8 +1294,9 @@ export async function approveRegistration(
 
   const settings = await getSystemSettings();
   const { sendGenericEmail } = await import("@/lib/email-notify");
-  await safeSendEmail("approve registration", () =>
-    sendGenericEmail({
+  // Critical beneficiary mail — await and log hard failures (still don't roll back approve).
+  try {
+    await sendGenericEmail({
       to: beneficiary.email,
       subject: "تم اعتماد تسجيلك في منصة تمكين",
       body: [
@@ -1295,8 +1308,10 @@ export async function approveRegistration(
         "مع تحيات فريق منصة تمكين",
       ].join("\n"),
       senderEmail: settings.senderEmail,
-    })
-  );
+    });
+  } catch (err) {
+    console.error("[email] approve registration failed:", err);
+  }
 
   return { success: true };
 }

@@ -131,18 +131,23 @@ export async function sendMail(params: SendMailParams): Promise<boolean> {
     return false;
   }
 
-  const from = (params.from ?? "").trim();
+  const requestedFrom = (params.from ?? "").trim();
+  const smtpUser = cleanSecret(process.env.SMTP_USER);
+  // Outlook rejects From ≠ SMTP auth user — prefer SMTP_USER when they differ.
+  let from = requestedFrom;
   if (!from) {
-    console.error("[EMAIL] missing From — pass settings.senderEmail");
+    from = smtpUser;
+  }
+  if (!from) {
+    console.error("[EMAIL] missing From — pass settings.senderEmail or SMTP_USER");
     return false;
   }
-
-  const smtpUser = cleanSecret(process.env.SMTP_USER).toLowerCase();
-  if (smtpUser && from.toLowerCase() !== smtpUser) {
+  if (smtpUser && from.toLowerCase() !== smtpUser.toLowerCase()) {
     console.warn(
-      "[EMAIL] senderEmail differs from SMTP_USER — Outlook often rejects this",
-      { from, smtpUser }
+      "[EMAIL] aligning From to SMTP_USER (Outlook requirement)",
+      { requestedFrom: from, smtpUser }
     );
+    from = smtpUser;
   }
 
   await tx.sendMail({

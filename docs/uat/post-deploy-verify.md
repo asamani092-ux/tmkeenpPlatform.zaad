@@ -11,8 +11,9 @@
 
 ## 0.1) حفظ بريد المرسل (إصلاح مسار الكتابة)
 
-`senderEmail` يُحفظ تحت `UPLOAD_DIR/data/system-settings.json` (مثلاً `/app/uploads/data/`).
-تأكد أن Coolify يوفّر volume دائم على `/app/uploads` وإلا يظهر «خطأ في الخادم» عند الحفظ.
+`senderEmail` يُحفظ تحت `APP_STORAGE/data/system-settings.json` (مثلاً `/app/storage/data/`).
+تأكد أن Coolify يوفّر volume دائم: سيرفر `/data/tmkeen/storage` → حاوية `/app/storage`،
+ثم `APP_STORAGE=/app/storage sh /app/scripts/check-storage-persistence.sh` حتى تظهر «ثابت».
 
 قائمة التحقق الحية: `/uat-checklist` → مجموعة «ما بعد النشر» أو Canvas
 `postdeploy-email-uat-tools-checklist`.

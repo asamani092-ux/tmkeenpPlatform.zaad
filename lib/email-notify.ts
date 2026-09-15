@@ -319,4 +319,27 @@ export async function sendRegistrationOtpEmail(params: {
   ]);
 }
 
+/** After OTP verify — confirm registration received (pending admin approval) — O(1) */
+export async function sendRegistrationReceivedEmail(params: {
+  to: string;
+  name: string;
+  senderEmail: string;
+}): Promise<void> {
+  await dispatch(params.senderEmail, [
+    {
+      to: params.to,
+      subject: "تم استلام طلب تسجيلك — منصة تمكين",
+      body: [
+        `مرحباً ${params.name}،`,
+        "",
+        "تم استلام طلب تسجيلك في منصة تمكين بنجاح.",
+        "حسابك الآن بانتظار اعتماد الإدارة.",
+        "ستصلك رسالة أخرى عند اعتماد التسجيل.",
+        "",
+        "مع تحيات فريق منصة تمكين",
+      ].join("\n"),
+    },
+  ]);
+}
+
 

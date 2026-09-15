@@ -1,23 +1,23 @@
 import fs from "fs/promises";
 import path from "path";
 import { isValidAsciiEmail } from "@/lib/email-format";
+import { getUploadDir } from "@/lib/storage";
 
 export type SystemSettings = {
   senderEmail: string;
 };
 
 /**
- * Persist under UPLOAD_DIR when set (Coolify volume is writable).
- * Fallback: ./data for local dev — O(1).
+ * Persist under APP_STORAGE / UPLOAD_DIR (Coolify volume) — O(1).
+ * Local dev without env → ./data
  */
 function getSettingsPaths(): { dir: string; file: string } {
-  const uploadDir =
+  const storage =
+    process.env.APP_STORAGE?.trim() ||
     process.env.UPLOAD_DIR?.trim() ||
-    (process.env.NODE_ENV === "production"
-      ? path.join(process.cwd(), "uploads")
-      : "");
-  const dir = uploadDir
-    ? path.join(uploadDir, "data")
+    (process.env.NODE_ENV === "production" ? getUploadDir() : "");
+  const dir = storage
+    ? path.join(storage, "data")
     : path.join(process.cwd(), "data");
   return { dir, file: path.join(dir, "system-settings.json") };
 }
