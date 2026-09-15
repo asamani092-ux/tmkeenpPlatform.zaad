@@ -25,13 +25,12 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
-# prisma.config.ts may require("dotenv/config"); global npm pkgs need NODE_PATH
-ENV NODE_PATH=/usr/local/lib/node_modules
 
 # entrypoint يعمل كـ root أولاً لـ chown على Volume كوليفاي ثم ينتقل إلى nextjs
+# prisma CLI only (no dotenv — prisma.config.ts loads .env without that package)
 RUN addgroup -S nodejs && adduser -S nextjs -G nodejs \
   && apk add --no-cache util-linux su-exec \
-  && npm install -g prisma@7.9.1 dotenv@17.4.2 \
+  && npm install -g prisma@7.8.0 --no-fund --no-audit \
   && mkdir -p /app/uploads/evidence /app/uploads/cv /app/uploads/certificates /app/uploads/data \
   && mkdir -p /app/storage/evidence /app/storage/cv /app/storage/certificates /app/storage/data \
   && mkdir -p /app/scripts \
