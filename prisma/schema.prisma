@@ -81,6 +81,8 @@ model User {
   selectedTrainingCourseIds   String @default("[]")
   isEmployed       Boolean  @default(false)
   isActive         Boolean  @default(true)
+  /** Staff (ADMIN/SYSTEM_ADMIN): receive new-registration in-app + email notices */
+  notifyOnRegistration Boolean @default(true)
   followUpProgramStatus   FollowUpProgramStatus?
   followUpProgramStartedAt DateTime?
   followUpPauseReason     String?
@@ -109,6 +111,7 @@ model User {
 
   @@index([guideId])
   @@index([role, stage])
+  @@index([role, isActive, notifyOnRegistration])
 }
 
 model PasswordResetToken {

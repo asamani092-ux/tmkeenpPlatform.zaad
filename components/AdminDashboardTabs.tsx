@@ -13,6 +13,7 @@ import { adminCopy } from "@/lib/copy/ar";
 import { Stage } from "@/generated/prisma/client";
 import { Briefcase, BarChart3, ClipboardList, Kanban, Settings, UsersRound, FileCheck } from "lucide-react";
 import type { ManagedBeneficiary } from "@/components/admin/AdminBeneficiaryManagement";
+import type { Supervisor } from "@/components/admin/AdminSupervisorsPanel";
 
 type Opportunity = {
   id: string;
@@ -76,14 +77,6 @@ type ApplicationRow = {
   appliedAt: string;
   beneficiary: { id: string; name: string; phone: string; stage: Stage };
   opportunity: { id: string; title: string; type: string; provider: string };
-};
-
-type Supervisor = {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  isActive: boolean;
 };
 
 type Props = {

@@ -70,7 +70,7 @@ export const adminCopy = {
   opportunitiesTabShort: "الفرص",
   usersTab: "المستخدمون",
   usersTabShort: "المستخدمون",
-  usersWindowSupervisors: "المشرفون",
+  usersWindowSupervisors: "الإدارة",
   usersWindowGuides: "المرشدون",
   usersWindowBeneficiaries: "المستفيدون",
   guidesTab: "إدارة المرشدين",

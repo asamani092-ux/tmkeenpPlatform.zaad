@@ -53,7 +53,7 @@ export default function AdminUsersPanel({
     {
       id: "supervisors",
       label: adminCopy.usersWindowSupervisors,
-      shortLabel: "مشرفون",
+      shortLabel: "إدارة",
     },
     {
       id: "guides",

@@ -346,7 +346,7 @@ export const UAT_GROUPS: UatToolGroup[] = [
         id: "email-02-admin-new-registration",
         tool: "② بريد المدير — مستفيد جديد",
         path: "بعد verify التسجيل",
-        checks: "كل حسابات ADMIN و SYSTEM_ADMIN تستلم «تسجيل مستفيد جديد» مع الاسم والبريد",
+        checks: "حسابات ADMIN/SYSTEM_ADMIN النشطة مع تفعيل «إشعار التسجيل» تستلم الإشعار والبريد",
       },
       {
         id: "email-03-forgot-password",

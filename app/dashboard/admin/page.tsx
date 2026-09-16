@@ -86,15 +86,17 @@ export default async function AdminDashboardPage() {
         orderBy: { createdAt: "desc" },
       }),
     db.user.findMany({
-      where: { role: "ADMIN" },
+      where: { role: { in: ["ADMIN", "SYSTEM_ADMIN"] } },
       select: {
         id: true,
         name: true,
         email: true,
         phone: true,
         isActive: true,
+        role: true,
+        notifyOnRegistration: true,
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ role: "asc" }, { createdAt: "desc" }],
     }),
       db.user.findMany({
         where: { role: "BENEFICIARY" },
@@ -206,6 +208,8 @@ export default async function AdminDashboardPage() {
     email: s.email,
     phone: s.phone,
     isActive: s.isActive,
+    role: s.role as "ADMIN" | "SYSTEM_ADMIN",
+    notifyOnRegistration: s.notifyOnRegistration,
   }));
 
   const guides = guidesRaw.map((g) => ({
