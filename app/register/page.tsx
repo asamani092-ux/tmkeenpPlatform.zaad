@@ -112,7 +112,7 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-surface-muted">
       <Navbar showAuth={false} />
       <main className="mx-auto max-w-2xl px-4 py-12">
-        <div className="card-auth">
+        <div className="card">
           <div className="mb-6 flex justify-center">
             <Image
               src="/logo.png"
@@ -146,7 +146,7 @@ export default function RegisterPage() {
                   variant="auth"
                   error={fieldError("name")}
                 >
-                  <input id="name" name="name" required className="input-field-auth" />
+                  <input id="name" name="name" required className="input-field" />
                 </FieldRow>
                 <FieldRow
                   label="رقم الجوال"
@@ -163,7 +163,7 @@ export default function RegisterPage() {
                     inputMode="tel"
                     autoComplete="tel"
                     required
-                    className="input-field-auth"
+                    className="input-field"
                     placeholder="05xxxxxxxx"
                     dir="ltr"
                   />
@@ -182,7 +182,7 @@ export default function RegisterPage() {
                     type="email"
                     autoComplete="email"
                     required
-                    className="input-field-auth"
+                    className="input-field"
                     placeholder="email@example.com"
                     dir="ltr"
                   />
@@ -202,7 +202,7 @@ export default function RegisterPage() {
                     autoComplete="new-password"
                     required
                     minLength={6}
-                    className="input-field-auth"
+                    className="input-field"
                     placeholder="••••••••"
                     dir="ltr"
                   />
@@ -222,7 +222,7 @@ export default function RegisterPage() {
                   id="educationLevel"
                   name="educationLevel"
                   required
-                  className="input-field-auth"
+                  className="input-field"
                 />
               </FieldRow>
               <FieldRow
@@ -237,7 +237,7 @@ export default function RegisterPage() {
                   name="experience"
                   rows={2}
                   required
-                  className="input-field-auth resize-none"
+                  className="input-field resize-none"
                 />
               </FieldRow>
               <FieldRow
@@ -252,7 +252,7 @@ export default function RegisterPage() {
                   name="skills"
                   rows={2}
                   required
-                  className="input-field-auth resize-none"
+                  className="input-field resize-none"
                 />
               </FieldRow>
               <FieldRow
@@ -267,7 +267,7 @@ export default function RegisterPage() {
                   name="careerInterests"
                   rows={2}
                   required
-                  className="input-field-auth resize-none"
+                  className="input-field resize-none"
                 />
               </FieldRow>
 
@@ -331,7 +331,7 @@ export default function RegisterPage() {
                   onChange={(e) =>
                     setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))
                   }
-                  className="input-field-auth text-center font-mono text-xl tracking-[0.35em]"
+                  className="input-field text-center font-mono text-xl tracking-[0.35em]"
                   placeholder="------"
                   dir="ltr"
                   required

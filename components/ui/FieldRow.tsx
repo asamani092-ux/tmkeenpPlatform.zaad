@@ -20,7 +20,7 @@ export default function FieldRow({
   children,
 }: Props) {
   const cellClass =
-    variant === "auth" ? "auth-field" : variant === "plain" ? "field-plain" : "field-cell";
+    variant === "auth" || variant === "default" ? "field-cell" : "field-plain";
   const invalidClass = error
     ? variant === "auth" || variant === "plain"
       ? ""
@@ -49,9 +49,7 @@ export default function FieldRow({
           className={
             variant === "plain"
               ? "w-full text-start text-sm font-semibold text-primary"
-              : `field-cell-label${
-                  variant === "auth" ? " w-full text-start sm:w-auto" : ""
-                }`
+              : "field-cell-label"
           }
         >
           {label}

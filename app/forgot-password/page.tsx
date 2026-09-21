@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen bg-surface-muted">
       <Navbar showAuth={false} />
       <main className="mx-auto max-w-md px-4 py-12">
-        <div className="card-auth">
+        <div className="card">
           <div className="mb-6 flex items-center gap-3">
             <KeyRound className="h-8 w-8 text-primary" />
             <div>
@@ -63,7 +63,7 @@ export default function ForgotPasswordPage() {
                 name="email"
                 type="email"
                 required
-                className="input-field-auth"
+                className="input-field"
                 dir="ltr"
                 autoComplete="email"
               />

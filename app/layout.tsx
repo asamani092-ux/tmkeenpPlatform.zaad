@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
+import { Tajawal } from "next/font/google";
 import AppToaster from "@/components/ui/AppToaster";
 import "./globals.css";
+
+const tajawal = Tajawal({
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "700", "800"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "منصة التمكين المستدام | جمعية الزاد",
@@ -21,8 +28,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl">
-      <body className="zad-root min-h-screen font-sans antialiased">
+    <html lang="ar" dir="rtl" data-theme="light">
+      <body className={`${tajawal.className} zad-root min-h-screen antialiased`}>
         <AppToaster />
         {children}
       </body>

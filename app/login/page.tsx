@@ -67,7 +67,7 @@ function LoginForm() {
   }
 
   return (
-    <div className="card-auth">
+    <div className="card">
       <div className="mb-6 flex justify-center">
         <Image
           src="/logo.png"
@@ -98,7 +98,7 @@ function LoginForm() {
             type="email"
             autoComplete="username"
             required
-            className="input-field-auth"
+            className="input-field"
             placeholder="email@example.com"
             dir="ltr"
           />
@@ -111,7 +111,7 @@ function LoginForm() {
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               required
-              className="input-field-auth pe-11"
+              className="input-field pe-11"
               placeholder="••••••••"
               dir="ltr"
             />
@@ -154,7 +154,7 @@ export default function LoginPage() {
       <Navbar showAuth={false} />
       <main className="flex flex-1 items-start justify-center px-4 py-10 sm:items-center sm:py-16">
         <div className="w-full max-w-md">
-          <Suspense fallback={<div className="card-auth h-64 animate-pulse" />}>
+          <Suspense fallback={<div className="card h-64 animate-pulse" />}>
             <LoginForm />
           </Suspense>
         </div>

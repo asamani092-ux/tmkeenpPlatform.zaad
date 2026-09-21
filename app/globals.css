@@ -4,7 +4,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap");
 /* نظام الزاد الموحّد — المصدر الوحيد للتوكنات والمكوّنات الأساسية */
 @import "@zaad/design-system/tokens.css";
-@import "@zaad/design-system/components.css" layer(components);
+@import "@zaad/design-system/components.css";
 
 @tailwind base;
 @tailwind components;
@@ -35,10 +35,10 @@ body {
   }
 
   /* Suppress browser red :invalid chrome only — keep normal borders visible */
-  .input-field-auth:invalid,
-  .auth-field input:invalid,
-  .auth-field textarea:invalid,
-  .auth-field select:invalid {
+  .input-field:invalid,
+  .field-cell input:invalid,
+  .field-cell textarea:invalid,
+  .field-cell select:invalid {
     box-shadow: none !important;
     outline: none !important;
   }
@@ -103,31 +103,8 @@ body {
     }
   }
 
-  .auth-field {
-    @apply rounded-lg border-0 bg-transparent px-0 py-1 text-start;
-  }
-
   .field-plain {
     @apply border-0 bg-transparent px-0 py-0 text-start;
-  }
-
-  .input-field-auth {
-    width: 100%;
-    border-radius: var(--radius-md, 0.625rem);
-    border: var(--border-thin, 1.5px) solid var(--border-subtle, #d2d0d1);
-    background: var(--surface-base, #fff);
-    padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
-    text-align: start;
-    color: var(--text-secondary, #4e4b4d);
-    font-size: var(--text-sm, 0.9375rem);
-    line-height: var(--leading-normal, 1.6);
-    outline: none;
-    transition: border-color var(--duration-fast, 150ms) var(--ease-standard, ease),
-      box-shadow var(--duration-fast, 150ms) var(--ease-standard, ease);
-  }
-  .input-field-auth:focus {
-    border-color: var(--border-focus, var(--brand-primary, #7b1e3a));
-    box-shadow: var(--shadow-focus, 0 0 0 3px rgba(123, 30, 58, 0.2));
   }
 
   .card-auth {
@@ -141,22 +118,6 @@ body {
   @media (min-width: 640px) {
     .card-auth {
       padding: var(--space-8, 2rem);
-    }
-  }
-
-  /* سلوك الجوال: عمود على الشاشات الضيقة (تفصيل فوق عقد الحزمة) */
-  .field-cell-row {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-1);
-    text-align: start;
-  }
-  @media (min-width: 640px) {
-    .field-cell-row {
-      flex-direction: row;
-      align-items: center;
-      gap: var(--space-3);
     }
   }
 
@@ -255,4 +216,9 @@ body {
       content: none;
     }
   }
+}
+
+/* زر إظهار كلمة المرور: .input-field من النظام خارج الطبقات فيغلب الحشو */
+.input-field.pe-11 {
+  padding-inline-end: 2.75rem;
 }
