@@ -256,31 +256,3 @@ body {
     }
   }
 }
-
-/* خارج الطبقات: لون الأزرار يبقى ظاهراً حتى لو تغلّب preflight على طبقة components */
-.btn-primary {
-  background-color: var(--brand-primary, #7b1e3a);
-  color: #fff;
-  border: none;
-}
-.btn-primary:hover {
-  background-color: var(--primary-800, #60162c);
-}
-.btn-secondary {
-  background-color: var(--surface-raised, #fff);
-  color: var(--text-primary, #3c3a3b);
-  border: 1px solid var(--border-default, #b4b1b3);
-}
-.btn-secondary:hover {
-  background-color: var(--surface-sunken, #e8e8e8);
-}
-.btn-register,
-.btn-recommend {
-  background-color: var(--brand-secondary, #e0b748);
-  color: var(--neutral-900, #171012);
-  border: none;
-}
-.btn-register:hover,
-.btn-recommend:hover {
-  background-color: var(--secondary-500, #c99c22);
-}

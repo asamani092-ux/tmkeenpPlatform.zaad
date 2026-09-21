@@ -31,9 +31,21 @@ export default function Navbar({
 
   return (
     <header className="border-b border-surface-border bg-surface shadow-sm">
-      {/* RTL: أول عنصر = يمين الشاشة (الإجراءات)، ثاني عنصر = يسار (الشعار) */}
+      {/* RTL: الشعار أولاً = يمين، الإجراءات = يسار دون تداخل */}
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+        <FullPageLink href="/" className="flex shrink-0 items-center" aria-label="جمعية الزاد">
+          <Image
+            src="/logo.png"
+            alt="شعار جمعية الزاد"
+            width={300}
+            height={179}
+            className="h-10 w-auto object-contain sm:h-12"
+            priority
+            unoptimized
+          />
+        </FullPageLink>
+
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5 sm:gap-2">
           {showAuth && userName && isBeneficiary && unifiedProfile ? (
             <BeneficiaryNavbarActions userName={userName} profile={unifiedProfile} />
           ) : showAuth && userName && isGuide && userEmail ? (
@@ -60,18 +72,6 @@ export default function Navbar({
             </FullPageLink>
           ) : null}
         </div>
-
-        <FullPageLink href="/" className="flex shrink-0 items-center" aria-label="جمعية الزاد">
-          <Image
-            src="/logo.png"
-            alt="شعار جمعية الزاد"
-            width={300}
-            height={179}
-            className="h-10 w-auto object-contain sm:h-12"
-            priority
-            unoptimized
-          />
-        </FullPageLink>
       </div>
     </header>
   );

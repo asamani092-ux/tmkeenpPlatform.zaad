@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import FullPageLink from "@/components/FullPageLink";
 import Navbar from "@/components/Navbar";
 import FieldRow from "@/components/ui/FieldRow";
@@ -112,6 +113,17 @@ export default function RegisterPage() {
       <Navbar showAuth={false} />
       <main className="mx-auto max-w-2xl px-4 py-12">
         <div className="card-auth">
+          <div className="mb-6 flex justify-center">
+            <Image
+              src="/logo.png"
+              alt="شعار جمعية الزاد"
+              width={300}
+              height={179}
+              className="h-16 w-auto object-contain"
+              priority
+              unoptimized
+            />
+          </div>
           <div className="mb-6 flex items-center gap-3">
             <UserPlus className="h-8 w-8 text-primary" />
             <div>
