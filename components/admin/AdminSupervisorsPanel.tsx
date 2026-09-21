@@ -126,12 +126,7 @@ export default function AdminSupervisorsPanel({
           }}
           role="status"
         >
-          عرض فقط — يلزم حساب <strong>مدير النظام</strong> لإضافة أو تعديل أو حذف
-          المشرفين. إن كنت المدير، سجّل الدخول بـ{" "}
-          <span dir="ltr" className="font-mono text-xs">
-            admin@alzaad.org
-          </span>
-          .
+          عرض فقط — حسابك لا يملك صلاحية إضافة أو تعديل أو حذف المشرفين.
         </div>
       )}
 

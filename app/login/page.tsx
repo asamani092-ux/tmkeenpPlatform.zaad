@@ -98,7 +98,7 @@ function LoginForm() {
             type="email"
             autoComplete="username"
             required
-            className="input-field"
+            className="input-field min-h-12"
             placeholder="email@example.com"
             dir="ltr"
           />
@@ -111,7 +111,7 @@ function LoginForm() {
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               required
-              className="input-field pe-11"
+              className="input-field min-h-12 pe-11"
               placeholder="••••••••"
               dir="ltr"
             />
@@ -127,7 +127,7 @@ function LoginForm() {
             </button>
           </div>
         </FieldRow>
-        <SubmitButton loading={loading} className="btn-primary w-full">
+        <SubmitButton loading={loading} className="btn-primary min-h-12 w-full">
           دخول
         </SubmitButton>
       </form>
@@ -144,6 +144,11 @@ function LoginForm() {
           سجّل هنا
         </FullPageLink>
       </p>
+      <p className="mt-3 text-center text-sm">
+        <FullPageLink href="/login/guide" className="font-semibold text-primary hover:underline">
+          دخول المرشد
+        </FullPageLink>
+      </p>
     </div>
   );
 }
@@ -152,7 +157,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col bg-surface-muted">
       <Navbar showAuth={false} />
-      <main className="flex flex-1 items-start justify-center px-4 py-10 sm:items-center sm:py-16">
+      <main className="flex flex-1 items-start justify-center px-4 py-6 sm:items-center sm:py-16">
         <div className="w-full max-w-md">
           <Suspense fallback={<div className="card h-64 animate-pulse" />}>
             <LoginForm />

@@ -7,6 +7,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
+import OpportunityAudienceFields from "@/components/admin/OpportunityAudienceFields";
 import { useSyncFromProps } from "@/lib/use-sync-from-props";
 
 type Opportunity = {
@@ -20,6 +21,7 @@ type Opportunity = {
   salary: string | null;
   jobType: string | null;
   showToAll: boolean;
+  targetCount: number;
 };
 
 type Props = {
@@ -81,6 +83,21 @@ export default function AdminOpportunityList({ opportunities: initial }: Props) 
         setMessage(data.error || "فشل التحديث");
         return;
       }
+      const showToAll = form.get("showToAll") === "on";
+      const beneficiaryIds = String(form.get("beneficiaryIds") ?? "")
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean);
+      const targetsRes = await fetch(`/api/opportunities/${id}/targets`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ beneficiaryIds: showToAll ? [] : beneficiaryIds }),
+      });
+      if (!targetsRes.ok) {
+        const targetsData = await targetsRes.json();
+        setMessage(targetsData.error || "تم حفظ الفرصة وتعذر حفظ المستهدفين");
+        return;
+      }
       setEditingId(null);
       setMessage("تم التحديث");
       router.refresh();
@@ -133,15 +150,10 @@ export default function AdminOpportunityList({ opportunities: initial }: Props) 
                       ))}
                     </select>
                   </FieldRow>
-                  <label className="flex cursor-pointer items-center gap-2 text-sm text-brand-gray">
-                    <input
-                      type="checkbox"
-                      name="showToAll"
-                      defaultChecked={opp.showToAll}
-                      className="shrink-0"
-                    />
-                    عرض لجميع المستفيدين المعتمدين
-                  </label>
+                  <OpportunityAudienceFields
+                    opportunityId={opp.id}
+                    initialShowToAll={opp.showToAll}
+                  />
                   <div className="flex gap-2">
                     <SubmitButton loading={pending} className="btn-primary flex-1 !py-2 text-sm">
                       حفظ
@@ -177,7 +189,11 @@ export default function AdminOpportunityList({ opportunities: initial }: Props) 
                         opp.status}
                     </span>
                     {" · "}
-                    {opp.showToAll ? "للجميع" : "حسب المرحلة"}
+                    {opp.showToAll
+                      ? "للجميع"
+                      : opp.targetCount > 0
+                        ? "مستفيدون محددون"
+                        : "حسب المرحلة"}
                   </p>
                 </>
               )}

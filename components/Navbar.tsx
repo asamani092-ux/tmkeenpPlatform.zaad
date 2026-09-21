@@ -67,9 +67,17 @@ export default function Navbar({
               </form>
             </>
           ) : showAuth && !userName ? (
-            <FullPageLink href="/login" className="btn-primary !px-4 !py-2 text-sm">
-              تسجيل الدخول
-            </FullPageLink>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <FullPageLink
+                href="/login/guide"
+                className="rounded-lg px-2 py-2 text-sm font-semibold text-primary hover:bg-surface-muted"
+              >
+                دخول المرشد
+              </FullPageLink>
+              <FullPageLink href="/login" className="btn-primary !px-4 !py-2 text-sm">
+                تسجيل الدخول
+              </FullPageLink>
+            </div>
           ) : null}
         </div>
       </div>

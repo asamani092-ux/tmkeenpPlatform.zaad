@@ -12,6 +12,7 @@ export const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
   PENDING: "قيد الانتظار",
   ACCEPTED: "مقبول",
   REJECTED: "مرفوض",
+  COMPLETED: "مكتمل",
 };
 
 export const FOLLOW_UP_STATUS_LABELS: Record<FollowUpStatus, string> = {

@@ -20,7 +20,8 @@ import { sendSessionScheduledEmails } from "@/lib/email-notify";
 import { safeSendEmail } from "@/lib/safe-email";
 import { formatArDateTime } from "@/lib/datetime-local";
 import type { CareerPlanTask } from "@/lib/copy/ar";
-import { isPlatformStaff, isSystemAdmin } from "@/lib/roles";
+import { isPlatformStaff } from "@/lib/roles";
+import { recordStageTransition } from "@/lib/stage-history";
 
 export type ActionResult = { success: true } | { success: false; error: string };
 
@@ -63,7 +64,7 @@ type RegisterVerifiedPayload = {
 /** Create beneficiary after email OTP verified — Time O(1), Space O(1) */
 export async function registerBeneficiaryFromVerifiedPayload(
   data: RegisterVerifiedPayload
-): Promise<ActionResult> {
+): Promise<ActionResult & { userId?: string }> {
   const email = data.email.toLowerCase().trim();
   if (!isValidEmailFormat(email)) {
     return { success: false, error: "البريد الإلكتروني غير صالح" };
@@ -132,7 +133,7 @@ export async function registerBeneficiaryFromVerifiedPayload(
     );
   }
 
-  return { success: true };
+  return { success: true, userId: created.id };
 }
 
 /** @deprecated use startRegistrationChallenge + verify — kept for typed callers */
@@ -198,7 +199,8 @@ export async function applyToOpportunity(
     user.stage,
     opportunity.type,
     opportunity.id,
-    targeted ? new Set([opportunityId]) : new Set()
+    targeted ? new Set([opportunityId]) : new Set(),
+    opportunity.showToAll
   );
 
   if (!canSee) {
@@ -555,7 +557,7 @@ export async function createOpportunity(data: {
   salary: string;
   jobType: string;
   showToAll?: boolean;
-}): Promise<ActionResult> {
+}): Promise<ActionResult & { id?: string }> {
   const session = await getSession();
   if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
@@ -565,7 +567,7 @@ export async function createOpportunity(data: {
     return { success: false, error: "جميع الحقول الأساسية مطلوبة" };
   }
 
-  await prisma.opportunity.create({
+  const created = await prisma.opportunity.create({
     data: {
       type: data.type,
       title: data.title.trim(),
@@ -579,7 +581,7 @@ export async function createOpportunity(data: {
     },
   });
 
-  return { success: true };
+  return { success: true, id: created.id };
 }
 
 export async function updateOpportunity(
@@ -831,31 +833,41 @@ export async function adminUpdateBeneficiary(
   const stageChanged =
     data.stage !== undefined && data.stage !== beneficiary.stage;
 
-  await prisma.user.update({
-    where: { id: beneficiaryId },
-    data: {
-      ...(data.name !== undefined ? { name: data.name.trim() } : {}),
-      ...(data.phone !== undefined ? { phone: data.phone.trim() } : {}),
-      ...(data.email !== undefined ? { email: data.email.toLowerCase().trim() } : {}),
-      ...(data.password ? { password: await hashPassword(data.password) } : {}),
-      ...(data.educationLevel !== undefined
-        ? { educationLevel: data.educationLevel.trim() }
-        : {}),
-      ...(data.experience !== undefined ? { experience: data.experience.trim() } : {}),
-      ...(data.skills !== undefined ? { skills: data.skills.trim() } : {}),
-      ...(data.careerInterests !== undefined
-        ? { careerInterests: data.careerInterests.trim() }
-        : {}),
-      ...(data.guideId !== undefined ? { guideId: data.guideId } : {}),
-      ...(stageChanged
-        ? {
-            stage: data.stage,
-            pendingStage: null,
-            stageEnteredAt: new Date(),
-            ...(data.stage === "EMPLOYMENT" ? { isEmployed: true } : {}),
-          }
-        : {}),
-    },
+  await prisma.$transaction(async (tx) => {
+    if (stageChanged && data.stage) {
+      await recordStageTransition(tx, {
+        beneficiaryId,
+        fromStage: beneficiary.stage,
+        toStage: data.stage,
+        note: "تعديل إداري للمرحلة",
+      });
+    }
+    await tx.user.update({
+      where: { id: beneficiaryId },
+      data: {
+        ...(data.name !== undefined ? { name: data.name.trim() } : {}),
+        ...(data.phone !== undefined ? { phone: data.phone.trim() } : {}),
+        ...(data.email !== undefined ? { email: data.email.toLowerCase().trim() } : {}),
+        ...(data.password ? { password: await hashPassword(data.password) } : {}),
+        ...(data.educationLevel !== undefined
+          ? { educationLevel: data.educationLevel.trim() }
+          : {}),
+        ...(data.experience !== undefined ? { experience: data.experience.trim() } : {}),
+        ...(data.skills !== undefined ? { skills: data.skills.trim() } : {}),
+        ...(data.careerInterests !== undefined
+          ? { careerInterests: data.careerInterests.trim() }
+          : {}),
+        ...(data.guideId !== undefined ? { guideId: data.guideId } : {}),
+        ...(stageChanged
+          ? {
+              stage: data.stage,
+              pendingStage: null,
+              stageEnteredAt: new Date(),
+              ...(data.stage === "EMPLOYMENT" ? { isEmployed: true } : {}),
+            }
+          : {}),
+      },
+    });
   });
 
   if (stageChanged && data.stage === "FOLLOW_UP") {
@@ -1277,13 +1289,21 @@ export async function approveRegistration(
     return { success: false, error: "يجب إسناد مرشد قبل اعتماد التسجيل" };
   }
 
-  await prisma.user.update({
-    where: { id: beneficiaryId },
-    data: {
-      stage: "GUIDANCE",
-      stageEnteredAt: new Date(),
-      pendingStage: null,
-    },
+  await prisma.$transaction(async (tx) => {
+    await recordStageTransition(tx, {
+      beneficiaryId,
+      fromStage: beneficiary.stage,
+      toStage: "GUIDANCE",
+      note: "اعتماد التسجيل",
+    });
+    await tx.user.update({
+      where: { id: beneficiaryId },
+      data: {
+        stage: "GUIDANCE",
+        stageEnteredAt: new Date(),
+        pendingStage: null,
+      },
+    });
   });
 
   await createNotification(
@@ -1334,14 +1354,22 @@ export async function approveStageTransition(
 
   const newStage = beneficiary.pendingStage;
 
-  await prisma.user.update({
-    where: { id: beneficiaryId },
-    data: {
-      stage: newStage,
-      pendingStage: null,
-      stageEnteredAt: new Date(),
-      ...(newStage === "EMPLOYMENT" ? { isEmployed: true } : {}),
-    },
+  await prisma.$transaction(async (tx) => {
+    await recordStageTransition(tx, {
+      beneficiaryId,
+      fromStage: beneficiary.stage,
+      toStage: newStage,
+      note: "اعتماد انتقال المرحلة",
+    });
+    await tx.user.update({
+      where: { id: beneficiaryId },
+      data: {
+        stage: newStage,
+        pendingStage: null,
+        stageEnteredAt: new Date(),
+        ...(newStage === "EMPLOYMENT" ? { isEmployed: true } : {}),
+      },
+    });
   });
 
   await createNotification(
@@ -1516,6 +1544,58 @@ export async function reviewApplication(data: {
   return { success: true };
 }
 
+/** Mark an accepted application complete. Staff or assigned guide. Time O(1), Space O(1). */
+export async function completeApplication(applicationId: string): Promise<ActionResult> {
+  const session = await getSession();
+  if (!session) return { success: false, error: "غير مصرح" };
+
+  const app = await prisma.application.findUnique({
+    where: { id: applicationId },
+    include: {
+      beneficiary: { select: { id: true, name: true, email: true, guideId: true } },
+      opportunity: { select: { title: true, type: true } },
+    },
+  });
+  if (!app) return { success: false, error: "التقديم غير موجود" };
+
+  const isGuideOf =
+    session.role === "GUIDE" && app.beneficiary.guideId === session.id;
+  if (!isPlatformStaff(session.role) && !isGuideOf) {
+    return { success: false, error: "غير مصرح" };
+  }
+  if (app.status !== "ACCEPTED") {
+    return { success: false, error: "يمكن إكمال التقديم المقبول فقط" };
+  }
+
+  const updated = await prisma.application.updateMany({
+    where: { id: applicationId, status: "ACCEPTED" },
+    data: { status: "COMPLETED" },
+  });
+  if (updated.count === 0) {
+    return { success: false, error: "يمكن إكمال التقديم المقبول فقط" };
+  }
+
+  const kind = app.opportunity.type === "TRAINING" ? "التدريب" : "الفرصة";
+  await createNotification(
+    app.beneficiaryId,
+    `اكتمال ${kind}`,
+    `تم تسجيل إكمال «${app.opportunity.title}» في سجل إنجازاتك.`
+  );
+
+  const settings = await getSystemSettings();
+  const { sendGenericEmail } = await import("@/lib/email-notify");
+  await safeSendEmail("complete application", () =>
+    sendGenericEmail({
+      to: app.beneficiary.email,
+      subject: `اكتمال ${app.opportunity.title} — منصة تمكين`,
+      body: `مرحباً ${app.beneficiary.name}،\n\nتم تسجيل إكمال «${app.opportunity.title}» ويظهر الآن في سجل إنجازاتك.\n\nمع تحيات فريق منصة تمكين`,
+      senderEmail: settings.senderEmail,
+    })
+  );
+
+  return { success: true };
+}
+
 /** List supervisors (ADMIN). Time O(n), Space O(n). */
 export async function listSupervisors(): Promise<
   ActionResult & { supervisors?: { id: string; name: string; email: string; phone: string; isActive: boolean }[] }
@@ -1540,7 +1620,7 @@ export async function listSupervisors(): Promise<
   return { success: true, supervisors };
 }
 
-/** Create supervisor (ADMIN only). System admin only. Time O(1), Space O(1). */
+/** Create supervisor (ADMIN). Platform staff. Time O(1), Space O(1). */
 export async function createAdmin(data: {
   name: string;
   email: string;
@@ -1548,7 +1628,7 @@ export async function createAdmin(data: {
   password: string;
 }): Promise<ActionResult> {
   const session = await getSession();
-  if (!session || !isSystemAdmin(session.role)) {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
@@ -1583,13 +1663,13 @@ export async function createAdmin(data: {
   return { success: true };
 }
 
-/** Update supervisor. System admin only. Time O(1), Space O(1). */
+/** Update supervisor (ADMIN only). Platform staff. Time O(1), Space O(1). */
 export async function updateAdmin(
   id: string,
   data: Partial<{ name: string; email: string; phone: string; password: string; isActive: boolean }>
 ): Promise<ActionResult> {
   const session = await getSession();
-  if (!session || !isSystemAdmin(session.role)) {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
@@ -1630,11 +1710,14 @@ export async function updateAdmin(
   return { success: true };
 }
 
-/** Delete supervisor. System admin only. Time O(1), Space O(1). */
+/** Delete supervisor (ADMIN only). Platform staff. Time O(1), Space O(1). */
 export async function deleteAdmin(id: string): Promise<ActionResult> {
   const session = await getSession();
-  if (!session || !isSystemAdmin(session.role)) {
+  if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
+  }
+  if (session.id === id) {
+    return { success: false, error: "لا يمكنك حذف حسابك" };
   }
 
   const target = await prisma.user.findFirst({ where: { id, role: "ADMIN" } });

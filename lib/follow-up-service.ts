@@ -12,6 +12,7 @@ import type { ActionResult } from "@/lib/platform-service";
 import type { Prisma } from "@/generated/prisma/client";
 import { getQuestionsForMonth } from "@/lib/follow-up-form-templates";
 import { isPlatformStaff } from "@/lib/roles";
+import { recordStageTransition } from "@/lib/stage-history";
 
 export async function initializeFollowUpProgram(beneficiaryId: string): Promise<void> {
   const startedAt = new Date();
@@ -200,14 +201,28 @@ export async function completeFollowUpProgram(beneficiaryId: string): Promise<Ac
     return { success: false, error: "غير مصرح" };
   }
 
-  await prisma.user.update({
+  const current = await prisma.user.findUnique({
     where: { id: beneficiaryId },
-    data: {
-      stage: "CLOSED",
-      followUpProgramStatus: "COMPLETED",
-      pendingStage: null,
-      stageEnteredAt: new Date(),
-    },
+    select: { stage: true },
+  });
+  if (!current) return { success: false, error: "المستفيد غير موجود" };
+
+  await prisma.$transaction(async (tx) => {
+    await recordStageTransition(tx, {
+      beneficiaryId,
+      fromStage: current.stage,
+      toStage: "CLOSED",
+      note: "إكمال برنامج المتابعة",
+    });
+    await tx.user.update({
+      where: { id: beneficiaryId },
+      data: {
+        stage: "CLOSED",
+        followUpProgramStatus: "COMPLETED",
+        pendingStage: null,
+        stageEnteredAt: new Date(),
+      },
+    });
   });
 
   const user = await prisma.user.findUnique({ where: { id: beneficiaryId } });
@@ -240,16 +255,30 @@ export async function withdrawFollowUpProgram(
     return { success: false, error: "غير مصرح" };
   }
 
-  await prisma.user.update({
+  const current = await prisma.user.findUnique({
     where: { id: beneficiaryId },
-    data: {
-      stage: "CLOSED",
-      followUpProgramStatus: "WITHDRAWN",
-      followUpPauseReason: reason?.trim() || null,
-      followUpStatusUpdatedAt: new Date(),
-      pendingStage: null,
-      stageEnteredAt: new Date(),
-    },
+    select: { stage: true },
+  });
+  if (!current) return { success: false, error: "المستفيد غير موجود" };
+
+  await prisma.$transaction(async (tx) => {
+    await recordStageTransition(tx, {
+      beneficiaryId,
+      fromStage: current.stage,
+      toStage: "CLOSED",
+      note: reason?.trim() || "إنهاء برنامج المتابعة",
+    });
+    await tx.user.update({
+      where: { id: beneficiaryId },
+      data: {
+        stage: "CLOSED",
+        followUpProgramStatus: "WITHDRAWN",
+        followUpPauseReason: reason?.trim() || null,
+        followUpStatusUpdatedAt: new Date(),
+        pendingStage: null,
+        stageEnteredAt: new Date(),
+      },
+    });
   });
 
   const user = await prisma.user.findUnique({ where: { id: beneficiaryId } });

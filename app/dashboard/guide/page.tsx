@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import GuideBeneficiaryTabs from "@/components/guide/GuideBeneficiaryTabs";
 import GuideDashboardKpis from "@/components/guide/GuideDashboardKpis";
+import GuideAcceptedApplications from "@/components/guide/GuideAcceptedApplications";
 import { getDashboardPath } from "@/lib/auth";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
@@ -83,13 +84,23 @@ export default async function GuideDashboardPage() {
   if (!session) redirect("/login");
   if (session.role !== "GUIDE") redirect(getDashboardPath(session.role));
 
-  const [activeRaw, previousRaw, trainingCourses] = await Promise.all([
+  const [activeRaw, previousRaw, trainingCourses, acceptedApplications] = await Promise.all([
     fetchBeneficiaries(session.id, "GUIDANCE"),
     fetchBeneficiaries(session.id, "PREVIOUS"),
     prisma.opportunity.findMany({
       where: { type: "TRAINING", status: "متاحة" },
       select: { id: true, title: true, provider: true },
       orderBy: { title: "asc" },
+    }),
+    prisma.application.findMany({
+      where: { status: "ACCEPTED", beneficiary: { guideId: session.id } },
+      orderBy: { appliedAt: "desc" },
+      take: 50,
+      select: {
+        id: true,
+        beneficiary: { select: { name: true } },
+        opportunity: { select: { title: true, type: true } },
+      },
     }),
   ]);
 
@@ -135,7 +146,7 @@ export default async function GuideDashboardPage() {
           <div className="text-start">
             <h1 className="text-2xl font-bold text-primary">لوحة المرشد المهني</h1>
             <p className="text-brand-gray">
-              النشطون ({serialized.length}) قابلون للتعديل · السابقون (
+              تعرض هذه اللوحة المستفيدين المُسندين إليك فقط. النشطون ({serialized.length}) قابلون للتعديل · السابقون (
               {previousSerialized.length}) للعرض فقط
             </p>
           </div>
@@ -146,6 +157,15 @@ export default async function GuideDashboardPage() {
           sessionsThisWeek={sessionsThisWeek}
           pendingTasks={pendingTasks}
           pendingTransitions={pendingTransitions}
+        />
+
+        <GuideAcceptedApplications
+          applications={acceptedApplications.map((a) => ({
+            id: a.id,
+            beneficiaryName: a.beneficiary.name,
+            opportunityTitle: a.opportunity.title,
+            opportunityType: a.opportunity.type,
+          }))}
         />
 
         <GuideBeneficiaryTabs

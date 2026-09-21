@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
-import { isPlatformStaff, isSystemAdmin } from "@/lib/roles";
+import { isPlatformStaff } from "@/lib/roles";
 import { createAdmin, listSupervisors } from "@/lib/platform-service";
 
 export async function GET() {
@@ -18,7 +18,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const session = await getSession();
-  if (!session || !isSystemAdmin(session.role)) {
+  if (!session || !isPlatformStaff(session.role)) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
 

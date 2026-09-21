@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { reviewApplication } from "@/lib/platform-service";
+import { reviewApplication, completeApplication } from "@/lib/platform-service";
 
 export async function PATCH(
   request: Request,
@@ -8,6 +8,14 @@ export async function PATCH(
   try {
     const { id } = await params;
     const { status, reviewNote } = await request.json();
+
+    if (status === "COMPLETED") {
+      const result = await completeApplication(id);
+      if (!result.success) {
+        return NextResponse.json({ error: result.error }, { status: 400 });
+      }
+      return NextResponse.json({ success: true });
+    }
 
     if (status !== "ACCEPTED" && status !== "REJECTED") {
       return NextResponse.json({ error: "حالة غير صالحة" }, { status: 400 });

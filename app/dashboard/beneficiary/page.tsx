@@ -7,6 +7,7 @@ import CareerPlanChecklist from "@/components/beneficiary/CareerPlanChecklist";
 import BeneficiaryGuideSummaryCard from "@/components/beneficiary/BeneficiaryGuideSummaryCard";
 import BeneficiaryProfileCard from "@/components/beneficiary/BeneficiaryProfileCard";
 import FollowUpMonthForm from "@/components/beneficiary/FollowUpMonthForm";
+import BeneficiaryAchievements from "@/components/beneficiary/BeneficiaryAchievements";
 import VerticalStageTimeline from "@/components/beneficiary/VerticalStageTimeline";
 import EmptyState from "@/components/ui/EmptyState";
 import { getFollowUpFormForBeneficiary } from "@/lib/follow-up-service";
@@ -103,6 +104,7 @@ export default async function BeneficiaryDashboardPage() {
         include: { opportunity: true },
         orderBy: { appliedAt: "desc" },
       },
+      stageHistory: { orderBy: { createdAt: "asc" } },
       tasksAsBeneficiary: { orderBy: { createdAt: "asc" } },
     },
   });
@@ -282,6 +284,24 @@ export default async function BeneficiaryDashboardPage() {
             sessions={sessionsSerialized}
           />
         </div>
+
+        <BeneficiaryAchievements
+          stages={user.stageHistory.map((row) => ({
+            id: row.id,
+            fromStage: row.fromStage,
+            toStage: row.toStage,
+            note: row.note,
+            createdAt: formatArDate(row.createdAt),
+          }))}
+          completed={user.applications
+            .filter((app) => app.status === "COMPLETED")
+            .map((app) => ({
+              id: app.id,
+              title: app.opportunity.title,
+              type: app.opportunity.type,
+              completedAt: null,
+            }))}
+        />
 
         <section
           aria-label="المهام والفرص"

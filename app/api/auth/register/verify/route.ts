@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { verifyRegistrationChallenge } from "@/lib/register-verification";
+import { createSession } from "@/lib/session";
 
 /** Confirm email OTP and create the beneficiary account */
 export async function POST(request: Request) {
@@ -19,11 +20,19 @@ export async function POST(request: Request) {
       String(body.code ?? "")
     );
 
-    if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
+    if (!result.success || !result.userId) {
+      return NextResponse.json(
+        { error: result.success ? "تعذر إنشاء الجلسة" : result.error },
+        { status: 400 }
+      );
     }
 
-    return NextResponse.json({ success: true });
+    await createSession(result.userId, "BENEFICIARY");
+
+    return NextResponse.json({
+      success: true,
+      redirect: "/dashboard/beneficiary",
+    });
   } catch {
     return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
   }

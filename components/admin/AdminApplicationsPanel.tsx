@@ -8,7 +8,7 @@ import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
 import { useSyncFromProps } from "@/lib/use-sync-from-props";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { APPLICATION_STATUS_LABELS } from "@/lib/labels";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle, BadgeCheck } from "lucide-react";
 
 type ApplicationRow = {
   id: string;
@@ -59,6 +59,30 @@ export default function AdminApplicationsPanel({ applications: initial }: Props)
   }
 
   const pendingRows = rows.filter((r) => r.status === "PENDING");
+  const acceptedRows = rows.filter((r) => r.status === "ACCEPTED");
+
+  async function complete(id: string) {
+    setPendingId(id);
+    try {
+      const res = await fetch(`/api/applications/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "COMPLETED" }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toastError(data.error || "تعذر تسجيل الإكمال");
+        return;
+      }
+      setRows((prev) => prev.map((r) => (r.id === id ? { ...r, status: "COMPLETED" } : r)));
+      toastSuccess("سُجّل الإكمال في إنجازات المستفيد");
+      router.refresh();
+    } catch {
+      toastError("حدث خطأ في الاتصال — حاول مرة أخرى");
+    } finally {
+      setPendingId(null);
+    }
+  }
 
   const columns: DataTableColumn<ApplicationRow>[] = [
     {
@@ -166,6 +190,35 @@ export default function AdminApplicationsPanel({ applications: initial }: Props)
         emptyMessage="لا توجد تقديمات بانتظار المراجعة"
         pageSize={10}
       />
+
+      {acceptedRows.length > 0 && (
+        <div className="border-t border-surface-border px-4 py-4 sm:px-6">
+          <h3 className="mb-3 text-start text-base font-bold text-primary">تقديمات مقبولة — تسجيل الإكمال</h3>
+          <ul className="space-y-2">
+            {acceptedRows.map((a) => (
+              <li
+                key={a.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-surface-muted px-3 py-2 text-sm"
+              >
+                <span className="text-start">
+                  <span className="font-semibold text-primary">{a.beneficiary.name}</span>
+                  <span className="text-brand-gray"> — {a.opportunity.title}</span>
+                </span>
+                <SubmitButton
+                  type="button"
+                  loading={pendingId === a.id}
+                  disabled={pendingId !== null && pendingId !== a.id}
+                  onClick={() => complete(a.id)}
+                  className="btn-secondary !px-3 !py-1.5 text-xs"
+                >
+                  <BadgeCheck className="inline h-3.5 w-3.5" />
+                  تعليم كمكتمل
+                </SubmitButton>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <ConfirmDialog
         open={rejectTarget !== null}

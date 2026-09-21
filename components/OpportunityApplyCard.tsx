@@ -117,10 +117,14 @@ export default function OpportunityApplyCard({
         )}
       </div>
 
-      {opportunity.requirements && (
+      {opportunity.requirements ? (
         <p className="mt-3 rounded-lg bg-surface-muted px-3 py-2 text-sm text-brand-gray">
           <span className="font-semibold text-primary">الشروط والمتطلبات: </span>
           {opportunity.requirements}
+        </p>
+      ) : (
+        <p className="mt-3 rounded-lg bg-surface-muted px-3 py-2 text-sm text-brand-gray">
+          لا توجد شروط إضافية مسجّلة لهذه الفرصة.
         </p>
       )}
 
