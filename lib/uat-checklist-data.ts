@@ -42,18 +42,24 @@ export const UAT_GROUPS: UatToolGroup[] = [
           "CTAs للضيف/المسجّل؛ قسم كيف نرافقك وعن المنصة؛ شعار؛ خروج/إشعارات عند الدخول",
       },
       {
+        id: "guide-login",
+        tool: "دخول المرشد",
+        path: "/login/guide",
+        checks: "POST /api/auth/login مع expectedRole=GUIDE؛ رفض غير المرشد؛ لوحة المُسندين فقط",
+      },
+      {
         id: "login",
         tool: "تسجيل الدخول",
         path: "/login",
         checks:
-          "POST ناجح → لوحة الدور؛ رسالة خطأ؛ ?registered=1؛ رابط نسيت كلمة المرور",
+          "POST ناجح → لوحة الدور؛ رسالة خطأ؛ رابط دخول المرشد /login/guide؛ رابط نسيت كلمة المرور",
       },
       {
         id: "register-beneficiary",
         tool: "تسجيل مستفيد",
         path: "/register",
         checks:
-          "رفع PDF اختياري؛ POST /api/auth/register؛ redirect /login?registered=1؛ تحقق الحقول",
+          "رفع PDF؛ OTP بالبريد؛ بعد التحقق جلسة تلقائية وانتقال /dashboard/beneficiary؛ تحقق الحقول",
       },
       {
         id: "forgot-password",

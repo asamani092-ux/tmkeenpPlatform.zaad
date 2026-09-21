@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
+import OpportunityAudienceFields from "@/components/admin/OpportunityAudienceFields";
 import { toastSuccess, toastError } from "@/lib/toast";
 
 type Props = {
@@ -40,6 +41,18 @@ export default function AdminOpportunityForm({ onSuccess }: Props) {
         if (!res.ok) {
           toastError(data.error || "فشل الإضافة");
           return;
+        }
+        const showToAll = form.get("showToAll") === "on";
+        const beneficiaryIds = String(form.get("beneficiaryIds") ?? "")
+          .split(",")
+          .map((id) => id.trim())
+          .filter(Boolean);
+        if (!showToAll && data.id && beneficiaryIds.length > 0) {
+          await fetch(`/api/opportunities/${data.id}/targets`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ beneficiaryIds }),
+          });
         }
         formEl.reset();
         toastSuccess("تمت إضافة الفرصة بنجاح");
@@ -101,10 +114,7 @@ export default function AdminOpportunityForm({ onSuccess }: Props) {
           <option value="مغلقة">مغلقة</option>
         </select>
       </FieldRow>
-      <label className="flex cursor-pointer items-center gap-2 text-sm text-brand-gray">
-        <input type="checkbox" name="showToAll" defaultChecked className="shrink-0" />
-        عرض لجميع المستفيدين المعتمدين
-      </label>
+      <OpportunityAudienceFields />
       <SubmitButton loading={pending} className="btn-primary w-full">
         إضافة الفرصة
       </SubmitButton>

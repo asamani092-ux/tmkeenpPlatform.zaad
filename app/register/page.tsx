@@ -99,7 +99,7 @@ export default function RegisterPage() {
         return;
       }
       toastSuccess("تم التحقق وإنشاء الحساب");
-      window.location.assign("/login?registered=1");
+      window.location.assign(data.redirect || "/dashboard/beneficiary");
       return;
     } catch {
       toastError("حدث خطأ في الاتصال. حاول مرة أخرى.");
@@ -111,7 +111,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-surface-muted">
       <Navbar showAuth={false} />
-      <main className="mx-auto max-w-2xl px-4 py-12">
+      <main className="mx-auto max-w-2xl px-4 py-6 sm:py-12">
         <div className="card">
           <div className="mb-6 flex justify-center">
             <Image
@@ -331,7 +331,7 @@ export default function RegisterPage() {
                   onChange={(e) =>
                     setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))
                   }
-                  className="input-field text-center font-mono text-xl tracking-[0.35em]"
+                  className="input-field min-h-12 text-center font-mono text-lg tracking-[0.2em] sm:text-xl sm:tracking-[0.35em]"
                   placeholder="------"
                   dir="ltr"
                   required

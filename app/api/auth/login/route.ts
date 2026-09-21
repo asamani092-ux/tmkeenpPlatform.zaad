@@ -14,7 +14,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { email, password } = await request.json();
+    const { email, password, expectedRole } = await request.json();
 
     if (!email || !password) {
       return NextResponse.json(
@@ -43,6 +43,13 @@ export async function POST(request: Request) {
     if (user.isActive === false) {
       return NextResponse.json(
         { error: "الحساب معلّق. تواصل مع الإدارة." },
+        { status: 403 }
+      );
+    }
+
+    if (expectedRole && user.role !== String(expectedRole)) {
+      return NextResponse.json(
+        { error: "هذا المدخل مخصص للمرشدين فقط" },
         { status: 403 }
       );
     }

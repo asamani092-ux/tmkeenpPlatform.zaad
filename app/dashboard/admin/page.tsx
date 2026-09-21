@@ -3,7 +3,7 @@ import Navbar from "@/components/Navbar";
 import AdminDashboardTabs from "@/components/AdminDashboardTabs";
 import AdminBulkExport from "@/components/admin/AdminBulkExport";
 import { getDashboardPath } from "@/lib/auth";
-import { isPlatformStaff, isSystemAdmin } from "@/lib/roles";
+import { isPlatformStaff } from "@/lib/roles";
 import { getSession } from "@/lib/session";
 import { withPrismaRetry } from "@/lib/prisma";
 import { backfillFollowUpProgram } from "@/lib/follow-up-service";
@@ -28,7 +28,7 @@ export default async function AdminDashboardPage() {
 
   /** Re-read role after possible promotion so UI gates stay accurate — O(1). */
   const { prisma } = await import("@/lib/prisma");
-  let canManageSupervisors = isSystemAdmin(session.role);
+  let canManageSupervisors = isPlatformStaff(session.role);
   try {
     const freshRole =
       (
@@ -37,7 +37,7 @@ export default async function AdminDashboardPage() {
           select: { role: true },
         })
       )?.role ?? session.role;
-    canManageSupervisors = isSystemAdmin(freshRole);
+    canManageSupervisors = isPlatformStaff(freshRole);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     if (!/SYSTEM_ADMIN|invalid input value for enum/i.test(message)) throw err;
@@ -73,7 +73,10 @@ export default async function AdminDashboardPage() {
         where: { role: "BENEFICIARY" },
         _count: { stage: true },
       }),
-      db.opportunity.findMany({ orderBy: { createdAt: "desc" } }),
+      db.opportunity.findMany({
+        orderBy: { createdAt: "desc" },
+        include: { _count: { select: { targets: true } } },
+      }),
       db.user.findMany({
         where: { role: "GUIDE" },
         select: {
@@ -183,6 +186,20 @@ export default async function AdminDashboardPage() {
   const applicationsTotal = applicationStats.reduce((sum, g) => sum + g._count.status, 0);
   const applicationsAccepted =
     applicationStats.find((g) => g.status === "ACCEPTED")?._count.status ?? 0;
+
+  const opportunityRows = opportunities.map((o) => ({
+    id: o.id,
+    type: o.type,
+    title: o.title,
+    provider: o.provider,
+    duration: o.duration,
+    status: o.status,
+    requirements: o.requirements,
+    salary: o.salary,
+    jobType: o.jobType,
+    showToAll: o.showToAll,
+    targetCount: o._count.targets,
+  }));
 
   const impactStats = {
     stageDistribution,
@@ -344,7 +361,7 @@ export default async function AdminDashboardPage() {
         "الراتب",
         "نوع الدوام",
       ],
-      rows: opportunities.map((o) => [
+      rows: opportunityRows.map((o) => [
         o.title,
         o.provider,
         o.type === "TRAINING" ? "تدريب" : "توظيف",
@@ -465,7 +482,7 @@ export default async function AdminDashboardPage() {
         <AdminDashboardTabs
         supervisors={supervisors}
         canManageSupervisors={canManageSupervisors}
-          opportunities={opportunities}
+          opportunities={opportunityRows}
           guides={guides}
           beneficiariesByGuideId={beneficiariesByGuideId}
           beneficiaries={beneficiaries}

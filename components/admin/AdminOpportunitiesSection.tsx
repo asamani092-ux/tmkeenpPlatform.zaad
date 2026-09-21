@@ -18,6 +18,7 @@ type Opportunity = {
   salary: string | null;
   jobType: string | null;
   showToAll: boolean;
+  targetCount: number;
 };
 
 type Props = {

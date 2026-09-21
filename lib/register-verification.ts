@@ -156,7 +156,7 @@ export async function startRegistrationChallenge(
 export async function verifyRegistrationChallenge(
   challengeId: string,
   code: string
-): Promise<ActionResult> {
+): Promise<ActionResult & { userId?: string }> {
   const id = challengeId.trim();
   const otp = code.trim();
   if (!id || !/^\d{6}$/.test(otp)) {

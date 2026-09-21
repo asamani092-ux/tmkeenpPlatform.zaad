@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
-import { isSystemAdmin } from "@/lib/roles";
+import { isPlatformStaff } from "@/lib/roles";
 import { updateAdmin, deleteAdmin } from "@/lib/platform-service";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
 export async function PATCH(request: Request, { params }: RouteParams) {
   const session = await getSession();
-  if (!session || !isSystemAdmin(session.role)) {
+  if (!session || !isPlatformStaff(session.role)) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
 
@@ -27,7 +27,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
 export async function DELETE(_request: Request, { params }: RouteParams) {
   const session = await getSession();
-  if (!session || !isSystemAdmin(session.role)) {
+  if (!session || !isPlatformStaff(session.role)) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
 
