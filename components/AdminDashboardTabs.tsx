@@ -11,7 +11,7 @@ import AdminApplicationsPanel from "@/components/admin/AdminApplicationsPanel";
 import AdminImpactPanel, { type ImpactStats } from "@/components/admin/AdminImpactPanel";
 import { adminCopy } from "@/lib/copy/ar";
 import { Stage } from "@/generated/prisma/client";
-import { Briefcase, BarChart3, ClipboardList, Kanban, Settings, UsersRound, FileCheck } from "lucide-react";
+import { Briefcase, BarChart3, ClipboardList, Kanban, Menu, Settings, UsersRound, FileCheck, X } from "lucide-react";
 import type { ManagedBeneficiary } from "@/components/admin/AdminBeneficiaryManagement";
 
 type Opportunity = {
@@ -85,6 +85,8 @@ type Supervisor = {
   email: string;
   phone: string;
   isActive: boolean;
+  role: "ADMIN" | "SYSTEM_ADMIN";
+  notifyOnRegistration: boolean;
 };
 
 type Props = {
@@ -126,6 +128,7 @@ export default function AdminDashboardTabs({
 }: Props) {
   const searchParams = useSearchParams();
   const [tab, setTab] = useState<Tab>("pipeline");
+  const [navOpen, setNavOpen] = useState(false);
   const [openBeneficiaryId, setOpenBeneficiaryId] = useState<string | null>(null);
   const [usersWindow, setUsersWindow] = useState<UsersWindow>("supervisors");
 
@@ -222,33 +225,89 @@ export default function AdminDashboardTabs({
     setUsersWindow("beneficiaries");
   }
 
+  function selectTab(id: Tab) {
+    setTab(id);
+    setNavOpen(false);
+  }
+
+  const activeLabel = tabs.find((t) => t.id === tab)?.label ?? "";
+
+  const navButtons = (
+    <nav aria-label="أقسام لوحة المدير" className="flex flex-col gap-1 p-3">
+      {tabs.map(({ id, label, icon: Icon }) => {
+        const active = tab === id;
+        return (
+          <button
+            key={id}
+            type="button"
+            onClick={() => selectTab(id)}
+            aria-current={active ? "page" : undefined}
+            className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-start text-sm font-semibold transition ${
+              active
+                ? "bg-primary text-white"
+                : "text-primary hover:bg-surface-muted"
+            }`}
+          >
+            <Icon className="h-4 w-4 shrink-0" />
+            <span>{label}</span>
+          </button>
+        );
+      })}
+    </nav>
+  );
+
   return (
-    <div className="space-y-6">
-      <div className="-mx-1 overflow-x-auto px-1">
-        <div
-          role="tablist"
-          aria-label="أقسام لوحة المدير"
-          className="tab-bar min-w-max sm:min-w-0"
+    <div className="lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start lg:gap-6">
+      {/* Mobile bar */}
+      <div className="mb-4 flex items-center justify-between gap-2 lg:hidden">
+        <p className="text-sm font-bold text-primary">{activeLabel}</p>
+        <button
+          type="button"
+          onClick={() => setNavOpen(true)}
+          className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-surface-border bg-surface px-3 text-sm font-semibold text-primary"
+          aria-expanded={navOpen}
+          aria-controls="admin-side-nav"
         >
-          {tabs.map(({ id, label, shortLabel, icon: Icon }) => (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              aria-selected={tab === id}
-              data-active={tab === id}
-              onClick={() => setTab(id)}
-              title={label}
-              className="flex min-h-[44px] min-w-[4.5rem] shrink-0 items-center justify-center gap-1.5 px-2 text-xs focus-visible:outline-none sm:min-w-[100px] sm:flex-1 sm:gap-2 sm:text-sm"
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              <span className="sm:hidden">{shortLabel}</span>
-              <span className="hidden sm:inline">{label}</span>
-            </button>
-          ))}
-        </div>
+          <Menu className="h-4 w-4" />
+          القائمة
+        </button>
       </div>
 
+      {/* Desktop sidebar */}
+      <aside className="card sticky top-4 hidden overflow-hidden p-0 lg:block" id="admin-side-nav-desktop">
+        {navButtons}
+      </aside>
+
+      {/* Mobile drawer */}
+      {navOpen && (
+        <div className="fixed inset-0 z-40 lg:hidden" role="presentation">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/40"
+            aria-label="إغلاق القائمة"
+            onClick={() => setNavOpen(false)}
+          />
+          <aside
+            id="admin-side-nav"
+            className="absolute inset-y-0 start-0 flex w-[min(18rem,88vw)] flex-col bg-surface shadow-xl"
+          >
+            <div className="flex items-center justify-between border-b border-surface-border px-3 py-3">
+              <p className="font-bold text-primary">أقسام اللوحة</p>
+              <button
+                type="button"
+                onClick={() => setNavOpen(false)}
+                className="rounded-lg p-2 text-brand-gray hover:bg-surface-muted hover:text-primary"
+                aria-label="إغلاق"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">{navButtons}</div>
+          </aside>
+        </div>
+      )}
+
+      <div className="min-w-0 space-y-6">
       {tab === "pipeline" && (
         <AdminPipelineBoard
           beneficiaries={beneficiaries}
@@ -298,6 +357,7 @@ export default function AdminDashboardTabs({
       {tab === "impact" && <AdminImpactPanel stats={impactStats} />}
 
       {tab === "settings" && <AdminSystemSettings />}
+      </div>
     </div>
   );
 }

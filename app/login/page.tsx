@@ -144,11 +144,6 @@ function LoginForm() {
           سجّل هنا
         </FullPageLink>
       </p>
-      <p className="mt-3 text-center text-sm">
-        <FullPageLink href="/login/guide" className="font-semibold text-primary hover:underline">
-          دخول المرشد
-        </FullPageLink>
-      </p>
     </div>
   );
 }
