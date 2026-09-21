@@ -27,9 +27,6 @@ export default function PlatformFooter({ dashboardHref, showAuthLinks = true }: 
         <FullPageLink href="/#about" className="hover:text-primary">
           {landingCopy.aboutTitle}
         </FullPageLink>
-        <FullPageLink href="/#partners" className="hover:text-primary">
-          {landingCopy.partnersTitle}
-        </FullPageLink>
       </nav>
       © {new Date().getFullYear()} {landingCopy.footer}
     </footer>
