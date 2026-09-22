@@ -48,7 +48,8 @@ COPY scripts/check-storage-persistence.sh /app/check-storage-persistence.sh
 COPY scripts/check-storage-persistence.sh /app/scripts/check-storage-persistence.sh
 
 # Serialized after builder: install prisma CLI for migrate deploy in entrypoint
-RUN npm install -g prisma@7.8.0 --no-fund --no-audit \
+# Pin to package major used by the app (see package.json / lockfile).
+RUN npm install -g prisma@7.9.1 --no-fund --no-audit \
   && chmod +x /app/docker-entrypoint.sh \
   /app/check-storage-persistence.sh \
   /app/scripts/check-storage-persistence.sh

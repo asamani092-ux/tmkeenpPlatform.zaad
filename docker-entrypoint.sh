@@ -33,7 +33,9 @@ if [ -n "${DATABASE_URL:-}" ]; then
     echo "Migrations applied successfully."
   else
     echo "WARNING: prisma migrate deploy failed — starting app anyway."
-    echo "Check DATABASE_URL and that PostgreSQL is on the same Coolify project network."
+    echo "Check DATABASE_URL, prisma.config.ts loads without prisma/config,"
+    echo "and that PostgreSQL is on the same Coolify project network."
+    echo "Last migrate stderr above; column mismatches (e.g. notifyOnRegistration) mean migrations did not apply."
   fi
 else
   echo "WARNING: DATABASE_URL is not set — skipping migrations"

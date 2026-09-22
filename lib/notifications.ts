@@ -17,18 +17,45 @@ export async function notifyAdmins(
   message: string,
   options?: { registrationNotice?: boolean }
 ) {
-  const admins = await prisma.user.findMany({
-    where: {
-      role: { in: ["ADMIN", "SYSTEM_ADMIN"] },
-      isActive: true,
-      ...(options?.registrationNotice ? { notifyOnRegistration: true } : {}),
-    },
-    select: { id: true },
-  });
-  if (admins.length === 0) return;
-  await prisma.inAppNotification.createMany({
-    data: admins.map((a) => ({ userId: a.id, title, message })),
-  });
+  try {
+    const admins = await prisma.user.findMany({
+      where: {
+        role: { in: ["ADMIN", "SYSTEM_ADMIN"] },
+        isActive: true,
+        ...(options?.registrationNotice ? { notifyOnRegistration: true } : {}),
+      },
+      select: { id: true },
+    });
+    if (admins.length === 0) return;
+    await prisma.inAppNotification.createMany({
+      data: admins.map((a) => ({ userId: a.id, title, message })),
+    });
+  } catch (err) {
+    const messageText = err instanceof Error ? err.message : String(err);
+    const code =
+      typeof err === "object" && err && "code" in err
+        ? String((err as { code?: unknown }).code)
+        : "";
+    // P2022 — column missing until migrate deploy succeeds.
+    if (
+      options?.registrationNotice &&
+      (code === "P2022" || /notifyOnRegistration/i.test(messageText))
+    ) {
+      console.warn(
+        "[notifyAdmins] notifyOnRegistration missing — falling back to all active staff"
+      );
+      const admins = await prisma.user.findMany({
+        where: { role: { in: ["ADMIN", "SYSTEM_ADMIN"] }, isActive: true },
+        select: { id: true },
+      });
+      if (admins.length === 0) return;
+      await prisma.inAppNotification.createMany({
+        data: admins.map((a) => ({ userId: a.id, title, message })),
+      });
+      return;
+    }
+    throw err;
+  }
 }
 
 /** O(1) count */
