@@ -8,7 +8,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import { toastSuccess, toastError } from "@/lib/toast";
-import { Pencil, Trash2, UserPlus, Shield } from "lucide-react";
+import { Bell, BellOff, Pencil, Trash2, UserPlus, Shield } from "lucide-react";
 
 export type Supervisor = {
   id: string;
@@ -16,6 +16,8 @@ export type Supervisor = {
   email: string;
   phone: string;
   isActive: boolean;
+  role: "ADMIN" | "SYSTEM_ADMIN";
+  notifyOnRegistration: boolean;
 };
 
 type Props = {
@@ -60,6 +62,10 @@ export default function AdminSupervisorsPanel({
       email: form.get("email"),
       phone: form.get("phone"),
       password: form.get("password") || undefined,
+      notifyOnRegistration: form.get("notifyOnRegistration") === "on",
+      ...(editing?.role === "ADMIN"
+        ? { isActive: form.get("isActive") === "on" }
+        : {}),
     };
 
     startTransition(async () => {
@@ -83,8 +89,8 @@ export default function AdminSupervisorsPanel({
     });
   }
 
-  function handleDeleteClick(id: string) {
-    if (!canManage) return;
+  function handleDeleteClick(id: string, role: Supervisor["role"]) {
+    if (!canManage || role === "SYSTEM_ADMIN") return;
     if (confirmDeleteId !== id) {
       setConfirmDeleteId(id);
       return;
@@ -100,6 +106,38 @@ export default function AdminSupervisorsPanel({
       setSupervisors((prev) => prev.filter((s) => s.id !== id));
       setConfirmDeleteId(null);
       toastSuccess("تم الحذف");
+      router.refresh();
+    });
+  }
+
+  /** Quick toggle notify — O(1). */
+  function toggleNotify(s: Supervisor) {
+    if (!canManage) return;
+    const next = !s.notifyOnRegistration;
+    setSupervisors((prev) =>
+      prev.map((row) =>
+        row.id === s.id ? { ...row, notifyOnRegistration: next } : row
+      )
+    );
+    startTransition(async () => {
+      const res = await fetch(`/api/admins/${s.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notifyOnRegistration: next }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSupervisors((prev) =>
+          prev.map((row) =>
+            row.id === s.id
+              ? { ...row, notifyOnRegistration: s.notifyOnRegistration }
+              : row
+          )
+        );
+        toastError(data.error || "فشل تحديث الإشعار");
+        return;
+      }
+      toastSuccess(next ? "سيصله إشعار التسجيل" : "لن يصله إشعار التسجيل");
       router.refresh();
     });
   }
@@ -155,49 +193,85 @@ export default function AdminSupervisorsPanel({
           <li key={s.id} className="rounded-lg border border-surface-border p-3">
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0 flex-1 text-start">
-                <p className="font-semibold text-primary">{s.name}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-semibold text-primary">{s.name}</p>
+                  <span className="rounded bg-surface-muted px-1.5 py-0.5 text-[10px] font-medium text-brand-gray">
+                    {s.role === "SYSTEM_ADMIN" ? "مدير النظام" : "مشرف"}
+                  </span>
+                </div>
                 <p className="text-xs text-brand-gray" dir="ltr">
                   {s.email}
                 </p>
                 <p className="text-xs text-brand-gray" dir="ltr">
                   {s.phone}
                 </p>
-                {!s.isActive && (
-                  <p className="mt-1 text-xs text-red-600">غير نشط</p>
-                )}
+                <div className="mt-1 flex flex-wrap gap-2 text-xs">
+                  {!s.isActive && <span className="text-red-600">غير نشط</span>}
+                  <span className={s.notifyOnRegistration ? "text-primary" : "text-brand-gray"}>
+                    {s.notifyOnRegistration
+                      ? "يستلم إشعار التسجيل"
+                      : "لا يستلم إشعار التسجيل"}
+                  </span>
+                </div>
               </div>
               {canManage && (
                 <div className="flex shrink-0 gap-1">
                   <button
                     type="button"
-                    onClick={() => openEdit(s)}
-                    aria-label="تعديل المشرف"
-                    title="تعديل"
+                    onClick={() => toggleNotify(s)}
+                    disabled={pending}
+                    aria-label={
+                      s.notifyOnRegistration
+                        ? "إيقاف إشعار التسجيل"
+                        : "تفعيل إشعار التسجيل"
+                    }
+                    title={
+                      s.notifyOnRegistration
+                        ? "إيقاف إشعار التسجيل"
+                        : "تفعيل إشعار التسجيل"
+                    }
                     className="rounded p-1 text-primary hover:bg-surface-muted"
                   >
-                    <Pencil className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteClick(s.id)}
-                    disabled={pending}
-                    aria-label="حذف المشرف"
-                    title="حذف"
-                    className={`rounded px-2 py-1 text-xs font-semibold ${
-                      confirmDeleteId === s.id
-                        ? "bg-red-600 text-white"
-                        : "text-red-600 hover:bg-red-50"
-                    }`}
-                  >
-                    {confirmDeleteId === s.id ? (
-                      <>
-                        <Trash2 className="inline h-4 w-4" />
-                        تأكيد الحذف؟
-                      </>
+                    {s.notifyOnRegistration ? (
+                      <Bell className="h-4 w-4" />
                     ) : (
-                      <Trash2 className="h-4 w-4" />
+                      <BellOff className="h-4 w-4 opacity-60" />
                     )}
                   </button>
+                  {s.role === "ADMIN" && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => openEdit(s)}
+                        aria-label="تعديل المشرف"
+                        title="تعديل"
+                        className="rounded p-1 text-primary hover:bg-surface-muted"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteClick(s.id, s.role)}
+                        disabled={pending}
+                        aria-label="حذف المشرف"
+                        title="حذف"
+                        className={`rounded px-2 py-1 text-xs font-semibold ${
+                          confirmDeleteId === s.id
+                            ? "bg-red-600 text-white"
+                            : "text-red-600 hover:bg-red-50"
+                        }`}
+                      >
+                        {confirmDeleteId === s.id ? (
+                          <>
+                            <Trash2 className="inline h-4 w-4" />
+                            تأكيد الحذف؟
+                          </>
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -262,6 +336,26 @@ export default function AdminSupervisorsPanel({
                 dir="ltr"
               />
             </FieldRow>
+            <label className="flex items-center gap-2 text-sm text-primary">
+              <input
+                type="checkbox"
+                name="notifyOnRegistration"
+                defaultChecked={editing?.notifyOnRegistration ?? true}
+                className="h-4 w-4"
+              />
+              استلام إشعار عند تسجيل مستفيد جديد
+            </label>
+            {modalMode === "edit" && editing?.role === "ADMIN" && (
+              <label className="flex items-center gap-2 text-sm text-primary">
+                <input
+                  type="checkbox"
+                  name="isActive"
+                  defaultChecked={editing.isActive}
+                  className="h-4 w-4"
+                />
+                الحساب نشط (يمكنه تسجيل الدخول)
+              </label>
+            )}
             <div className="flex gap-2 pt-2">
               <SubmitButton loading={pending} className="btn-primary flex-1 !py-2 text-sm">
                 {modalMode === "add" ? "حفظ المشرف" : "حفظ التعديلات"}

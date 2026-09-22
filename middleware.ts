@@ -41,10 +41,7 @@ export function middleware(request: NextRequest) {
   }
 
   const isDashboard = pathname.startsWith("/dashboard");
-  const isAuthPage =
-    pathname === "/login" ||
-    pathname.startsWith("/login/") ||
-    pathname === "/register";
+  const isAuthPage = pathname === "/login" || pathname === "/register";
 
   if (isDashboard && !sessionId) {
     return NextResponse.redirect(new URL("/login", request.url));
@@ -74,7 +71,6 @@ export const config = {
     "/dashboard",
     "/dashboard/:path*",
     "/login",
-    "/login/:path*",
     "/register",
     "/uat-checklist",
     "/uat-checklist/:path*",

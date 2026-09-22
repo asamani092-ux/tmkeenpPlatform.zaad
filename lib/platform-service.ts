@@ -101,7 +101,8 @@ export async function registerBeneficiaryFromVerifiedPayload(
 
   await notifyAdmins(
     "تسجيل مستفيد جديد",
-    `طلب اعتماد للمستفيد ${created.name} — يرجى المراجعة والاعتماد.`
+    `طلب اعتماد للمستفيد ${created.name} — يرجى المراجعة والاعتماد.`,
+    { registrationNotice: true }
   );
 
   const settings = await getSystemSettings();
@@ -119,7 +120,11 @@ export async function registerBeneficiaryFromVerifiedPayload(
   );
 
   const admins = await prisma.user.findMany({
-    where: { role: { in: ["ADMIN", "SYSTEM_ADMIN"] } },
+    where: {
+      role: { in: ["ADMIN", "SYSTEM_ADMIN"] },
+      isActive: true,
+      notifyOnRegistration: true,
+    },
     select: { email: true },
   });
   for (const admin of admins) {
@@ -1596,9 +1601,19 @@ export async function completeApplication(applicationId: string): Promise<Action
   return { success: true };
 }
 
-/** List supervisors (ADMIN). Time O(n), Space O(n). */
+/** List ADMIN + SYSTEM_ADMIN for management and notify prefs. Time O(n), Space O(n). */
 export async function listSupervisors(): Promise<
-  ActionResult & { supervisors?: { id: string; name: string; email: string; phone: string; isActive: boolean }[] }
+  ActionResult & {
+    supervisors?: {
+      id: string;
+      name: string;
+      email: string;
+      phone: string;
+      isActive: boolean;
+      role: "ADMIN" | "SYSTEM_ADMIN";
+      notifyOnRegistration: boolean;
+    }[];
+  }
 > {
   const session = await getSession();
   if (!session || !isPlatformStaff(session.role)) {
@@ -1606,18 +1621,26 @@ export async function listSupervisors(): Promise<
   }
 
   const supervisors = await prisma.user.findMany({
-    where: { role: "ADMIN" },
+    where: { role: { in: ["ADMIN", "SYSTEM_ADMIN"] } },
     select: {
       id: true,
       name: true,
       email: true,
       phone: true,
       isActive: true,
+      role: true,
+      notifyOnRegistration: true,
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ role: "asc" }, { createdAt: "desc" }],
   });
 
-  return { success: true, supervisors };
+  return {
+    success: true,
+    supervisors: supervisors.map((s) => ({
+      ...s,
+      role: s.role as "ADMIN" | "SYSTEM_ADMIN",
+    })),
+  };
 }
 
 /** Create supervisor (ADMIN). Platform staff. Time O(1), Space O(1). */
@@ -1626,6 +1649,7 @@ export async function createAdmin(data: {
   email: string;
   phone: string;
   password: string;
+  notifyOnRegistration?: boolean;
 }): Promise<ActionResult> {
   const session = await getSession();
   if (!session || !isPlatformStaff(session.role)) {
@@ -1657,28 +1681,43 @@ export async function createAdmin(data: {
       password: await hashPassword(data.password),
       role: "ADMIN",
       stage: "PENDING_APPROVAL",
+      notifyOnRegistration: data.notifyOnRegistration ?? true,
     },
   });
 
   return { success: true };
 }
 
-/** Update supervisor (ADMIN only). Platform staff. Time O(1), Space O(1). */
+/** Update supervisor or notify pref for staff. Platform staff. Time O(1), Space O(1). */
 export async function updateAdmin(
   id: string,
-  data: Partial<{ name: string; email: string; phone: string; password: string; isActive: boolean }>
+  data: Partial<{
+    name: string;
+    email: string;
+    phone: string;
+    password: string;
+    isActive: boolean;
+    notifyOnRegistration: boolean;
+  }>
 ): Promise<ActionResult> {
   const session = await getSession();
   if (!session || !isPlatformStaff(session.role)) {
     return { success: false, error: "غير مصرح" };
   }
 
-  const target = await prisma.user.findFirst({ where: { id, role: "ADMIN" } });
+  const target = await prisma.user.findFirst({
+    where: { id, role: { in: ["ADMIN", "SYSTEM_ADMIN"] } },
+  });
   if (!target) {
-    return { success: false, error: "المشرف غير موجود" };
+    return { success: false, error: "الحساب غير موجود" };
   }
 
-  if (data.email !== undefined) {
+  const isSys = target.role === "SYSTEM_ADMIN";
+  if (isSys && data.isActive === false) {
+    return { success: false, error: "لا يمكن تعطيل حساب مدير النظام" };
+  }
+
+  if (data.email !== undefined && !isSys) {
     const email = data.email.toLowerCase().trim();
     if (!isValidEmailFormat(email)) {
       return { success: false, error: "البريد الإلكتروني غير صالح" };
@@ -1699,11 +1738,16 @@ export async function updateAdmin(
   await prisma.user.update({
     where: { id },
     data: {
-      ...(data.name !== undefined ? { name: data.name.trim() } : {}),
-      ...(data.email !== undefined ? { email: data.email.toLowerCase().trim() } : {}),
-      ...(data.phone !== undefined ? { phone: data.phone.trim() } : {}),
-      ...(data.password ? { password: await hashPassword(data.password) } : {}),
-      ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
+      ...(!isSys && data.name !== undefined ? { name: data.name.trim() } : {}),
+      ...(!isSys && data.email !== undefined
+        ? { email: data.email.toLowerCase().trim() }
+        : {}),
+      ...(!isSys && data.phone !== undefined ? { phone: data.phone.trim() } : {}),
+      ...(!isSys && data.password ? { password: await hashPassword(data.password) } : {}),
+      ...(!isSys && data.isActive !== undefined ? { isActive: data.isActive } : {}),
+      ...(data.notifyOnRegistration !== undefined
+        ? { notifyOnRegistration: data.notifyOnRegistration }
+        : {}),
     },
   });
 

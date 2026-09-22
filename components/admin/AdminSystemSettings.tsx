@@ -5,7 +5,7 @@ import FieldRow from "@/components/ui/FieldRow";
 import SubmitButton from "@/components/ui/SubmitButton";
 import FollowUpFormTemplatesPanel from "@/components/admin/FollowUpFormTemplatesPanel";
 import { toastSuccess, toastError } from "@/lib/toast";
-import { Settings, Mail } from "lucide-react";
+import { Settings, Mail, HardDrive, Server } from "lucide-react";
 
 export default function AdminSystemSettings() {
   const [senderEmail, setSenderEmail] = useState("");
@@ -84,92 +84,92 @@ export default function AdminSystemSettings() {
 
   return (
     <div className="space-y-6">
-      <div className="card max-w-lg space-y-4">
+      <div className="card max-w-lg space-y-6">
         <div className="flex items-center gap-2">
           <Settings className="h-6 w-6 text-primary" />
           <h2 className="text-xl font-bold text-primary">إعدادات النظام</h2>
         </div>
 
-        <p className="text-sm text-brand-gray">
-          البريد أدناه هو عنوان المرسل (From) لكل الرسائل: رمز التحقق عند التسجيل،
-          استعادة كلمة المرور، والإشعارات. بيانات SMTP في البيئة للمصادقة فقط.
-        </p>
+        <section className="space-y-3" aria-labelledby="settings-sender">
+          <h3 id="settings-sender" className="font-bold text-primary">
+            المرسل
+          </h3>
+          <p className="text-xs text-brand-gray">عنوان From للرسائل الصادرة.</p>
+          {loading ? (
+            <p className="text-sm text-brand-gray">جاري التحميل...</p>
+          ) : (
+            <form noValidate onSubmit={handleSubmit} className="space-y-3">
+              <FieldRow label="البريد الإلكتروني للمرسل" htmlFor="senderEmail" ltr>
+                <input
+                  id="senderEmail"
+                  type="email"
+                  required
+                  value={senderEmail}
+                  onChange={(e) => setSenderEmail(e.target.value)}
+                  className="input-field"
+                  dir="ltr"
+                  placeholder="noreply@example.com"
+                />
+              </FieldRow>
+              <SubmitButton loading={pending} className="btn-primary w-full">
+                حفظ
+              </SubmitButton>
+            </form>
+          )}
+        </section>
 
-        <div
-          className={`space-y-1 rounded-lg px-4 py-3 text-sm ${
-            smtpConfigured ? "bg-secondary/10 text-primary" : "bg-amber-50 text-amber-900"
-          }`}
-        >
-          <p>البريد: {smtpConfigured ? "مفعّل" : "غير مفعّل"}</p>
-          {smtpConfigured && smtpHost ? (
-            <p className="text-xs opacity-90" dir="ltr">
-              {smtpHost}
-              {smtpPort ? `:${smtpPort}` : ""}
-              {smtpUser ? ` · ${smtpUser}` : ""}
-            </p>
-          ) : null}
-          {smtpUser ? (
-            <p className="text-xs">
-              لـ Outlook: اجعل بريد المرسل مطابقاً لـ{" "}
-              <span dir="ltr">{smtpUser}</span>
-            </p>
-          ) : null}
-        </div>
-
-        {storage ? (
+        <section className="space-y-2 border-t border-surface-border pt-4" aria-labelledby="settings-smtp">
+          <h3 id="settings-smtp" className="flex items-center gap-2 font-bold text-primary">
+            <Server className="h-5 w-5" />
+            حالة SMTP
+          </h3>
           <div
-            className={`space-y-1 rounded-lg px-4 py-3 text-sm ${
-              storage.exists && storage.writable
-                ? "bg-secondary/10 text-primary"
-                : "bg-amber-50 text-amber-900"
+            className={`rounded-lg px-4 py-3 text-sm ${
+              smtpConfigured ? "bg-secondary/10 text-primary" : "bg-amber-50 text-amber-900"
             }`}
           >
-            <p>
-              مخزن المرفقات:{" "}
-              {storage.exists && storage.writable
-                ? "جاهز"
-                : storage.exists
-                  ? "موجود لكن غير قابل للكتابة"
-                  : "المجلد غير موجود"}
-            </p>
-            <p className="text-xs opacity-90" dir="ltr">
-              {storage.dir} · CV: {storage.cvCount} · شهادات: {storage.certificatesCount}
-            </p>
-            <p className="text-xs">
-              مهم: اربط في Coolify Persistent Storage —
-              السيرفر `/data/tmkeen/storage` → الحاوية `/app/storage` —
-              وإلا تُفقد المرفقات مع كل إعادة نشر. نفّذ
-              scripts/check-storage-persistence.sh داخل الحاوية حتى تظهر «ثابت».
-            </p>
+            <p>{smtpConfigured ? "مفعّل" : "غير مفعّل"}</p>
+            {smtpConfigured && smtpHost ? (
+              <p className="mt-1 text-xs opacity-90" dir="ltr">
+                {smtpHost}
+                {smtpPort ? `:${smtpPort}` : ""}
+                {smtpUser ? ` · ${smtpUser}` : ""}
+              </p>
+            ) : null}
           </div>
+        </section>
+
+        {storage ? (
+          <section className="space-y-2 border-t border-surface-border pt-4" aria-labelledby="settings-storage">
+            <h3 id="settings-storage" className="flex items-center gap-2 font-bold text-primary">
+              <HardDrive className="h-5 w-5" />
+              مخزن المرفقات
+            </h3>
+            <div
+              className={`rounded-lg px-4 py-3 text-sm ${
+                storage.exists && storage.writable
+                  ? "bg-secondary/10 text-primary"
+                  : "bg-amber-50 text-amber-900"
+              }`}
+            >
+              <p>
+                {storage.exists && storage.writable
+                  ? "جاهز"
+                  : storage.exists
+                    ? "موجود لكن غير قابل للكتابة"
+                    : "المجلد غير موجود"}
+              </p>
+              <p className="mt-1 text-xs opacity-90" dir="ltr">
+                {storage.dir} · CV: {storage.cvCount} · شهادات: {storage.certificatesCount}
+              </p>
+            </div>
+          </section>
         ) : null}
 
-        {loading ? (
-          <p className="text-sm text-brand-gray">جاري التحميل...</p>
-        ) : (
-          <form noValidate onSubmit={handleSubmit} className="space-y-4">
-            <FieldRow label="البريد الإلكتروني للمرسل" htmlFor="senderEmail" ltr>
-              <input
-                id="senderEmail"
-                type="email"
-                required
-                value={senderEmail}
-                onChange={(e) => setSenderEmail(e.target.value)}
-                className="input-field"
-                dir="ltr"
-                placeholder="noreply@example.com"
-              />
-            </FieldRow>
-            <SubmitButton loading={pending} className="btn-primary w-full">
-              حفظ الإعدادات
-            </SubmitButton>
-          </form>
-        )}
-
-        <div className="border-t border-surface-border pt-4">
-          <h3 className="mb-2 flex items-center gap-2 font-bold text-primary">
+        <section className="space-y-3 border-t border-surface-border pt-4" aria-labelledby="settings-test">
+          <h3 id="settings-test" className="flex items-center gap-2 font-bold text-primary">
             <Mail className="h-5 w-5" />
-            اختبار إرسال البريد
+            اختبار إرسال
           </h3>
           <div className="flex flex-wrap gap-2">
             <input
@@ -189,7 +189,7 @@ export default function AdminSystemSettings() {
               إرسال تجربة
             </SubmitButton>
           </div>
-        </div>
+        </section>
       </div>
 
       <FollowUpFormTemplatesPanel />
