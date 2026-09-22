@@ -92,7 +92,7 @@ export default async function BeneficiaryDashboardPage() {
     );
   }
 
-  let user = await prisma.user
+  const user = await prisma.user
     .findUnique({
       where: { id: session.id },
       include: {
