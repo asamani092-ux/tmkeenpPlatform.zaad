@@ -119,15 +119,35 @@ export async function registerBeneficiaryFromVerifiedPayload(
     })
   );
 
-  const admins = await prisma.user.findMany({
-    where: {
-      role: { in: ["ADMIN", "SYSTEM_ADMIN"] },
-      isActive: true,
-      notifyOnRegistration: true,
-    },
-    select: { email: true },
-  });
-  for (const admin of admins) {
+  let adminEmails: { email: string }[] = [];
+  try {
+    adminEmails = await prisma.user.findMany({
+      where: {
+        role: { in: ["ADMIN", "SYSTEM_ADMIN"] },
+        isActive: true,
+        notifyOnRegistration: true,
+      },
+      select: { email: true },
+    });
+  } catch (err) {
+    const messageText = err instanceof Error ? err.message : String(err);
+    const code =
+      typeof err === "object" && err && "code" in err
+        ? String((err as { code?: unknown }).code)
+        : "";
+    if (code === "P2022" || /notifyOnRegistration/i.test(messageText)) {
+      console.warn(
+        "[register] notifyOnRegistration missing — emailing all active staff"
+      );
+      adminEmails = await prisma.user.findMany({
+        where: { role: { in: ["ADMIN", "SYSTEM_ADMIN"] }, isActive: true },
+        select: { email: true },
+      });
+    } else {
+      throw err;
+    }
+  }
+  for (const admin of adminEmails) {
     await safeSendEmail("register notify admin", () =>
       sendGenericEmail({
         to: admin.email,
@@ -1632,6 +1652,31 @@ export async function listSupervisors(): Promise<
       notifyOnRegistration: true,
     },
     orderBy: [{ role: "asc" }, { createdAt: "desc" }],
+  }).catch(async (err) => {
+    const messageText = err instanceof Error ? err.message : String(err);
+    const code =
+      typeof err === "object" && err && "code" in err
+        ? String((err as { code?: unknown }).code)
+        : "";
+    if (code !== "P2022" && !/notifyOnRegistration/i.test(messageText)) {
+      throw err;
+    }
+    console.warn(
+      "[listSupervisors] notifyOnRegistration missing — defaulting preference to true"
+    );
+    const rows = await prisma.user.findMany({
+      where: { role: { in: ["ADMIN", "SYSTEM_ADMIN"] } },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        isActive: true,
+        role: true,
+      },
+      orderBy: [{ role: "asc" }, { createdAt: "desc" }],
+    });
+    return rows.map((s) => ({ ...s, notifyOnRegistration: true }));
   });
 
   return {
@@ -1673,17 +1718,40 @@ export async function createAdmin(data: {
     return { success: false, error: "البريد مسجل مسبقاً" };
   }
 
-  await prisma.user.create({
-    data: {
-      name: data.name.trim(),
-      email,
-      phone: data.phone.trim(),
-      password: await hashPassword(data.password),
-      role: "ADMIN",
-      stage: "PENDING_APPROVAL",
-      notifyOnRegistration: data.notifyOnRegistration ?? true,
-    },
-  });
+  const passwordHash = await hashPassword(data.password);
+
+  try {
+    await prisma.user.create({
+      data: {
+        name: data.name.trim(),
+        email,
+        phone: data.phone.trim(),
+        password: passwordHash,
+        role: "ADMIN",
+        stage: "PENDING_APPROVAL",
+        notifyOnRegistration: data.notifyOnRegistration ?? true,
+      },
+    });
+  } catch (err) {
+    const messageText = err instanceof Error ? err.message : String(err);
+    const code =
+      typeof err === "object" && err && "code" in err
+        ? String((err as { code?: unknown }).code)
+        : "";
+    if (code !== "P2022" && !/notifyOnRegistration/i.test(messageText)) {
+      throw err;
+    }
+    await prisma.user.create({
+      data: {
+        name: data.name.trim(),
+        email,
+        phone: data.phone.trim(),
+        password: passwordHash,
+        role: "ADMIN",
+        stage: "PENDING_APPROVAL",
+      },
+    });
+  }
 
   return { success: true };
 }
@@ -1735,21 +1803,39 @@ export async function updateAdmin(
     return { success: false, error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" };
   }
 
-  await prisma.user.update({
-    where: { id },
-    data: {
-      ...(!isSys && data.name !== undefined ? { name: data.name.trim() } : {}),
-      ...(!isSys && data.email !== undefined
-        ? { email: data.email.toLowerCase().trim() }
-        : {}),
-      ...(!isSys && data.phone !== undefined ? { phone: data.phone.trim() } : {}),
-      ...(!isSys && data.password ? { password: await hashPassword(data.password) } : {}),
-      ...(!isSys && data.isActive !== undefined ? { isActive: data.isActive } : {}),
-      ...(data.notifyOnRegistration !== undefined
-        ? { notifyOnRegistration: data.notifyOnRegistration }
-        : {}),
-    },
-  });
+  try {
+    await prisma.user.update({
+      where: { id },
+      data: {
+        ...(!isSys && data.name !== undefined ? { name: data.name.trim() } : {}),
+        ...(!isSys && data.email !== undefined
+          ? { email: data.email.toLowerCase().trim() }
+          : {}),
+        ...(!isSys && data.phone !== undefined ? { phone: data.phone.trim() } : {}),
+        ...(!isSys && data.password ? { password: await hashPassword(data.password) } : {}),
+        ...(!isSys && data.isActive !== undefined ? { isActive: data.isActive } : {}),
+        ...(data.notifyOnRegistration !== undefined
+          ? { notifyOnRegistration: data.notifyOnRegistration }
+          : {}),
+      },
+    });
+  } catch (err) {
+    const messageText = err instanceof Error ? err.message : String(err);
+    const code =
+      typeof err === "object" && err && "code" in err
+        ? String((err as { code?: unknown }).code)
+        : "";
+    if (
+      data.notifyOnRegistration !== undefined &&
+      (code === "P2022" || /notifyOnRegistration/i.test(messageText))
+    ) {
+      return {
+        success: false,
+        error: "عمود تفضيل الإشعار غير موجود بعد — طبّق هجرات قاعدة البيانات",
+      };
+    }
+    throw err;
+  }
 
   return { success: true };
 }

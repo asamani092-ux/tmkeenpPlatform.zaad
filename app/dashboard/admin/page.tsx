@@ -54,7 +54,6 @@ export default async function AdminDashboardPage() {
     stageGroups,
     opportunities,
     guidesRaw,
-    supervisorsRaw,
     beneficiariesRaw,
     followUpsRaw,
     employedBeneficiaries,
@@ -88,19 +87,6 @@ export default async function AdminDashboardPage() {
         },
         orderBy: { createdAt: "desc" },
       }),
-    db.user.findMany({
-      where: { role: { in: ["ADMIN", "SYSTEM_ADMIN"] } },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        isActive: true,
-        role: true,
-        notifyOnRegistration: true,
-      },
-      orderBy: [{ role: "asc" }, { createdAt: "desc" }],
-    }),
       db.user.findMany({
         where: { role: "BENEFICIARY" },
         select: {
@@ -176,6 +162,11 @@ export default async function AdminDashboardPage() {
       }),
     ])
   );
+
+  /** Soft-load supervisors so missing notifyOnRegistration does not crash the dashboard. */
+  const { listSupervisors } = await import("@/lib/platform-service");
+  const supervisorsResult = await listSupervisors();
+  const supervisorsRaw = supervisorsResult.supervisors ?? [];
 
   const stageDistribution = STAGE_ORDER.map((stage) => ({
     stage,

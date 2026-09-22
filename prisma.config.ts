@@ -1,8 +1,9 @@
 // Prisma CLI config. Coolify injects DATABASE_URL; locally we load .env
 // without depending on the dotenv package (not present in the runner image).
+// Plain object export — no `prisma/config` import so global CLI migrate works
+// in the Docker runner (standalone image has no local node_modules/prisma).
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { defineConfig } from "prisma/config";
 
 function loadEnvFile(file: string): void {
   const path = resolve(process.cwd(), file);
@@ -27,7 +28,7 @@ function loadEnvFile(file: string): void {
 
 loadEnvFile(".env");
 
-export default defineConfig({
+export default {
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
@@ -36,4 +37,4 @@ export default defineConfig({
   datasource: {
     url: process.env["DATABASE_URL"],
   },
-});
+};

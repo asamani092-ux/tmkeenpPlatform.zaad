@@ -92,22 +92,50 @@ export default async function BeneficiaryDashboardPage() {
     );
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.id },
-    include: {
-      guide: { select: { name: true, email: true, phone: true } },
-      sessionsAsBeneficiary: {
-        orderBy: { date: "desc" },
-        take: 10,
+  let user = await prisma.user
+    .findUnique({
+      where: { id: session.id },
+      include: {
+        guide: { select: { name: true, email: true, phone: true } },
+        sessionsAsBeneficiary: {
+          orderBy: { date: "desc" },
+          take: 10,
+        },
+        applications: {
+          include: { opportunity: true },
+          orderBy: { appliedAt: "desc" },
+        },
+        stageHistory: { orderBy: { createdAt: "asc" } },
+        tasksAsBeneficiary: { orderBy: { createdAt: "asc" } },
       },
-      applications: {
-        include: { opportunity: true },
-        orderBy: { appliedAt: "desc" },
-      },
-      stageHistory: { orderBy: { createdAt: "asc" } },
-      tasksAsBeneficiary: { orderBy: { createdAt: "asc" } },
-    },
-  });
+    })
+    .catch(async (err) => {
+      const messageText = err instanceof Error ? err.message : String(err);
+      const code =
+        typeof err === "object" && err && "code" in err
+          ? String((err as { code?: unknown }).code)
+          : "";
+      if (code !== "P2021" && !/StageHistory/i.test(messageText)) throw err;
+      console.warn("[beneficiary] StageHistory missing — loading without history");
+      const fallback = await prisma.user.findUnique({
+        where: { id: session.id },
+        include: {
+          guide: { select: { name: true, email: true, phone: true } },
+          sessionsAsBeneficiary: {
+            orderBy: { date: "desc" },
+            take: 10,
+          },
+          applications: {
+            include: { opportunity: true },
+            orderBy: { appliedAt: "desc" },
+          },
+          tasksAsBeneficiary: { orderBy: { createdAt: "asc" } },
+        },
+      });
+      return fallback
+        ? { ...fallback, stageHistory: [] as { id: string; fromStage: typeof fallback.stage; toStage: typeof fallback.stage; note: string | null; createdAt: Date }[] }
+        : null;
+    });
 
   if (!user) redirect("/login");
 
